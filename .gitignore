@@ -1,0 +1,54 @@
+# IDE
+.idea
+idea
+vscode
+.vscode/
+
+# Logs
+logs/
+*.log
+
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Data files (if large)
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+
+# Dataset directories (auto-downloaded)
+data/
