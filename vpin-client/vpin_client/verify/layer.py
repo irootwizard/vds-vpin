@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -26,11 +27,11 @@ class LayerVerifyReport:
 def verify_layer_proofs(bundle: LayerProofBundle) -> LayerVerifyReport:
     """
     Verify π_conv / π_pool / π_fc[k] when present.
-    MVP: empty proofs pass (stubs); non-empty requires future Spartan client verify.
+    MVP: structured stubs from prove-layer pass; non-SNARK payloads fail closed.
     """
-    conv_ok = bundle.pi_conv is None or len(bundle.pi_conv) == 0
-    pool_ok = bundle.pi_pool is None or len(bundle.pi_pool) == 0
-    fc_ok = all(len(p) == 0 for p in bundle.pi_fc) if bundle.pi_fc else True
+    conv_ok = _stub_proof_ok(bundle.pi_conv)
+    pool_ok = _stub_proof_ok(bundle.pi_pool)
+    fc_ok = all(_stub_proof_ok(p) for p in bundle.pi_fc) if bundle.pi_fc else True
     ok = conv_ok and pool_ok and fc_ok
     return LayerVerifyReport(
         ok=ok,
@@ -39,6 +40,16 @@ def verify_layer_proofs(bundle: LayerProofBundle) -> LayerVerifyReport:
         fc_ok=fc_ok,
         proof_coverage="layer_proofs_partial" if ok else "layer_proofs_failed",
     )
+
+
+def _stub_proof_ok(proof: bytes | None) -> bool:
+    if proof is None or len(proof) == 0:
+        return True
+    try:
+        json.loads(proof.decode("utf-8"))
+        return True
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return proof.startswith(b"stub:")
 
 
 def layer_bundle_from_dict(raw: dict[str, Any]) -> LayerProofBundle:

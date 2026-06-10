@@ -8,7 +8,9 @@ pub mod protocol;
 pub mod trace;
 
 pub mod load_data {
-    pub use crate::trace::load_data::{load_data, load_weights_only, rust_files_root, witness_available};
+    pub use crate::trace::load_data::{
+        ec_witness_root, load_data, load_weights_only, rust_files_root, witness_available,
+    };
 }
 pub mod load_data_add {
     pub use crate::trace::load_data_add::load_data_add;
@@ -23,8 +25,8 @@ pub mod commit_spartan;
 
 pub use challenge::ClientChallenge;
 pub use commit::{
-    commit_model, commit_public_inputs, InputCommitmentBundle, ModelCommitmentBundle,
-    ModelCommitmentOpening,
+    commit_model, commit_public_inputs, verify_pedersen_open_model, InputCommitmentBundle,
+    ModelCommitmentBundle, ModelCommitmentOpening,
 };
 pub use prove::{
     prove_with_challenge, setup_model, ProverError, ServerProveInput, SetupBundle, TraceBundleRef,

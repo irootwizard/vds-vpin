@@ -39,8 +39,11 @@ class ServerCryptoBridge:
     def is_available(self) -> bool:
         return self.manifest.is_file()
 
-    def _cargo_bin(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
-        cmd = [
+    def _crypto_cmd(self, *extra_args: str) -> list[str]:
+        exe = self.workspace_root / "target" / "debug" / "vpin-server-crypto.exe"
+        if exe.is_file():
+            return [str(exe), *extra_args]
+        return [
             "cargo",
             "run",
             "--quiet",
@@ -51,11 +54,16 @@ class ServerCryptoBridge:
             "--",
             *extra_args,
         ]
+
+    def _cargo_bin(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
+        cmd = self._crypto_cmd(*extra_args)
         return subprocess.run(
             cmd,
             cwd=str(self.workspace_root),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=600,
         )
 
@@ -110,6 +118,8 @@ class ServerCryptoBridge:
             cwd=str(settings.cp_snark_root),
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=600,
         )
         artifact = settings.cp_snark_root / "artifacts" / network / "layer_proofs.json"

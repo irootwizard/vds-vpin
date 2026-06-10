@@ -15,10 +15,12 @@ def _mod(x: int) -> Scalar:
 
 
 def embed_u128_to_scalar(value: int) -> Scalar:
-    """Canonical u128 → scalar (16-byte LE in low half of wide buffer)."""
+    """Canonical u128 → scalar (16-byte LE in low half of 64-byte wide buffer, mod q_1)."""
     if value < 0 or value >= 2**128:
         raise ValueError("value must fit in u128")
-    return _mod(value)
+    wide = bytearray(64)
+    wide[:16] = value.to_bytes(16, "little")
+    return _mod(int.from_bytes(wide, "little"))
 
 
 def scalar_from_hex(h: str) -> Scalar:

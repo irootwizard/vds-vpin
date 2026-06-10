@@ -82,12 +82,20 @@ def verify_session(
     traces: TraceBundle,
     *,
     skip_fc: bool = True,
+    cm_w_point_hex: str = "",
+    cm_w_digest_hex: str = "",
+    num_weights: int | None = None,
 ) -> VerifyReport:
-    """P6 entry: Pedersen opening (stub) + M1 scalar + future EC verify."""
+    """P6 entry: Pedersen opening + M1 scalar + future EC verify."""
     from vpin_client.commitment.pedersen import verify_pedersen_open
 
     coverage = artifacts.proof_coverage or "ec_gadget_only"
-    opening_ok = verify_pedersen_open(opening)
+    opening_ok = verify_pedersen_open(
+        opening,
+        cm_w_point_hex=cm_w_point_hex,
+        cm_w_digest_hex=cm_w_digest_hex,
+        num_weights=num_weights,
+    )
     stack = build_stack_from_traces(traces, skip_fc=skip_fc)
     scalar_ok = False
     detail = ""

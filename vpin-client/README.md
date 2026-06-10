@@ -23,3 +23,7 @@ Use `vpin_client.upload.upload_model()` against a running FastAPI backend.
 ```bash
 pytest vpin-client/tests
 ```
+
+## Tauri desktop shell (optional, A6-3)
+
+The independent client is designed to run inside a **Tauri 2** host (`localhost:1420` is already allowed in backend CORS). MVP workflow: ship `vpin-client` as a Python sidecar or embed verification via HTTP to `vpin-backend`; a full Tauri UI is optional and not required for protocol compliance tests.

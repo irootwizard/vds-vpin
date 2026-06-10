@@ -104,5 +104,17 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
         proof_coverage=str(artifact.get("proof_coverage", "skeleton_ec_stub")),
         prove_time_ms=int(artifact.get("prove_time_ms", 0)),
     )
-    report = verify_session(bundle, opening, ch, traces, skip_fc=True)
+    mc = artifact.get("model_commitment", {})
+    cm = mc.get("cm_weights", {})
+    report = verify_session(
+        bundle,
+        opening,
+        ch,
+        traces,
+        skip_fc=True,
+        cm_w_point_hex=str(cm.get("point_hex", "")),
+        cm_w_digest_hex=str(cm.get("digest_hex", "")),
+        num_weights=mc.get("num_weights"),
+    )
     assert report.scalar_ok, report.detail
+    assert report.opening_ok, "Pedersen opening should verify against protocol artifact"

@@ -45,7 +45,17 @@ def main() -> None:
         "windows": windows,
         "output_flat": output_flat,
     }
-    fc_payload = {"layers": []}
+    # Self-consistent FC layer (Eq.8 / Eq.10) — matches layer_proof/fc.rs toy + client test shape.
+    fc_payload = {
+        "layers": [
+            {
+                "inputs": ["10", "20"],
+                "weights_in_out": [["2", "1"], ["3", "4"]],
+                "bias": ["1", "0"],
+                "outputs": ["81", "90"],
+            }
+        ]
+    }
 
     base = ROOT / args.network
     base.mkdir(parents=True, exist_ok=True)

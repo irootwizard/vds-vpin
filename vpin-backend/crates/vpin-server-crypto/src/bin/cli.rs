@@ -3,14 +3,17 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use vpin_server_crypto::{
-    prove_with_challenge, save_artifacts, setup_model, ClientChallenge, ProverError,
+    prove_with_challenge, save_artifacts, setup_model, verify_pedersen_open_model,
+    ClientChallenge, ModelCommitmentBundle, ModelCommitmentOpening, ProverError,
     ServerProveInput, SetupBundle, TraceBundleRef,
 };
+use vpin_server_crypto::load_data::{ec_witness_root, witness_available};
 
 fn print_usage() {
     eprintln!("Usage:");
     eprintln!("  vpin-server-crypto setup <network> [weights.json]");
     eprintln!("  vpin-server-crypto prove-with-challenge <network> <challenge.json> [setup.json]");
+    eprintln!("  vpin-server-crypto verify-pedersen <setup.json>");
 }
 
 fn main() {
@@ -33,6 +36,24 @@ fn main() {
                 std::process::exit(1);
             }
         },
+        "verify-pedersen" => {
+            if args.len() < 3 {
+                eprintln!("Usage: verify-pedersen <setup.json>");
+                std::process::exit(1);
+            }
+            let path = PathBuf::from(&args[2]);
+            match run_verify_pedersen(&path) {
+                Ok(true) => println!("pedersen_open_ok"),
+                Ok(false) => {
+                    eprintln!("pedersen opening verification failed");
+                    std::process::exit(1);
+                }
+                Err(e) => {
+                    eprintln!("verify-pedersen failed: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
         "prove-with-challenge" => {
             if args.len() < 4 {
                 eprintln!("Usage: prove-with-challenge <network> <challenge.json> [setup.json]");
@@ -97,7 +118,7 @@ fn run_prove(
             pool_trace: None,
             fc_trace: None,
         },
-        ec_witness_root: None,
+        ec_witness_root: resolve_ec_witness_root(network),
     };
 
     let artifacts = prove_with_challenge(input).map_err(|e| match e {
@@ -162,6 +183,28 @@ fn load_weights(weights_path: Option<&str>, network: &str) -> Result<Vec<u128>, 
         return parse_weights_file(&default);
     }
     Ok(vec![1u128, 2, 3])
+}
+
+fn resolve_ec_witness_root(network: &str) -> Option<PathBuf> {
+    if std::env::var("VPIN_EC_REAL_PROVE").ok().as_deref() != Some("1") {
+        return None;
+    }
+    let root = ec_witness_root(network);
+    if witness_available(network) && root.is_dir() {
+        Some(root)
+    } else {
+        None
+    }
+}
+
+fn run_verify_pedersen(path: &Path) -> Result<bool, String> {
+    let raw = fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| e.to_string())?;
+    let model: ModelCommitmentBundle =
+        serde_json::from_value(v["model_commitment"].clone()).map_err(|e| e.to_string())?;
+    let opening: ModelCommitmentOpening =
+        serde_json::from_value(v["model_opening"].clone()).map_err(|e| e.to_string())?;
+    Ok(verify_pedersen_open_model(&model, &opening))
 }
 
 fn parse_weights_file(path: &Path) -> Result<Vec<u128>, String> {
