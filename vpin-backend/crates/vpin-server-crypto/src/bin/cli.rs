@@ -2,6 +2,12 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use vpin_server_crypto::circuit::cps_ver::{
+    prove_toy_cps, verify_toy_cps_bundle, ToyCpsTraces,
+};
+use vpin_server_crypto::circuit::layer::{
+    conv_mac::ConvToyTrace, fc_mac::FcToyTrace, pool_sum::PoolToyTrace,
+};
 use vpin_server_crypto::{
     prove_with_challenge, save_artifacts, setup_model, verify_pedersen_open_model,
     ClientChallenge, ModelCommitmentBundle, ModelCommitmentOpening, ProverError,
@@ -14,16 +20,42 @@ fn print_usage() {
     eprintln!("  vpin-server-crypto setup <network> [weights.json]");
     eprintln!("  vpin-server-crypto prove-with-challenge <network> <challenge.json> [setup.json]");
     eprintln!("  vpin-server-crypto verify-pedersen <setup.json>");
+    eprintln!("  vpin-server-crypto verify-cps --toy");
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
+    if args.len() < 2 {
         print_usage();
         std::process::exit(1);
     }
 
     let cmd = args[1].as_str();
+
+    // `verify-cps` is the only subcommand that does not take a positional
+    // <network> arg.
+    if cmd == "verify-cps" {
+        let toy = args.iter().any(|a| a == "--toy");
+        if !toy {
+            eprintln!("Usage: verify-cps --toy");
+            std::process::exit(1);
+        }
+        match run_verify_cps_toy() {
+            Ok(()) => {
+                println!("cps_ver_unified_toy_ok");
+            }
+            Err(e) => {
+                eprintln!("verify-cps --toy failed: {e}");
+                std::process::exit(1);
+            }
+        }
+        return;
+    }
+
+    if args.len() < 3 {
+        print_usage();
+        std::process::exit(1);
+    }
     let network = args[2].as_str();
 
     match cmd {
@@ -205,6 +237,54 @@ fn run_verify_pedersen(path: &Path) -> Result<bool, String> {
     let opening: ModelCommitmentOpening =
         serde_json::from_value(v["model_opening"].clone()).map_err(|e| e.to_string())?;
     Ok(verify_pedersen_open_model(&model, &opening))
+}
+
+fn run_verify_cps_toy() -> Result<(), String> {
+    let w_star: Vec<u128> = vec![1, 0, 1, 2, 0, 2, 1, 0, 1, 2, 3, 5, 7];
+    let traces = ToyCpsTraces {
+        conv: ConvToyTrace {
+            filter: vec![1, 0, 1, 2, 0, 2, 1, 0, 1],
+            windows: vec![
+                vec![1, 2, 3, 5, 6, 7, 9, 10, 11],
+                vec![2, 3, 4, 6, 7, 8, 10, 11, 12],
+                vec![5, 6, 7, 9, 10, 11, 13, 14, 15],
+                vec![6, 7, 8, 10, 11, 12, 14, 15, 16],
+            ],
+            outputs: vec![48, 56, 80, 88],
+        },
+        pool: PoolToyTrace {
+            windows: vec![vec![48, 56, 80, 88]],
+            outputs: vec![272],
+        },
+        fc: FcToyTrace {
+            input: 272,
+            weights: vec![2, 3],
+            bias: vec![5, 7],
+            outputs: vec![549, 823],
+        },
+    };
+    let challenge = ClientChallenge {
+        gamma: "11".repeat(32),
+        gamma_add: "22".repeat(32),
+        gamma_mult: "33".repeat(32),
+        num_point_adds: 0,
+        num_point_mults: 0,
+    };
+    let (bundle, prove_timing) = prove_toy_cps(&w_star, &traces, &challenge)
+        .map_err(|e| format!("prove_toy_cps: {e}"))?;
+    let verify_timing = verify_toy_cps_bundle(&bundle, Some(&traces))
+        .map_err(|e| format!("verify_toy_cps_bundle: {e}"))?;
+    println!(
+        "verify-cps --toy: cm_W kind={} num_scalars={} padded_len={} prove_ms={{conv:{},pool:{},fc:{}}} verify_total_ms={}",
+        bundle.cm_w.kind,
+        bundle.cm_w.num_scalars,
+        bundle.cm_w.padded_len,
+        prove_timing.prove_ms_conv,
+        prove_timing.prove_ms_pool,
+        prove_timing.prove_ms_fc,
+        verify_timing.total_ms,
+    );
+    Ok(())
 }
 
 fn parse_weights_file(path: &Path) -> Result<Vec<u128>, String> {

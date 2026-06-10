@@ -20,6 +20,17 @@ fn toy_w_star() -> Vec<u128> {
     vec![1, 0, 1, 2, 0, 2, 1, 0, 1, 3, 5, 7, 11]
 }
 
+/// Same W* the server-crypto crate uses
+/// (`vpin-backend/crates/vpin-server-crypto/tests/cps_toy_e2e.rs::w_star`).
+/// Both implementations must produce the same Spartan PC digest.
+fn cross_crate_toy_w_star() -> Vec<u128> {
+    vec![1, 0, 1, 2, 0, 2, 1, 0, 1, 2, 3, 5, 7]
+}
+
+/// Frozen by `vpin-server-crypto::tests::cps_toy_e2e::TOY_W_STAR_CM_HEX`.
+const CROSS_CRATE_FROZEN_CM_HEX: &str =
+    "d056527f12aad5b2200a98e5e882c15d7dac17ed234ffa6352cd2e633b346645";
+
 fn write_perf_z5(prove_ms: u128, verify_ms: u128, commitment_bytes: usize, num_scalars: usize) {
     let perf_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
@@ -90,6 +101,15 @@ fn z5_protocol_pc_kind_is_spartan_not_pedersen() {
     assert_eq!(pc.kind, CPS_KIND_SPARTAN_PC);
     assert_ne!(pc.kind, "pedersen");
     assert_ne!(pc.cm_hex, ped, "Spartan PC digest ≠ Pedersen point_hex");
+}
+
+#[test]
+fn z5_cross_crate_parity_with_server_crypto() {
+    let cm = cps_comm_w_star(&cross_crate_toy_w_star()).expect("commit");
+    assert_eq!(
+        cm.cm_hex, CROSS_CRATE_FROZEN_CM_HEX,
+        "cp-snark-full Spartan PC must match the vpin-server-crypto frozen vector"
+    );
 }
 
 #[test]
