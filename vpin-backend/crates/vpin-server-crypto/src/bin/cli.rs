@@ -37,10 +37,13 @@ fn main() {
     if cmd == "verify-cps" {
         let toy = args.iter().any(|a| a == "--toy");
         if !toy {
-            eprintln!("Usage: verify-cps --toy");
+            eprintln!("Usage: verify-cps --toy [--bundle-out <path>]");
             std::process::exit(1);
         }
-        match run_verify_cps_toy() {
+        let bundle_out = args
+            .windows(2)
+            .find_map(|w| (w[0] == "--bundle-out").then(|| PathBuf::from(&w[1])));
+        match run_verify_cps_toy(bundle_out.as_deref()) {
             Ok(()) => {
                 println!("cps_ver_unified_toy_ok");
             }
@@ -239,7 +242,7 @@ fn run_verify_pedersen(path: &Path) -> Result<bool, String> {
     Ok(verify_pedersen_open_model(&model, &opening))
 }
 
-fn run_verify_cps_toy() -> Result<(), String> {
+fn run_verify_cps_toy(bundle_out: Option<&Path>) -> Result<(), String> {
     let w_star: Vec<u128> = vec![1, 0, 1, 2, 0, 2, 1, 0, 1, 2, 3, 5, 7];
     let traces = ToyCpsTraces {
         conv: ConvToyTrace {
@@ -284,6 +287,37 @@ fn run_verify_cps_toy() -> Result<(), String> {
         prove_timing.prove_ms_fc,
         verify_timing.total_ms,
     );
+    if let Some(path) = bundle_out {
+        // Side-channel for the Python toy E2E test: dump the bundle +
+        // traces JSON so vpin-client can run its own M1 / L1 / γ-replay
+        // verification on top.
+        let payload = serde_json::json!({
+            "bundle": &bundle,
+            "traces": {
+                "conv": {
+                    "filter": traces.conv.filter.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                    "windows": traces.conv.windows.iter().map(|w| w.iter().map(|v| v.to_string()).collect::<Vec<_>>()).collect::<Vec<_>>(),
+                    "outputs": traces.conv.outputs.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                },
+                "pool": {
+                    "windows": traces.pool.windows.iter().map(|w| w.iter().map(|v| v.to_string()).collect::<Vec<_>>()).collect::<Vec<_>>(),
+                    "outputs": traces.pool.outputs.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                },
+                "fc": {
+                    "input": traces.fc.input.to_string(),
+                    "weights": traces.fc.weights.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                    "bias": traces.fc.bias.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                    "outputs": traces.fc.outputs.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+                },
+            },
+            "w_star_opening": w_star.iter().map(|v| v.to_string()).collect::<Vec<_>>(),
+        });
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| format!("create bundle dir: {e}"))?;
+        }
+        fs::write(path, serde_json::to_string_pretty(&payload).unwrap())
+            .map_err(|e| format!("write bundle: {e}"))?;
+    }
     Ok(())
 }
 
