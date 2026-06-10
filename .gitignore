@@ -52,3 +52,6 @@ Thumbs.db
 
 # Dataset directories (auto-downloaded)
 data/
+
+# vPIN server-crypto generated artifacts (regenerated from setup.json + challenge.json)
+vpin-backend/crates/vpin-server-crypto/artifacts/*/protocol.json
