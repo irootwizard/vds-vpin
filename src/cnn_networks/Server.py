@@ -21,6 +21,16 @@ weights_array = []
 point_one_Add = []
 point_two_Add = []
 
+# cp-snark-full MAC trace (windows / outputs as decimal strings)
+conv_trace_windows = []
+conv_trace_output_flat = []
+pool_trace_windows = []
+pool_trace_output_flat = []
+fc_trace_layers = []
+conv_trace_recording = False
+pool_trace_recording = False
+fc_trace_recording = False
+
 # Get the directory path of the script and its parent directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(script_dir))
@@ -333,6 +343,16 @@ def myConv2d(input_data, filter_weights, identityPoint, curveBaseField, type, pa
 
         assert result_left == result_right, "The values are not equal"
 
+        if conv_trace_recording:
+            global conv_trace_windows, conv_trace_output_flat
+            for cell in window_list:
+                conv_trace_windows.append(
+                    [str(int(v.x())) if hasattr(v, "x") else str(int(v)) for v in cell]
+                )
+            conv_trace_output_flat.extend(
+                [str(int(v.x())) if hasattr(v, "x") else str(int(v)) for v in output_data_flatten]
+            )
+
     return output_data
 
 def callConv2_ciphertext(images, identityPoint, curveBaseField):
@@ -414,6 +434,21 @@ def myAvgPool2d(flag , input_data, identityPoint, type1, type2, kernel_size, str
                     None
                 output_data[i,j] = sum_value * fixed_point
 
+        if pool_trace_recording and type1 == 1:
+            global pool_trace_windows, pool_trace_output_flat
+            for i in range(output_height):
+                for j in range(output_width):
+                    win = []
+                    for ii in range(kernel_size):
+                        for jj in range(kernel_size):
+                            v = input_data[i * stride + ii, j * stride + jj]
+                            win.append(str(int(v.x())) if hasattr(v, "x") else str(int(v)))
+                    pool_trace_windows.append(win)
+                    outv = output_data[i, j]
+                    pool_trace_output_flat.append(
+                        str(int(outv.x())) if hasattr(outv, "x") else str(int(outv))
+                    )
+
     return output_data
 
 def pf(secret_key, message):
@@ -480,6 +515,15 @@ def FCLayer(input_data, weight_matrix, bias_vector, flag, identityPoint, curveBa
 
         assert result_left == result_right, "The values are not equal"
 
+        if fc_trace_recording and flag == 1:
+            global fc_trace_layers
+            fc_trace_layers.append({
+                "input_row": [str(int(v.x())) if hasattr(v, "x") else str(int(v)) for v in input_data[0]],
+                "weights": [[str(int(x)) for x in row] for row in weight_matrix.tolist()],
+                "bias": [str(int(v.x())) if hasattr(v, "x") else str(int(v)) for v in bias_vector],
+                "output_row": [str(int(output_data[0, j].x())) if hasattr(output_data[0, j], "x") else str(int(output_data[0, j])) for j in range(weight_matrix.shape[1])],
+            })
+
     return output_data
 
 def encrypt(tensorInputPlaintext, curveOrder, curveGenerator, h):
@@ -544,8 +588,14 @@ def conv2_ciphertext(encryptedValue_c1, encryptedValue_c2,identityPoint, curveBa
     print("\n**************************************************")
     print("Server: First conv. layer started!")
 
+    global conv_trace_recording, conv_trace_windows, conv_trace_output_flat
+    conv_trace_windows = []
+    conv_trace_output_flat = []
+    conv_trace_recording = True
+
     outputConv2Ciphertext_c1 = callConv2_ciphertext(encryptedValue_c1, identityPoint, curveBaseField)
     outputConv2Ciphertext_c2 = callConv2_ciphertext(encryptedValue_c2, identityPoint, curveBaseField)
+    conv_trace_recording = False
 
     print("Server: First conv. layer finished!")
     print("**************************************************")
@@ -556,7 +606,13 @@ def avgPool_ciphertext(encryptedValue_c1, encryptedValue_c2, identityPoint, kern
     print("\n**************************************************")
     print("Server: First AvgPooling started!")
 
+    global pool_trace_recording, pool_trace_windows, pool_trace_output_flat
+    pool_trace_windows = []
+    pool_trace_output_flat = []
+    pool_trace_recording = True
+
     outputAvgPool2dCiphertext_c1 = callAvgPool2d_ciphertext(encryptedValue_c1, identityPoint, kernelSize, stride)
+    pool_trace_recording = False
     outputAvgPool2dCiphertext_c2 = callAvgPool2d_ciphertext(encryptedValue_c2, identityPoint, kernelSize, stride)
 
     print("Server: First AvgPooling finished!")
@@ -580,12 +636,16 @@ def FC1(weight_fc1, bias_fc1, curveOrder, curveGenerator, h, encryptedValue_c1, 
     print("\n**************************************************")
     print("Server: FC1 started!")
 
+    global fc_trace_recording, fc_trace_layers
+    fc_trace_recording = True
+
     weight_fc1_FixedPoint = realNumbersToFixedPointRepresentation(weight_fc1, 1, 16)
     bias_fc1_FixedPoint = realNumbersToFixedPointRepresentation(bias_fc1, 1, 16)
 
     outputBias_Fc1_c1, outputBias_Fc1_c2 = encryptBias(bias_fc1_FixedPoint, curveOrder, curveGenerator, h)
     outputCiphertext_c1_FC1 = FCLayer(encryptedValue_c1, weight_fc1_FixedPoint, outputBias_Fc1_c1, 1, identityPoint, curveBaseField)
     outputCiphertext_c2_FC1 = FCLayer(encryptedValue_c2, weight_fc1_FixedPoint, outputBias_Fc1_c2, 1, identityPoint, curveBaseField)
+    fc_trace_recording = False
 
     print("Server: FC1 finished!")
     print("**************************************************")
@@ -662,6 +722,68 @@ def convertFormatForRust_pointMult(version):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)             
     with open(file_path, 'w') as file:
         json.dump(my_array2, file)
+
+def convertFormatForRust_conv(version):
+    """
+    Export convolution MAC witnesses for cp-snark-full (model_exports/.../conv_trace.json).
+    """
+    folder_name = VERSION_TO_FOLDER.get(version)
+    if folder_name is None:
+        raise ValueError("Invalid version number. Version must be between 1 and 5.")
+
+    filter_weights = np.array([[1, 0, 1], [2, 0, 2], [1, 0, 1]])
+    filter_flat = [str(int(x)) for x in filter_weights.flatten().tolist()]
+    payload = {
+        "filter_flat": filter_flat,
+        "windows": conv_trace_windows,
+        "output_flat": conv_trace_output_flat,
+    }
+
+    file_path = os.path.join(
+        parent_dir,
+        "src",
+        "cp-snark-full",
+        "model_exports",
+        folder_name,
+        "conv_trace.json",
+    )
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as file:
+        json.dump(payload, file, indent=2)
+
+def convertFormatForRust_pool(version):
+    """Export average-pool MAC trace for cp-snark-full."""
+    folder_name = VERSION_TO_FOLDER.get(version)
+    if folder_name is None:
+        raise ValueError("Invalid version number. Version must be between 1 and 5.")
+    kernel, stride = KERNEL_STRIDE.get(version, (2, 2))
+    inv_fp = int(realNumbersToFixedPointRepresentation((1 / (kernel ** 2)), 2, 10))
+    payload = {
+        "kernel": kernel,
+        "stride": stride,
+        "inv_k_squared_fp": str(inv_fp),
+        "windows": pool_trace_windows,
+        "output_flat": pool_trace_output_flat,
+    }
+    file_path = os.path.join(
+        parent_dir, "src", "cp-snark-full", "model_exports", folder_name, "pool_trace.json"
+    )
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as file:
+        json.dump(payload, file, indent=2)
+
+def convertFormatForRust_fc(version):
+    """Export FC MAC traces for cp-snark-full."""
+    folder_name = VERSION_TO_FOLDER.get(version)
+    if folder_name is None:
+        raise ValueError("Invalid version number. Version must be between 1 and 5.")
+    payload = {"layers": fc_trace_layers}
+    file_path = os.path.join(
+        parent_dir, "src", "cp-snark-full", "model_exports", folder_name, "fc_trace.json"
+    )
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, "w") as file:
+        json.dump(payload, file, indent=2)
 
 def convertFormatForRust_pointAdd(version):
     """
@@ -774,7 +896,9 @@ def inferenceCNN(curveBaseField, curveGenerator, curveOrder, h, identityPoint, w
     print("Server: Second Activation layer finished!")
     print("**************************************************")
 
+    fc_trace_recording = True
     outputCiphertext_c1_FC2, outputCiphertext_c2_FC2 = FC2(weight_fc2, bias_fc2, curveOrder, curveGenerator, h, encryptedValue_c1, encryptedValue_c2, identityPoint, curveBaseField)
+    fc_trace_recording = False
 
     interactionClient(conn, outputCiphertext_c1_FC2, outputCiphertext_c2_FC2)
     
@@ -782,6 +906,9 @@ def inferenceCNN(curveBaseField, curveGenerator, curveOrder, h, identityPoint, w
 
     convertFormatForRust_pointMult(version)
     convertFormatForRust_pointAdd(version)
+    convertFormatForRust_conv(version)
+    convertFormatForRust_pool(version)
+    convertFormatForRust_fc(version)
     print("Server: The witnesses are saved in a file for generating proof with Rust")
 
 def main():

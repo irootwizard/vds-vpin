@@ -1,0 +1,21 @@
+{
+  "model_id": "vpin-network-a",
+  "display_name": "vPIN Network A (demo)",
+  "created_at_utc": "2026-06-04T00:00:00Z",
+  "topology_network": "A",
+  "manifest_path": "manifest.json",
+  "weights_path": "model_export.json",
+  "source": {
+    "kind": "vpin_npy",
+    "version": 1
+  },
+  "commitment": {
+    "status": "pending"
+  },
+  "truncation_plan": {
+    "status": "stub",
+    "plan_version": 0,
+    "checkpoints": []
+  },
+  "weights_digest_hex": null
+}
