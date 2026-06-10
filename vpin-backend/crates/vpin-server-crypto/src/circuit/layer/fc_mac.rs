@@ -22,7 +22,10 @@ use libspartan::scalar::Scalar;
 use libspartan::{InputsAssignment, Instance, VarsAssignment};
 
 use crate::challenge::ClientChallenge;
-use crate::circuit_prove::{prove_sub_circuit, verify_sub_circuit, CircuitWitness};
+use crate::circuit_prove::{
+    prove_sub_circuit_with_cm_w, verify_sub_circuit_with_cm_w, CircuitWitness,
+};
+use crate::commit::cps::CpsCommitment;
 use crate::commit::{InputCommitmentBundle, ModelCommitmentBundle};
 use crate::curve::embed_u128_to_scalar;
 use crate::protocol::artifacts::SubCircuitProof;
@@ -191,14 +194,34 @@ pub fn prove_fc_toy(
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
 ) -> Result<(SubCircuitProof, u128), String> {
+    prove_fc_toy_with_cm_w(trace, None, model, input, challenge)
+}
+
+pub fn prove_fc_toy_with_cm_w(
+    trace: &FcToyTrace,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(SubCircuitProof, u128), String> {
     let witness = build_fc_toy_witness(trace)?;
     let t0 = Instant::now();
-    let proof = prove_sub_circuit("fc_toy", witness, model, input, challenge);
+    let proof = prove_sub_circuit_with_cm_w("fc_toy", witness, cps_cm_w, model, input, challenge);
     Ok((proof, t0.elapsed().as_millis()))
 }
 
 pub fn verify_fc_toy(
     proof: &SubCircuitProof,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(), String> {
+    verify_fc_toy_with_cm_w(proof, None, model, input, challenge)
+}
+
+pub fn verify_fc_toy_with_cm_w(
+    proof: &SubCircuitProof,
+    cps_cm_w: Option<&CpsCommitment>,
     model: &ModelCommitmentBundle,
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
@@ -210,7 +233,7 @@ pub fn verify_fc_toy(
         ));
     }
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        verify_sub_circuit(proof, "fc_toy", model, input, challenge)
+        verify_sub_circuit_with_cm_w(proof, "fc_toy", cps_cm_w, model, input, challenge)
     }))
     .map_err(|_| "verify_fc_toy: spartan upstream panic on invalid proof".to_string())
     .and_then(|r| r)

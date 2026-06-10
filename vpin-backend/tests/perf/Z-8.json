@@ -1,0 +1,7 @@
+{
+  "proof_bytes": 44712,
+  "prove_ms": 530,
+  "task": "Z-8",
+  "transcript_binding": "cps_cm_w + pedersen_cm_w + cm_x + challenge + sub_circuit",
+  "verify_ms": 226
+}

@@ -11,9 +11,10 @@
 use libspartan::scalar::Scalar;
 
 use crate::challenge::ClientChallenge;
-use crate::circuit::layer::conv_mac::{prove_conv_toy, ConvToyTrace};
-use crate::circuit::layer::fc_mac::{prove_fc_toy, FcToyTrace};
-use crate::circuit::layer::pool_sum::{prove_pool_toy, PoolToyTrace};
+use crate::circuit::layer::conv_mac::{prove_conv_toy, prove_conv_toy_with_cm_w, ConvToyTrace};
+use crate::circuit::layer::fc_mac::{prove_fc_toy, prove_fc_toy_with_cm_w, FcToyTrace};
+use crate::circuit::layer::pool_sum::{prove_pool_toy, prove_pool_toy_with_cm_w, PoolToyTrace};
+use crate::commit::cps::CpsCommitment;
 use crate::commit::{InputCommitmentBundle, ModelCommitmentBundle};
 use crate::curve::embed_u128_to_scalar;
 use crate::protocol::artifacts::SubCircuitProof;
@@ -113,11 +114,29 @@ pub fn prove_toy_with_binding(
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
 ) -> Result<ToyLayerProofBundle, String> {
+    prove_toy_with_binding_and_cm_w(w_star, conv, pool, fc, None, model, input, challenge)
+}
+
+/// Phase Z.8: same as [`prove_toy_with_binding`] but threads a Spartan PC
+/// `cm_W` into every per-layer SNARK transcript so the proofs share a
+/// single canonical model identity.
+pub fn prove_toy_with_binding_and_cm_w(
+    w_star: &[u128],
+    conv: &ConvToyTrace,
+    pool: &PoolToyTrace,
+    fc: &FcToyTrace,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<ToyLayerProofBundle, String> {
     check_l1_binding(w_star, conv, fc)?;
 
-    let (pi_conv, prove_ms_conv) = prove_conv_toy(conv, model, input, challenge)?;
-    let (pi_pool, prove_ms_pool) = prove_pool_toy(pool, model, input, challenge)?;
-    let (pi_fc, prove_ms_fc) = prove_fc_toy(fc, model, input, challenge)?;
+    let (pi_conv, prove_ms_conv) =
+        prove_conv_toy_with_cm_w(conv, cps_cm_w, model, input, challenge)?;
+    let (pi_pool, prove_ms_pool) =
+        prove_pool_toy_with_cm_w(pool, cps_cm_w, model, input, challenge)?;
+    let (pi_fc, prove_ms_fc) = prove_fc_toy_with_cm_w(fc, cps_cm_w, model, input, challenge)?;
 
     Ok(ToyLayerProofBundle {
         pi_conv,

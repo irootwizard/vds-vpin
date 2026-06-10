@@ -7,9 +7,49 @@ use libspartan::{InputsAssignment, Instance, SNARK, SNARKGens, VarsAssignment};
 use merlin::Transcript;
 
 use crate::challenge::{append_challenge_to_transcript, ClientChallenge};
+use crate::commit::cps::CpsCommitment;
 use crate::commit::{append_commitments_to_transcript, InputCommitmentBundle, ModelCommitmentBundle};
 use crate::commit_spartan::{my_dense_mlpoly_commit, my_lib_prove, my_lib_verify};
 use crate::protocol::artifacts::SubCircuitProof;
+
+/// Phase Z.8: append the canonical Spartan PC `cm_W` to a Merlin
+/// transcript before the legacy Pedersen commitments. EC and layer
+/// proofs both call this helper so they share a single fingerprint of
+/// the committed model identity.
+pub fn append_cps_cm_w_to_transcript(transcript: &mut Transcript, cps_cm: &CpsCommitment) {
+    transcript.append_message(b"cps_kind", cps_cm.kind.as_bytes());
+    transcript.append_message(b"cps_cm_w_hex", cps_cm.cm_hex.as_bytes());
+    transcript.append_message(
+        b"cps_cm_w_num_scalars",
+        cps_cm.num_scalars.to_le_bytes().as_ref(),
+    );
+    transcript.append_message(
+        b"cps_cm_w_padded_len",
+        cps_cm.padded_len.to_le_bytes().as_ref(),
+    );
+}
+
+/// Phase Z.8 unified transcript seed shared by `prove_sub_circuit` and
+/// `verify_sub_circuit`. Order (matching docs/cp-snark §3):
+/// 1. optional Spartan PC `cm_W` (new in Z.8)
+/// 2. legacy Pedersen `cm_W` / `cm_x` (`append_commitments_to_transcript`)
+/// 3. client challenge γ / γ_add / γ_mult
+/// 4. sub-circuit name (e.g. `conv_toy`, `point_mult`)
+pub fn seed_layer_transcript(
+    transcript: &mut Transcript,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+    name: &str,
+) {
+    if let Some(cm) = cps_cm_w {
+        append_cps_cm_w_to_transcript(transcript, cm);
+    }
+    append_commitments_to_transcript(transcript, model, input);
+    append_challenge_to_transcript(transcript, challenge);
+    transcript.append_message(b"sub_circuit", name.as_bytes());
+}
 
 pub struct CircuitWitness {
     pub num_cons: usize,
@@ -26,6 +66,20 @@ pub struct CircuitWitness {
 pub fn prove_sub_circuit(
     name: &str,
     witness: CircuitWitness,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> SubCircuitProof {
+    prove_sub_circuit_with_cm_w(name, witness, None, model, input, challenge)
+}
+
+/// Phase Z.8 variant: bind a canonical Spartan PC `cm_W` to the
+/// transcript so the per-sub-circuit proof rejects mismatching cm_W on
+/// verify.
+pub fn prove_sub_circuit_with_cm_w(
+    name: &str,
+    witness: CircuitWitness,
+    cps_cm_w: Option<&CpsCommitment>,
     model: &ModelCommitmentBundle,
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
@@ -75,9 +129,14 @@ pub fn prove_sub_circuit(
     };
 
     let mut prover_transcript = Transcript::new(b"cp_snark_vpin");
-    append_commitments_to_transcript(&mut prover_transcript, model, input);
-    append_challenge_to_transcript(&mut prover_transcript, challenge);
-    prover_transcript.append_message(b"sub_circuit", name.as_bytes());
+    seed_layer_transcript(
+        &mut prover_transcript,
+        cps_cm_w,
+        model,
+        input,
+        challenge,
+        name,
+    );
 
     let proof = my_lib_prove(
         &inst,
@@ -123,6 +182,17 @@ pub fn prove_sub_circuit(
 pub fn verify_sub_circuit(
     sub: &SubCircuitProof,
     network: &str,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(), String> {
+    verify_sub_circuit_with_cm_w(sub, network, None, model, input, challenge)
+}
+
+pub fn verify_sub_circuit_with_cm_w(
+    sub: &SubCircuitProof,
+    network: &str,
+    cps_cm_w: Option<&CpsCommitment>,
     model: &ModelCommitmentBundle,
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
@@ -189,9 +259,14 @@ pub fn verify_sub_circuit(
     );
 
     let mut verifier_transcript = Transcript::new(b"cp_snark_vpin");
-    append_commitments_to_transcript(&mut verifier_transcript, model, input);
-    append_challenge_to_transcript(&mut verifier_transcript, challenge);
-    verifier_transcript.append_message(b"sub_circuit", sub.circuit_name.as_bytes());
+    seed_layer_transcript(
+        &mut verifier_transcript,
+        cps_cm_w,
+        model,
+        input,
+        challenge,
+        &sub.circuit_name,
+    );
 
     my_lib_verify(
         proof,
@@ -235,6 +310,17 @@ pub fn prove_point_add(
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
 ) -> SubCircuitProof {
+    prove_point_add_with_cm_w(network, None, model, input, challenge)
+}
+
+/// Phase Z.8: bind Spartan PC `cm_W` to the EC PtAdd SNARK transcript.
+pub fn prove_point_add_with_cm_w(
+    network: &str,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> SubCircuitProof {
     let (
         num_cons,
         num_vars,
@@ -247,7 +333,7 @@ pub fn prove_point_add(
         assignment_inputs,
     ) = crate::point_addition::point_addition(network);
 
-    prove_sub_circuit(
+    prove_sub_circuit_with_cm_w(
         "point_add",
         CircuitWitness {
             num_cons,
@@ -260,6 +346,7 @@ pub fn prove_point_add(
             padded_vars,
             assignment_inputs,
         },
+        cps_cm_w,
         model,
         input,
         challenge,
@@ -268,6 +355,17 @@ pub fn prove_point_add(
 
 pub fn prove_point_mult(
     network: &str,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> SubCircuitProof {
+    prove_point_mult_with_cm_w(network, None, model, input, challenge)
+}
+
+/// Phase Z.8: bind Spartan PC `cm_W` to the EC PtMul SNARK transcript.
+pub fn prove_point_mult_with_cm_w(
+    network: &str,
+    cps_cm_w: Option<&CpsCommitment>,
     model: &ModelCommitmentBundle,
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
@@ -284,7 +382,7 @@ pub fn prove_point_mult(
         assignment_inputs,
     ) = crate::point_mult::point_mult(network);
 
-    prove_sub_circuit(
+    prove_sub_circuit_with_cm_w(
         "point_mult",
         CircuitWitness {
             num_cons,
@@ -297,6 +395,7 @@ pub fn prove_point_mult(
             padded_vars,
             assignment_inputs,
         },
+        cps_cm_w,
         model,
         input,
         challenge,
@@ -313,6 +412,17 @@ pub fn verify_point_add(
     verify_sub_circuit(sub, network, model, input, challenge)
 }
 
+pub fn verify_point_add_with_cm_w(
+    sub: &SubCircuitProof,
+    network: &str,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(), String> {
+    verify_sub_circuit_with_cm_w(sub, network, cps_cm_w, model, input, challenge)
+}
+
 pub fn verify_point_mult(
     sub: &SubCircuitProof,
     network: &str,
@@ -321,4 +431,15 @@ pub fn verify_point_mult(
     challenge: &ClientChallenge,
 ) -> Result<(), String> {
     verify_sub_circuit(sub, network, model, input, challenge)
+}
+
+pub fn verify_point_mult_with_cm_w(
+    sub: &SubCircuitProof,
+    network: &str,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(), String> {
+    verify_sub_circuit_with_cm_w(sub, network, cps_cm_w, model, input, challenge)
 }

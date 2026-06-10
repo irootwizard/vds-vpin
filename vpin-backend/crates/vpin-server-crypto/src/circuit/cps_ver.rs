@@ -23,11 +23,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::challenge::ClientChallenge;
 use crate::circuit::bind_l1::{
-    check_l1_binding, prove_toy_with_binding, ToyLayerProofBundle, ToyWeightLayout, TOY_W_STAR_LEN,
+    check_l1_binding, prove_toy_with_binding_and_cm_w, ToyLayerProofBundle, ToyWeightLayout,
+    TOY_W_STAR_LEN,
 };
-use crate::circuit::layer::conv_mac::{verify_conv_toy, ConvToyTrace};
-use crate::circuit::layer::fc_mac::{verify_fc_toy, FcToyTrace};
-use crate::circuit::layer::pool_sum::{verify_pool_toy, PoolToyTrace};
+use crate::circuit::layer::conv_mac::{verify_conv_toy_with_cm_w, ConvToyTrace};
+use crate::circuit::layer::fc_mac::{verify_fc_toy_with_cm_w, FcToyTrace};
+use crate::circuit::layer::pool_sum::{verify_pool_toy_with_cm_w, PoolToyTrace};
 use crate::commit::cps::{cps_comm_w_star, CpsCommitment};
 use crate::commit::{
     commit_model, commit_public_inputs, InputCommitmentBundle, ModelCommitmentBundle,
@@ -134,11 +135,12 @@ pub fn prove_toy_cps(
     let (input_commitment, _) = commit_public_inputs(&public_scalars);
 
     let t_layers = Instant::now();
-    let layers: ToyLayerProofBundle = prove_toy_with_binding(
+    let layers: ToyLayerProofBundle = prove_toy_with_binding_and_cm_w(
         w_star,
         &traces.conv,
         &traces.pool,
         &traces.fc,
+        Some(&cm_w),
         &model_commitment,
         &input_commitment,
         challenge,
@@ -247,22 +249,25 @@ pub fn verify_toy_cps_bundle(
     }
 
     let t_layers = Instant::now();
-    verify_conv_toy(
+    verify_conv_toy_with_cm_w(
         &bundle.pi_conv,
+        Some(&bundle.cm_w),
         &bundle.model_commitment,
         &bundle.input_commitment,
         &bundle.challenge,
     )
     .map_err(|e| CpsVerError::LayerVerify(format!("conv: {e}")))?;
-    verify_pool_toy(
+    verify_pool_toy_with_cm_w(
         &bundle.pi_pool,
+        Some(&bundle.cm_w),
         &bundle.model_commitment,
         &bundle.input_commitment,
         &bundle.challenge,
     )
     .map_err(|e| CpsVerError::LayerVerify(format!("pool: {e}")))?;
-    verify_fc_toy(
+    verify_fc_toy_with_cm_w(
         &bundle.pi_fc,
+        Some(&bundle.cm_w),
         &bundle.model_commitment,
         &bundle.input_commitment,
         &bundle.challenge,

@@ -24,7 +24,10 @@ use libspartan::scalar::Scalar;
 use libspartan::{InputsAssignment, Instance, VarsAssignment};
 
 use crate::challenge::ClientChallenge;
-use crate::circuit_prove::{prove_sub_circuit, verify_sub_circuit, CircuitWitness};
+use crate::circuit_prove::{
+    prove_sub_circuit_with_cm_w, verify_sub_circuit_with_cm_w, CircuitWitness,
+};
+use crate::commit::cps::CpsCommitment;
 use crate::commit::{InputCommitmentBundle, ModelCommitmentBundle};
 use crate::curve::embed_u128_to_scalar;
 use crate::protocol::artifacts::SubCircuitProof;
@@ -232,9 +235,21 @@ pub fn prove_conv_toy(
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
 ) -> Result<(SubCircuitProof, u128), String> {
+    prove_conv_toy_with_cm_w(trace, None, model, input, challenge)
+}
+
+/// Phase Z.8: prove conv layer with the canonical Spartan PC `cm_W` woven
+/// into the SNARK transcript.
+pub fn prove_conv_toy_with_cm_w(
+    trace: &ConvToyTrace,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(SubCircuitProof, u128), String> {
     let witness = build_conv_toy_witness(trace)?;
     let t0 = Instant::now();
-    let proof = prove_sub_circuit("conv_toy", witness, model, input, challenge);
+    let proof = prove_sub_circuit_with_cm_w("conv_toy", witness, cps_cm_w, model, input, challenge);
     Ok((proof, t0.elapsed().as_millis()))
 }
 
@@ -250,6 +265,17 @@ pub fn verify_conv_toy(
     input: &InputCommitmentBundle,
     challenge: &ClientChallenge,
 ) -> Result<(), String> {
+    verify_conv_toy_with_cm_w(proof, None, model, input, challenge)
+}
+
+/// Phase Z.8 verifier counterpart of [`prove_conv_toy_with_cm_w`].
+pub fn verify_conv_toy_with_cm_w(
+    proof: &SubCircuitProof,
+    cps_cm_w: Option<&CpsCommitment>,
+    model: &ModelCommitmentBundle,
+    input: &InputCommitmentBundle,
+    challenge: &ClientChallenge,
+) -> Result<(), String> {
     if proof.circuit_name != "conv_toy" {
         return Err(format!(
             "verify_conv_toy: unexpected circuit_name {}",
@@ -257,7 +283,7 @@ pub fn verify_conv_toy(
         ));
     }
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        verify_sub_circuit(proof, "conv_toy", model, input, challenge)
+        verify_sub_circuit_with_cm_w(proof, "conv_toy", cps_cm_w, model, input, challenge)
     }))
     .map_err(|_| "verify_conv_toy: spartan upstream panic on invalid proof".to_string())
     .and_then(|r| r)
