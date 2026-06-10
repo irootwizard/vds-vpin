@@ -364,7 +364,7 @@ def verify_toy_cps_bundle(
         l1_binding_ok=l1_binding_ok,
         scalar_ok=scalar_ok,
         gamma_replay_ok=gamma_replay_ok,
-        proof_coverage="cps_spartan_pc_plus_layer_pi_with_l1_toy",
+        proof_coverage="ec_plus_layer_pi_with_model_binding",
         detail=(
             f"pi_conv={bundle.pi_conv_bytes_len}B "
             f"pi_pool={bundle.pi_pool_bytes_len}B "

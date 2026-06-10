@@ -12,6 +12,7 @@ COVERAGE_LABELS: dict[str, str] = {
     "ec_plus_l1_binding": "EC + L1 weight binding in R1CS",
     "skeleton_ec_stub": "Server-crypto stub; EC prove not wired",
     "layer_proofs_partial": "Per-layer π partial (M5 in progress)",
+    "ec_plus_layer_pi_with_model_binding": "Toy CPS: EC + layer pi + model binding; not Network A",
     "cps_ver_unified": "Unified CPS.Ver (M-B′ target)",
 }
 

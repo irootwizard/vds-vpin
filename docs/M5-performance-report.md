@@ -18,10 +18,10 @@
 
 | 任务 | prove_ms | verify_ms | proof_bytes | 备注 |
 |------|----------|-----------|-------------|------|
-| **Z-1** conv MAC 式(9) | 344 | 139 | 23 336 | `tests/perf/Z-1.json` |
-| **Z-2** pool sum 式(7) |  ~60 | ~30 | ~9 400 | `tests/perf/Z-2.json` |
-| **Z-3** fc MAC 式(10) + bias |  ~80 | ~50 | ~12 000 | `tests/perf/Z-3.json` |
-| **Z-4** L1 绑定（三层串行） |  ~480 | ~220 | ~44 700 | `tests/perf/Z-4.json` |
+| **Z-1** conv MAC 式(9) | 331 | 131 | 23 336 | `tests/perf/Z-1.json` |
+| **Z-2** pool sum 式(7) | 80 | 40 | 9 400 | `tests/perf/Z-2.json` |
+| **Z-3** fc MAC 式(10) + bias | 98 | 59 | 11 976 | `tests/perf/Z-3.json` |
+| **Z-4** L1 绑定（三层串行） | 398 | 209 | 44 712 | `tests/perf/Z-4.json` |
 
 ---
 
@@ -29,7 +29,7 @@
 
 | 任务 | 输入维度 | `prove_ms` | `commitment_bytes` | 输出形状 |
 |------|----------|-----------|--------------------|----------|
-| Z-5 toy（`|W*|=13`） | padded_len = 16 → ell=4 → L_size=4 | 4 | 128 | 4 × CompressedRistretto |
+| Z-5 toy（`|W*|=13`） | padded_len = 16 → ell=4 → L_size=4 | 3 | 128 | 4 × CompressedRistretto |
 
 ---
 
@@ -37,7 +37,7 @@
 
 | 任务 | prove_ms | verify_ms | proof_bytes | 备注 |
 |------|----------|-----------|-------------|------|
-| Z-6 | 619 | 234 | 44 712 | cm_W (128 B) 单独通过 `cm_w_bytes` 字段记录 |
+| Z-6 | 579 | 228 | 44 712 | cm_W (128 B) 单独通过 `cm_w_bytes` 字段记录 |
 
 ---
 
@@ -56,10 +56,11 @@
 
 | 任务 | prove_ms | verify_ms | proof_bytes | transcript 绑定 |
 |------|----------|-----------|-------------|----------------|
-| Z-8 | 530 | 226 | 44 712 | `cps_cm_w → pedersen_cm_w → cm_x → challenge → sub_circuit` |
+| Z-8 | 544 | 214 | 44 712 | `cps_cm_w → pedersen_cm_w → cm_x → challenge → sub_circuit` |
 
-> Z.8 与 Z.6 相比，证明 / 校验侧多了 cm_W (Spartan PC) 的额外
-> `append_message` 调用，引入的开销 < 5 ms（同一台机器测量）。
+> Z.8 与 Z.6 相比，证明侧多了 cm_W (Spartan PC) 的额外 `append_message`
+> 调用；本次 JSON 快照中 Z.8 prove 比 Z.6 少 35 ms，属于单次 dev build
+> 测量波动，不能据此宣称优化。
 
 ---
 
@@ -71,7 +72,7 @@
 |------|------|
 | `num_weights` | 1 219 |
 | `padded_len` | 2 048 (`ell = 11`) |
-| `cm_w_ms` | **42 ms** |
+| `cm_w_ms` | **44 ms** |
 | `poly_comm_count` | 32（L_size = 2^5） |
 | `cm_w_hex` | `6c8706f65ba2cfd9f2759a7c5d9accef101ef590ce7c977da23bde0bb078c260` |
 
@@ -93,8 +94,8 @@
 
 > **诚实边界**：该耗时仅包含 PtAdd / PtMul Spartan SNARK 端到端；当前
 > Network A pipeline 还未将 Phase Z 的 Spartan PC cm_W、layer π_conv /
-> π_pool / π_fc、L1 binding 串入此 SNARK transcript。下一阶段（Z.11
-> 的诚实边界文档 + 后续 milestones）会拓展该表。
+> π_pool / π_fc、L1 binding 串入此 SNARK transcript。Z.11 的边界见
+> `docs/cps-honesty-boundary.md`。
 >
 > **未触发停止条件**：耗时 7 m 55 s < 30 min 阈值（plan §0.6），故 Z.9
 > 不写 issue 阻塞，继续推进 Z.10 / Z.11。
@@ -106,7 +107,7 @@
 | `cps_comm_w_star` × Network A pipeline 接入 | **未接入**：`prove_with_challenge` 当前不调用 `cps_comm_w_star`，需要把 Z.6 的 `prove_toy_cps` 一般化 | `prove/pipeline.rs::prove_with_challenge` |
 | layer π_conv/π_pool/π_fc × Network A | **未实现**：Network A 的 R1CS 层在 `vpin-server-crypto/src/circuit/layer/` 仅有 toy；Network A 的对齐版本待 M5.* | `circuit/layer/` |
 | L1 binding × Network A | **未实现**：`bind_l1.rs::ToyWeightLayout` 是 toy 专用；Network A 需要 `j_to_wstar_index.json` 驱动的通用 layout | `circuit/bind_l1.rs` + `model_exports/A/j_to_wstar_index.json` |
-| `proof_coverage` 推进到 `ec_plus_layer_pi_with_model_binding` | 仅 toy 可宣称（Z.7 `cps_spartan_pc_plus_layer_pi_with_l1_toy`） | `docs/cps-honesty-boundary.md`（Z.11 写） |
+| `proof_coverage` 推进到 `ec_plus_layer_pi_with_model_binding` | 仅 toy 可宣称；Network A 尚未统一 cm_W、layer π 与 L1 binding | `docs/cps-honesty-boundary.md` |
 
 ---
 
@@ -125,4 +126,4 @@
 
 | 日期 | 变更 |
 |------|------|
-| 2026-06-10 | 初版：Z-1..Z-9 toy + Network A cm_W + Network A EC prove 7m55s |
+| 2026-06-10 | Z.11 刷新：按 `tests/perf/Z-*.json` 聚合 Z-1..Z-9，并链接 honesty boundary |

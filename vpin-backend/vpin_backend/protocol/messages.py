@@ -10,6 +10,7 @@ ProofCoverage = Literal[
     "ec_gadget_only",
     "ec_plus_scalar_check",
     "ec_plus_l1_binding",
+    "ec_plus_layer_pi_with_model_binding",
     "skeleton_ec_stub",
 ]
 

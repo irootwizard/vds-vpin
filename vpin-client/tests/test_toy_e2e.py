@@ -212,7 +212,7 @@ def test_p5_gamma_tamper_alone_undetectable_in_python(
     )
     assert report.ok
     assert report.scalar_ok
-    assert report.proof_coverage.startswith("cps_spartan_pc_plus_layer_pi_with_l1")
+    assert report.proof_coverage == "ec_plus_layer_pi_with_model_binding"
 
 
 def test_p5_trace_outputs_mismatch_fails_scalar(
