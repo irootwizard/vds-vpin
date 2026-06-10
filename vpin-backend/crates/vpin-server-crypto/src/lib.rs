@@ -1,4 +1,5 @@
 pub mod challenge;
+pub mod circuit;
 pub mod circuit_prove;
 pub mod commit;
 pub mod curve;

@@ -23,7 +23,7 @@ pub struct CircuitWitness {
     pub assignment_inputs: InputsAssignment,
 }
 
-fn prove_sub_circuit(
+pub fn prove_sub_circuit(
     name: &str,
     witness: CircuitWitness,
     model: &ModelCommitmentBundle,
@@ -221,6 +221,9 @@ fn rebuild_instance(sub: &SubCircuitProof, network: &str) -> Result<Instance, St
             let _ = (num_vars, num_inputs, num_non_zero);
             inst
         }
+        "conv_toy" => crate::circuit::layer::conv_mac::build_conv_toy_instance(),
+        "pool_toy" => crate::circuit::layer::pool_sum::build_pool_toy_instance(),
+        "fc_toy" => crate::circuit::layer::fc_mac::build_fc_toy_instance(),
         other => return Err(format!("unknown circuit: {other}")),
     };
     Ok(inst)
