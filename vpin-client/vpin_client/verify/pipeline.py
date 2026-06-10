@@ -1,0 +1,109 @@
+"""P6 verification pipeline skeleton (opening + scalar + future π_ec / CPS.Ver)."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any, Optional
+
+from vpin_client.protocol.messages import ClientChallenge, ProofBundle
+from vpin_client.verify.stack import ServerLinearProofStack, verify_all_client
+
+
+@dataclass
+class ModelOpening:
+    weights: list[int] = field(default_factory=list)
+    blind: str = ""
+
+
+@dataclass
+class TraceBundle:
+    conv_traces: list[dict[str, Any]] = field(default_factory=list)
+    pool_traces: list[dict[str, Any]] = field(default_factory=list)
+    fc_traces: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class VerifyReport:
+    ok: bool
+    scalar_ok: bool = False
+    opening_ok: bool = False
+    ec_ok: Optional[bool] = None
+    proof_coverage: str = ""
+    detail: str = ""
+
+
+def _trace_ints(raw: list) -> list[int]:
+    return [int(x) for x in raw]
+
+
+def _trace_windows(raw: list) -> list[list[int]]:
+    return [[int(x) for x in row] for row in raw]
+
+
+def build_stack_from_traces(traces: TraceBundle, skip_fc: bool = True) -> ServerLinearProofStack:
+    """Build M1 stack from trace JSON-shaped dicts (A4-2 export format)."""
+    from vpin_client.verify.conv import ConvLayerProofSpec
+    from vpin_client.verify.fc import FcLayerProofSpec
+    from vpin_client.verify.pool import PoolLayerProofSpec
+
+    stack = ServerLinearProofStack(skip_fc=skip_fc)
+    for t in traces.conv_traces:
+        stack.conv_layers.append(
+            ConvLayerProofSpec(
+                filter_flat=_trace_ints(t["filter_flat"]),
+                windows=_trace_windows(t["windows"]),
+                output_flat=_trace_ints(t["output_flat"]),
+            )
+        )
+    for t in traces.pool_traces:
+        sums = t.get("output_sums") or t.get("output_flat", [])
+        stack.pool_layers.append(
+            PoolLayerProofSpec(
+                windows=_trace_windows(t["windows"]),
+                output_sums=_trace_ints(sums),
+            )
+        )
+    for t in traces.fc_traces:
+        stack.fc_layers.append(
+            FcLayerProofSpec(
+                inputs=_trace_ints(t["inputs"]),
+                weights_in_out=_trace_windows(t["weights_in_out"]),
+                bias=_trace_ints(t["bias"]),
+                outputs=_trace_ints(t["outputs"]),
+            )
+        )
+    return stack
+
+
+def verify_session(
+    artifacts: ProofBundle,
+    opening: ModelOpening,
+    challenge: ClientChallenge,
+    traces: TraceBundle,
+    *,
+    skip_fc: bool = True,
+) -> VerifyReport:
+    """P6 entry: Pedersen opening (stub) + M1 scalar + future EC verify."""
+    from vpin_client.commitment.pedersen import verify_pedersen_open
+
+    coverage = artifacts.proof_coverage or "ec_gadget_only"
+    opening_ok = verify_pedersen_open(opening)
+    stack = build_stack_from_traces(traces, skip_fc=skip_fc)
+    scalar_ok = False
+    detail = ""
+    try:
+        verify_all_client(stack, challenge)
+        scalar_ok = True
+    except Exception as exc:  # noqa: BLE001 — report path for pipeline skeleton
+        detail = str(exc)
+
+    ec_ok: Optional[bool] = None  # wired when client EC verify lands (A5-5)
+    ok = opening_ok and scalar_ok
+    return VerifyReport(
+        ok=ok,
+        scalar_ok=scalar_ok,
+        opening_ok=opening_ok,
+        ec_ok=ec_ok,
+        proof_coverage=coverage,
+        detail=detail,
+    )
