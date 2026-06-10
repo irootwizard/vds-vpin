@@ -2,6 +2,7 @@
 
 pub mod cps;
 pub mod input;
+pub mod merkle;
 pub mod model;
 pub mod transcript;
 
