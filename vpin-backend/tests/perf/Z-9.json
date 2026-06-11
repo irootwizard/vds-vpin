@@ -1,6 +1,6 @@
 {
   "cm_w_hex": "6c8706f65ba2cfd9f2759a7c5d9accef101ef590ce7c977da23bde0bb078c260",
-  "cm_w_ms": 44,
+  "cm_w_ms": 51,
   "ec_proof_artifact_bytes": 6261858,
   "ec_proof_artifact_relpath": "vpin-backend/crates/vpin-server-crypto/artifacts/A/protocol.json",
   "ec_prove_ms": 475846,

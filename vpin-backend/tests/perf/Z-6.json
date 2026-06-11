@@ -1,7 +1,7 @@
 {
   "cm_w_bytes": 128,
   "proof_bytes": 44712,
-  "prove_ms": 664,
+  "prove_ms": 654,
   "task": "Z-6",
-  "verify_ms": 241
+  "verify_ms": 264
 }
