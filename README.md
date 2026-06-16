@@ -2,13 +2,23 @@
 
 本仓库包含 [**vPIN** 论文](https://arxiv.org/pdf/2411.07468)（已被 [ACSAC 2024](https://www.acsac.org/2024/) 接收）的完整实现。
 
+### 开发与路线图
+
+**所有阶段排期、计划与改动请以 **[`docs/综合未来工作路线图.md`](docs/综合未来工作路线图.md)** 为准**（含 CP-SNARK M1–M5、设计定稿、Plan A→D 状态）。
+
+CP-SNARK 三线分工摘要：
+
+- **[A]** `Server.py` `rLCL`/`rLCR`：式 (9)(10) **计算侧**（原论文实现路径）
+- **[B]** `vPIN_proof_generation`：PtAdd/PtMul EC gadget SNARK（整批）
+- **[C]** `cp-snark-full`：协议编排、客户端 γ、按层 π（演进中；`mac_rlc` 桩已停用）
 
 ## 代码结构
 - **src/cnn_networks/Pre_computed_table/**: 包含用于生成预计算表的 `baby-step-giant-step.py`。
 - **src/cnn_networks/**: 包含用于生成图 2 结果的五个不同 CNN 网络的 `Server.py` 和 `Client.py` 文件。
 - **src/convolution/**: 包含用于生成图 3 结果的具有不同过滤器大小和输入大小的卷积层的 `Server.py` 和 `Client.py` 文件。
 - **src/LeNet/**: 包含用于生成表 2 结果的 LeNet 模型的 `Server.py` 和 `Client.py` 文件。
-- **src/proof_generation/vPIN_proof_generation/src/**: 包含用于生成点加法和点乘法证明的文件。
+- **src/proof_generation/vPIN_proof_generation/src/**: 点加/点乘 Spartan 证明（路径 [B]）。
+- **src/cp-snark-full/**: CP-SNARK 协议编排（路径 [C]）；设计见上节定稿文档。
 - **src/accuracy/**: 包含用于评估准确率的 `train_test_lenet5.py`。
 
 ## 前置要求
@@ -257,9 +267,9 @@
 
 此外，我们感谢 [ezDPS 实现](https://github.com/vt-asaplab/ezDPS) 提供了位于 `src/proof_generation/vPIN_proof_generation/src/` 的 `commitment_test.rs` 文件。该文件对于在我们的项目中创建辅助见证数据的承诺至关重要。
 
-## 引用
+## 原论文引用与致谢
 
-如果您使用本仓库或基于我们的工作构建，我们感谢您使用以下 BibTeX 条目引用我们的论文：
+本仓库以以下 ACSAC 2024 论文为理论与实现基础。我们在复现与扩展工作中引用该论文，并向原作者 Riasi、Guajardo 与 Hoang 表示诚挚感谢。如需引用该原论文，请使用以下 BibTeX 条目：
 
 ```bibtex
 @inproceedings{vPIN2024,

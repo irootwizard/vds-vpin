@@ -1,0 +1,20 @@
+{
+  "kernel": 2,
+  "stride": 2,
+  "mode": "sum",
+  "windows": [
+    [
+      "48",
+      "56",
+      "80",
+      "88"
+    ]
+  ],
+  "output_shape": [
+    1,
+    1
+  ],
+  "output_flat": [
+    "272"
+  ]
+}
