@@ -267,9 +267,9 @@ CP-SNARK 三线分工摘要：
 
 此外，我们感谢 [ezDPS 实现](https://github.com/vt-asaplab/ezDPS) 提供了位于 `src/proof_generation/vPIN_proof_generation/src/` 的 `commitment_test.rs` 文件。该文件对于在我们的项目中创建辅助见证数据的承诺至关重要。
 
-## 引用
+## 原论文引用与致谢
 
-如果您使用本仓库或基于我们的工作构建，我们感谢您使用以下 BibTeX 条目引用我们的论文：
+本仓库以以下 ACSAC 2024 论文为理论与实现基础。我们在复现与扩展工作中引用该论文，并向原作者 Riasi、Guajardo 与 Hoang 表示诚挚感谢。如需引用该原论文，请使用以下 BibTeX 条目：
 
 ```bibtex
 @inproceedings{vPIN2024,
