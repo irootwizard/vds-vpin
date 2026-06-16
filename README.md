@@ -1,6 +1,6 @@
 # 隐私保护的可验证神经网络推理服务
 
-本仓库包含 [**vPIN** 论文](https://arxiv.org/pdf/2411.07468)（已被 [ACSAC 2024](https://www.acsac.org/2024/) 接收）的完整实现。
+本仓库是基于 [**vPIN** 论文](https://arxiv.org/pdf/2411.07468)（[ACSAC 2024](https://www.acsac.org/2024/)）的工程化可信推理平台实现。我们在复现与扩展过程中引用该论文，并复用了原作者开源仓库 [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) 中的部分源代码。
 
 
 ## 代码结构
@@ -253,13 +253,15 @@
 
 ## 致谢
 
+本项目的理论与密码学设计来源于 Riasi、Guajardo 与 Hoang 发表于 ACSAC 2024 的 vPIN 论文，并基于原作者开源实现 [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) 中的部分代码进行工程化扩展。我们向原作者及开源社区致以诚挚感谢。
+
 本项目使用位于 `src/proof_generation/spartan/` 目录中的 [Spartan 仓库](https://github.com/microsoft/Spartan) 作为库来为我们的见证数据生成证明。我们已修改了 Spartan 仓库中的某些文件以将其与 vPIN 框架集成。我们向 Spartan 项目的贡献者表示诚挚的感谢，他们为我们构建证明生成系统提供了坚实的基础。
 
 此外，我们感谢 [ezDPS 实现](https://github.com/vt-asaplab/ezDPS) 提供了位于 `src/proof_generation/vPIN_proof_generation/src/` 的 `commitment_test.rs` 文件。该文件对于在我们的项目中创建辅助见证数据的承诺至关重要。
 
-## 引用
+## 原论文引用与致谢
 
-如果您使用本仓库或基于我们的工作构建，我们感谢您使用以下 BibTeX 条目引用我们的论文：
+本仓库并非原论文作者的官方实现，而是在其公开代码基础上构建的可信推理平台。我们在工作中引用以下 ACSAC 2024 论文，并向原作者致谢。如需引用该原论文，请使用以下 BibTeX 条目：
 
 ```bibtex
 @inproceedings{vPIN2024,
