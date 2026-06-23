@@ -5,11 +5,11 @@
   "identifier": "com.tauri.dev",
   "build": {
     "frontendDist": "../ui",
-    "devUrl": "http://localhost:1420",
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "vPIN Client",

@@ -12,7 +12,7 @@
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -20,9 +20,9 @@
         }
         .container {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 32px;
             max-width: 600px;
             width: 90%;
         }
@@ -135,8 +135,6 @@
     </div>
 
     <script>
-        const { invoke } = window.__TAURI__.core;
-
         async function checkHealth() {
             const result = document.getElementById('result');
             const status = document.getElementById('status');
@@ -144,7 +142,7 @@
             result.textContent = '正在检查...';
 
             try {
-                const response = await invoke('health_check');
+                const response = await window.__TAURI__.core.invoke('health_check');
                 result.textContent = '服务器响应:\n' + response;
                 status.className = 'status connected';
                 status.textContent = '● 已连接';
@@ -158,21 +156,28 @@
         async function saveUrl() {
             const url = document.getElementById('serverUrl').value;
             try {
-                await invoke('set_server_url', { url });
+                await window.__TAURI__.core.invoke('set_server_url', { url });
                 document.getElementById('result').textContent = '服务器地址已保存';
             } catch (error) {
                 document.getElementById('result').textContent = '保存失败: ' + error;
             }
         }
 
-        window.onload = async function() {
+        async function loadServerUrl() {
             try {
-                const url = await invoke('get_server_url');
+                const url = await window.__TAURI__.core.invoke('get_server_url');
                 document.getElementById('serverUrl').value = url;
             } catch (error) {
                 console.error('Failed to load server URL:', error);
             }
-        };
+        }
+
+        // DOM 加载完成后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadServerUrl);
+        } else {
+            loadServerUrl();
+        }
     </script>
 </body>
 </html>
