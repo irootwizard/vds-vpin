@@ -81,7 +81,9 @@ class InputCommitment(BaseModel):
 class PublicKey(BaseModel):
     """P3: client ephemeral AHE public key."""
 
-    h: str
+    h: str | None = None
+    h_x: str | None = None
+    h_y: str | None = None
     curve_meta: CurveE2Meta | None = None
 
 
@@ -96,8 +98,47 @@ class TruncateRequest(BaseModel):
     """P3 loop: server asks client to decrypt/truncate/re-encrypt."""
 
     phase_id: str
-    bits: int
+    bits: int = 16
     shape: list[int]
+    client_action: str = "relu"
+    shift_bits: int | None = None
+
+
+class ModelSelectAck(BaseModel):
+    model_id: str
+    network_id: str
+    topology_hash: str
+    weights_digest_hex: str
+    truncation_plan: TruncationPlan | None = None
+    deployable: bool | None = None
+    range_ok: bool | None = None
+    accuracy_ok: bool | None = None
+    adapter_id: str | None = None
+
+
+class InputDigest(BaseModel):
+    input_digest_hex: str
+    shape: list[int]
+    fixed_point_bits: int = 16
+    mnist_index: int | None = None
+
+
+class InputDigestAck(BaseModel):
+    ok: bool = True
+
+
+class CiphertextPayload(BaseModel):
+    phase_id: str
+    tensor_part: str
+    chunk_index: int
+    total_chunks: int
+    data_b64: str
+
+
+class SessionEnd(BaseModel):
+    session_id: str
+    ok: bool = True
+    message: str | None = None
 
 
 class InferenceComplete(BaseModel):

@@ -2,14 +2,14 @@
   "input_commitment": {
     "cm_public": {
       "digest_hex": "93dedf84d5a04de750e746eded663b3a46e10896fd428cfaea2a33f521398420",
-      "point_hex": "5057e5cee5cdd246dc6e792fd469f87dc6415f53b037dfc05b42b7c5056a8362"
+      "point_hex": "b25827900da0ffc64131cb0c6fbe5e190f737999e0ed6e8340542190d3d85937"
     },
     "num_public_inputs": 1
   },
   "model_commitment": {
     "cm_weights": {
       "digest_hex": "abd4d1902e1169a6834f19c46eccf68c86808d6362c56c577cea871383a8f6ec",
-      "point_hex": "84ddc07aa54c1dc6253c31f9ef0951c388bfdef73190dae124063a0656d71b4f"
+      "point_hex": "166f5b9baa3307235f65586ee2315f67809a73921fe8876504467c5fc9c6335f"
     },
     "curve_e2": {
       "a": "3491403595575449084947959021303599933011749826127899762162894550148391771037",
@@ -23,7 +23,7 @@
     "num_weights": 1219
   },
   "model_opening": {
-    "blind_hex": "682b8d027f5b0df8f4e710eec989674ee9e9e52fdcb974f460e0b523cd55cf02",
+    "blind_hex": "ef4c980bb54b6677bd94ceb20ac2b36889f014ca006ad2fc03c2baa0bfeded0c",
     "weights": [
       "1",
       "0",

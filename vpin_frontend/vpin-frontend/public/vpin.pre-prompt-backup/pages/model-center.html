@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型中心 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <style>
+        /* 按钮对齐修复 */
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-actions button {
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+        }
+		
+		/* 仅在此页面隐藏隐私徽章 */
+		.privacy-badges {
+		    display: none !important;
+		}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <!-- 页面头部 -->
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>模型中心</h1>
+                            <p>选择或上传用于隐私推理的AI模型</p>
+                        </div>
+                        
+                        <div class="page-actions">
+                            <button class="btn-primary">
+                                <img src="../assets/icons/upload.svg" alt="上传">
+                                上传模型
+                            </button>
+                            <button class="btn-secondary">
+
+                                <span style="margin-right: 6px;">↻</span>
+                                刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选和搜索 -->
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <!-- 方案：用CSS绘制的搜索图标 -->
+                            <span style="display: inline-block; width: 16px; height: 16px; margin-right: 8px; position: relative;">
+                                <span style="position: absolute; width: 10px; height: 10px; border: 2px solid #bfbfbf; border-radius: 50%; top: 0; left: 0;"></span>
+                                <span style="position: absolute; width: 6px; height: 2px; background: #bfbfbf; transform: rotate(45deg); bottom: 1px; right: -1px;"></span>
+                            </span>
+                            <input type="text" placeholder="搜索模型名称或描述...">
+                        </div>
+                        
+                        <div class="filter-tags">
+                            <span class="filter-label">筛选：</span>
+                            <div class="tag-group">
+                                <button class="tag active">所有类型</button>
+                                <button class="tag">TEE支持</button>
+                                <button class="tag">差分隐私</button>
+                                <button class="tag">联邦学习</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 模型网格视图 -->
+                    <div class="model-grid">
+                        <!-- 模型卡片（通过JS动态加载） -->
+                        <div data-include="../components/model-card.html"></div>
+                        
+                        <!-- 上传卡片 -->
+                        <div class="model-card upload-card">
+                            <div class="upload-content">
+                                <img src="../assets/icons/upload.svg" alt="上传">
+                                <h3>上传新模型</h3>
+                                <p>支持 .pth, .onnx, .pb 格式</p>
+                                <button class="btn-outline">
+                                    选择文件
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // HTML包含功能
+        document.querySelectorAll('[data-include]').forEach(function(element) {
+            const file = element.getAttribute('data-include');
+            fetch(file)
+                .then(response => response.text())
+                .then(data => {
+                    element.innerHTML = data;
+                });
+        });
+    });
+    </script>
+</body>
+</html>

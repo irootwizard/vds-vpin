@@ -105,6 +105,11 @@ def decrypt_ciphertext_pair(
     return _giant_step(generator, output, output2, table)
 
 
+def to_signed_fixed(values: np.ndarray) -> np.ndarray:
+    """Return decrypted discrete-log integers as int64 (legacy Client.py — no pre-shift int32 cast)."""
+    return values.astype(np.int64, copy=False)
+
+
 def decrypt_tensor(
     private_scalar: int,
     enc_c1: np.ndarray,
@@ -126,7 +131,7 @@ def decrypt_tensor(
                             generator,
                             table,
                         )
-        return out
+        return to_signed_fixed(out)
     rows, cols = enc_c1.shape
     out = np.zeros((rows, cols), dtype=np.int64)
     for i in range(rows):
@@ -138,7 +143,7 @@ def decrypt_tensor(
                 generator,
                 table,
             )
-    return out
+    return to_signed_fixed(out)
 
 
 def load_bsgs_table(path: Path) -> dict[Any, int]:
