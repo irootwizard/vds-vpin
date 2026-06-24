@@ -85,7 +85,16 @@ LAYOUTS: dict[str, NetworkWeightLayout] = {
 
 
 def get_layout(network_id: str) -> NetworkWeightLayout:
-    key = network_id.upper()
+    key = network_id.upper().replace("-", "_")
+    if key in ("LENET_CIFAR", "LENET_CIFAR10", "LENET"):
+        raise KeyError(
+            f"use get_lenet_layout() for {network_id!r} (10-file conv+FC bundle)"
+        )
     if key not in LAYOUTS:
         raise KeyError(f"unknown network layout: {network_id}")
     return LAYOUTS[key]
+
+
+def is_lenet_cifar(network_id: str) -> bool:
+    key = network_id.lower().replace("-", "_")
+    return key in ("lenet_cifar", "lenet_cifar10", "lenet")

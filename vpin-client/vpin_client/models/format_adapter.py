@@ -10,7 +10,8 @@ from pathlib import Path
 
 import numpy as np
 
-from vpin_client.models.weights_layout import NetworkWeightLayout, get_layout
+from vpin_client.models.lenet_weights_layout import get_lenet_layout
+from vpin_client.models.weights_layout import NetworkWeightLayout, get_layout, is_lenet_cifar
 
 
 class ModelFormat(str, Enum):
@@ -56,12 +57,20 @@ def _probe_json(path: Path) -> FormatProbe:
 
 
 def _probe_directory(path: Path) -> FormatProbe:
+    lenet_layout = get_lenet_layout()
+    missing_lenet = [f for f in lenet_layout.required_files if not (path / f).is_file()]
+    if not missing_lenet:
+        return FormatProbe(
+            ModelFormat.AHE_NPY_BUNDLE,
+            network="lenet_cifar",
+            detail="complete LeNet-CIFAR npy bundle",
+        )
     for net in ("A", "B", "C", "D", "E"):
         layout = get_layout(net)
         missing = [f for f in layout.required_files if not (path / f).is_file()]
         if not missing:
             return FormatProbe(ModelFormat.AHE_NPY_BUNDLE, network=net, detail="complete npy bundle")
-    return FormatProbe(ModelFormat.UNKNOWN, detail="directory missing required npy set for A–E")
+    return FormatProbe(ModelFormat.UNKNOWN, detail="directory missing required npy set for A–E or lenet_cifar")
 
 
 def _probe_zip(path: Path) -> FormatProbe:
@@ -76,6 +85,8 @@ def _probe_zip(path: Path) -> FormatProbe:
 
 
 def validate_npy_bundle(directory: Path, network: str) -> tuple[bool, list[str]]:
+    if is_lenet_cifar(network):
+        return validate_lenet_npy_bundle(directory)
     layout = get_layout(network)
     errors: list[str] = []
     for fname in layout.required_files:
@@ -91,6 +102,25 @@ def validate_npy_bundle(directory: Path, network: str) -> tuple[bool, list[str]]
         w = np.load(w1)
         if w.shape != (layout.fc1_in, layout.fc1_out):
             errors.append(f"{layout.weight_fc1} shape {w.shape} != ({layout.fc1_in}, {layout.fc1_out})")
+    return len(errors) == 0, errors
+
+
+def validate_lenet_npy_bundle(directory: Path) -> tuple[bool, list[str]]:
+    layout = get_lenet_layout()
+    errors: list[str] = []
+    for fname in layout.required_files:
+        p = directory / fname
+        if not p.is_file():
+            errors.append(f"missing {fname}")
+            continue
+        arr = np.load(p)
+        if arr.size == 0:
+            errors.append(f"empty {fname}")
+    w1 = directory / layout.weight_fc1
+    if w1.is_file():
+        w = np.load(w1)
+        if w.shape != (400, 120):
+            errors.append(f"{layout.weight_fc1} shape {w.shape} != (400, 120)")
     return len(errors) == 0, errors
 
 

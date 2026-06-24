@@ -13,8 +13,9 @@ _CLIENT = _REPO / "vpin-client"
 if str(_CLIENT) not in sys.path:
     sys.path.insert(0, str(_CLIENT))
 
-from vpin_client.models.format_adapter import validate_npy_bundle
-from vpin_client.models.weights_layout import get_layout
+from vpin_client.models.format_adapter import validate_lenet_npy_bundle, validate_npy_bundle
+from vpin_client.models.lenet_weights_layout import get_lenet_layout
+from vpin_client.models.weights_layout import get_layout, is_lenet_cifar
 
 
 def resolve_weights_dir(entry: dict, default: Path) -> Path:
@@ -32,7 +33,15 @@ def _has_any_npy(directory: Path) -> bool:
 
 
 def load_homomorphic_weights(weights_dir: Path, network: str = "A"):
-    """Load FC weights for homomorphic inference (Network A/B share conv+pool path)."""
+    """Load weights for homomorphic inference (Network A/B or LeNet-CIFAR)."""
+    if is_lenet_cifar(network):
+        from vpin_backend.inference.homomorphic_network_lenet import LeNetWeights, load_lenet_weights
+
+        ok, errs = validate_lenet_npy_bundle(weights_dir)
+        if not ok:
+            raise FileNotFoundError(f"invalid LeNet bundle in {weights_dir}: {errs}")
+        return load_lenet_weights(weights_dir)
+
     from vpin_backend.inference.homomorphic_network_a import NetworkAWeights
 
     layout = get_layout(network)
@@ -48,7 +57,10 @@ def load_homomorphic_weights(weights_dir: Path, network: str = "A"):
 
 
 def install_bundle(source: Path, dest: Path, network: str) -> Path:
-    layout = get_layout(network)
+    if is_lenet_cifar(network):
+        layout = get_lenet_layout()
+    else:
+        layout = get_layout(network)
     dest.mkdir(parents=True, exist_ok=True)
     if source.is_dir():
         for fname in layout.required_files:
@@ -62,7 +74,11 @@ def install_bundle(source: Path, dest: Path, network: str) -> Path:
                 dest.joinpath(fname).write_bytes(zf.read(member))
     else:
         raise ValueError(f"unsupported bundle source: {source}")
-    ok, errs = validate_npy_bundle(dest, network)
+    ok, errs = (
+        validate_lenet_npy_bundle(dest)
+        if is_lenet_cifar(network)
+        else validate_npy_bundle(dest, network)
+    )
     if not ok:
         raise ValueError("; ".join(errs))
     return dest
@@ -71,9 +87,14 @@ def install_bundle(source: Path, dest: Path, network: str) -> Path:
 def weights_digest(weights_dir: Path, network: str = "A") -> str:
     import hashlib
 
-    layout = get_layout(network)
+    if is_lenet_cifar(network):
+        layout = get_lenet_layout()
+        files = layout.required_files
+    else:
+        layout = get_layout(network)
+        files = layout.required_files
     h = hashlib.sha256()
-    for name in sorted(layout.required_files):
+    for name in sorted(files):
         path = weights_dir / name
         if path.is_file():
             h.update(path.read_bytes())

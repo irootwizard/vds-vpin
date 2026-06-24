@@ -12,9 +12,16 @@ from vpin_backend.storage.registry import get_model, upsert_model
 
 
 def _has_npy_bundle(directory: Path, network: str) -> bool:
-    from vpin_client.models.weights_layout import get_layout
+    from vpin_client.models.weights_layout import is_lenet_cifar
 
-    layout = get_layout(network)
+    if is_lenet_cifar(network):
+        from vpin_client.models.lenet_weights_layout import get_lenet_layout
+
+        layout = get_lenet_layout()
+    else:
+        from vpin_client.models.weights_layout import get_layout
+
+        layout = get_layout(network)
     return all((directory / name).is_file() for name in layout.required_files)
 
 
@@ -74,6 +81,10 @@ def _register_from_output_runs() -> None:
         if snippet.is_file():
             entry = json.loads(snippet.read_text(encoding="utf-8"))
             weights_dir = Path(entry.get("weights_dir", run_dir))
+            if not weights_dir.is_absolute():
+                weights_dir = (settings.repo_root / weights_dir).resolve()
+            if not weights_dir.is_dir():
+                weights_dir = run_dir.resolve()
         elif _has_npy_bundle(run_dir, "A"):
             weights_dir = run_dir
             entry = {"id": f"cnn-mnist-trained-{run_dir.name}", "network": "A"}
@@ -82,8 +93,11 @@ def _register_from_output_runs() -> None:
 
         if not _has_npy_bundle(weights_dir, entry.get("network", "A")):
             continue
+        fc1_npy = weights_dir / "weight_fc1_64_16.npy"
+        if not fc1_npy.is_file():
+            fc1_npy = weights_dir / "weight_fc1_400_120.npy"
         mtime = max(
-            (weights_dir / "weight_fc1_64_16.npy").stat().st_mtime,
+            fc1_npy.stat().st_mtime if fc1_npy.is_file() else 0,
             snippet.stat().st_mtime if snippet.is_file() else 0,
         )
         candidates.append((mtime, weights_dir, entry))

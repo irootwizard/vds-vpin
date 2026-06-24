@@ -5,9 +5,10 @@
   "task": "\u56fe\u50cf\u5206\u7c7b",
   "params_count_m": 1.21,
   "input_shape": "1x28x28",
-  "accuracy": 10.41,
+  "accuracy": 92.93,
+  "accuracy_fixed": 10.41,
   "network": "A",
   "topology": "cnn_mnist_v1",
-  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254",
+  "weights_dir": "model_training/outputs/20260622_184254",
   "updated": "2026-06-22T18:50:32.216503+00:00"
 }
