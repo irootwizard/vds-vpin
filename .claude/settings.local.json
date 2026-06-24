@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tauri:*)",
+      "Bash(timeout 5 cargo run)",
+      "Bash(curl -s http://127.0.0.1:8000/api/v1/health)",
+      "Bash(cargo run:*)",
+      "Bash(cargo build:*)",
+      "Bash(./target/debug/vpin-server.exe)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /F /PID 22788)",
+      "Bash(cmd.exe:*)",
+      "Bash(wget:*)",
+      "Bash(powershell:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo clean:*)",
+      "Bash(findstr :8000)",
+      "Bash(tasklist)",
+      "Bash(findstr 23288)",
+      "Bash(taskkill:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cp:*)",
+      "Bash(npm run:*)",
+      "Bash(grep -E \"\\\\.html$\")",
+      "Bash(cargo tauri:*)",
+      "Bash(python -m http.server 8080)",
+      "Bash(grep -n \"common.js\" *.html)",
+      "Bash(ls -la *.js)",
+      "Bash(ls -la *.svg)",
+      "Bash(grep -n \"loading-placeholder\\\\|加载数据列表中\\\\|加载模型列表中\\\\|加载任务列表中\\\\|加载.*中\\\\.\\\\.\\\\.\" *.html)",
+      "Bash(grep -n \"RunningTasks\\\\|QueuedTasks\\\\|CompletedTasks\\\\|FailedTasks\\\\|runningTasks\\\\|queuedTasks\\\\|completedTasks\\\\|failedTasks\" *.html)",
+      "Bash(git pull:*)",
+      "Bash(find . -type f -delete)",
+      "Bash(find . -type f -exec rm -f {} \\\\;)"
+    ]
+  }
+}
