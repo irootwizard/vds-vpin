@@ -1,0 +1,16 @@
+{
+  "models": [
+    {
+      "id": "cnn-mnist",
+      "name": "CNN (MNIST \u9884\u8bad\u7ec3 / legacy)",
+      "framework": "npy",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 1.21,
+      "input_shape": "1x28x28",
+      "accuracy": 99.1,
+      "network": "A",
+      "topology": "cnn_mnist_v1",
+      "weights_dir": "C:\\Users\\liurj\\Desktop\\vdsvpin\\vds-vpin\\src\\cnn_networks\\Pre_trained_model"
+    }
+  ]
+}

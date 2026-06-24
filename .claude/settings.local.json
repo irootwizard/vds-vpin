@@ -36,7 +36,11 @@
       "Bash(grep -n \"RunningTasks\\\\|QueuedTasks\\\\|CompletedTasks\\\\|FailedTasks\\\\|runningTasks\\\\|queuedTasks\\\\|completedTasks\\\\|failedTasks\" *.html)",
       "Bash(git pull:*)",
       "Bash(find . -type f -delete)",
-      "Bash(find . -type f -exec rm -f {} \\\\;)"
+      "Bash(find . -type f -exec rm -f {} \\\\;)",
+      "Bash(grep:*)",
+      "Bash(git restore:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m vpin_backend.main)"
     ]
   }
 }

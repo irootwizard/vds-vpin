@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+# Add vpin-client to Python path
+repo_root = Path(__file__).resolve().parents[2]
+client_path = repo_root / "vpin-client"
+if str(client_path) not in sys.path:
+    sys.path.insert(0, str(client_path))
+
 import uvicorn
 
 from vpin_backend.api.app import create_app
