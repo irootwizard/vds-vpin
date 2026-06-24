@@ -96,7 +96,8 @@ export async function aheBatchInfer({
     );
   }
 
-  const { invoke, getCurrentWindow } = await import("@tauri-apps/api/core");
+  const { invoke } = await import("@tauri-apps/api/core");
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const { listen } = await import("@tauri-apps/api/event");
 
   const unlisten = await listen("ahe-batch-progress", (event) => {
