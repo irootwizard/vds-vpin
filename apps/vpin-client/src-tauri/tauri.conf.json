@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "vPIN Client",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "productName": "VDS-VPIN Client",
+  "version": "1.0.0",
+  "identifier": "com.vdsvpin.client",
   "build": {
     "frontendDist": "../ui",
     "beforeDevCommand": "",
@@ -12,15 +12,20 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "vPIN Client",
-        "width": 800,
-        "height": 600,
+        "title": "VDS-VPIN 工作台",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 768,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "center": true,
+        "decorations": true,
+        "transparent": false
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://picsum.photos; connect-src 'self' http://127.0.0.1:* https://*.localhost:*; frame-src 'self'; object-src 'none'; base-uri 'self';"
     }
   },
   "bundle": {
@@ -33,8 +38,23 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "publisher": "VDS-VPIN",
+    "copyright": "Copyright © 2024 VDS-VPIN",
+    "category": "Developer Tool",
+    "shortDescription": "可验证隐私神经网络推理客户端",
+    "longDescription": "VDS-VPIN客户端应用程序，支持隐私计算和模型验证",
     "android": {
       "debugApplicationIdSuffix": ".debug"
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
     }
   }
 }
