@@ -1,0 +1,15 @@
+{
+  "run_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_174721",
+  "modes": {
+    "bounds": {
+      "maxima": {
+        "after_conv": 524280.0,
+        "after_pool_pre_shift": 530809856.0,
+        "after_fc1_pre_relu": 2146919427.0,
+        "after_fc2_pre_relu": 2145550100.0
+      },
+      "pass": true,
+      "error": null
+    }
+  }
+}

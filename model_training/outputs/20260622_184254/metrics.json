@@ -1,0 +1,64 @@
+{
+  "run_id": "20260622_184254",
+  "phases": [
+    {
+      "name": "float",
+      "best_test_acc": 0.9293
+    },
+    {
+      "name": "fixed",
+      "best_test_acc": 0.1041
+    }
+  ],
+  "truncation": {
+    "shift_pool": 26,
+    "shift_fc1": 32,
+    "pool_inv_bits": 10,
+    "fixed_point_bits": 16,
+    "pool_inv_fp": 64,
+    "intrinsic_shift_pool": 26,
+    "intrinsic_shift_fc1": 32,
+    "phases": [
+      {
+        "phase_id": "after_conv",
+        "client_action": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "phase_id": "after_pool",
+        "client_action": "shift",
+        "from_bits": 26,
+        "to_bits": 16,
+        "shift_bits": 26
+      },
+      {
+        "phase_id": "after_fc1",
+        "client_action": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16,
+        "shift_bits": 32
+      },
+      {
+        "phase_id": "after_fc2",
+        "client_action": "relu_only",
+        "from_bits": 16,
+        "to_bits": 16
+      }
+    ],
+    "calibration": {
+      "n_samples": 256,
+      "max_after_pool_pre_shift": 525447808.0,
+      "max_after_fc1_pre_relu": 2146843847.0,
+      "max_after_fc2_pre_relu": 2147425568.0,
+      "max_post_pool_shift": 513132.625,
+      "max_post_fc1_shift": 32758.237411499023,
+      "percentile": 100.0
+    }
+  },
+  "topology_synced": false,
+  "float_fixed_acc": 0.1041,
+  "target_acc": 0.9,
+  "weights_exported": true,
+  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254"
+}

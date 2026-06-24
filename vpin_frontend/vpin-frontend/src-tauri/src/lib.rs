@@ -84,6 +84,7 @@ fn build_ahe_infer_args(
         "--model".into(),
         model_id,
         "--timing".into(),
+        "--trace".into(),
     ];
     if let Some(path) = image_path {
         args.push("--image".into());

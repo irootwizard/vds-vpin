@@ -92,23 +92,28 @@
       </n-gi>
     </n-grid>
 
-    <n-card title="交互时间线" style="margin-top: 16px">
-      <n-timeline>
-        <n-timeline-item
-          v-for="(item, i) in log"
-          :key="i"
-          :title="item.title"
-          :content="item.content"
-          :time="item.at"
-        />
-      </n-timeline>
+    <n-card title="推理流程时间线" style="margin-top: 16px">
+      <template #header-extra>
+        <n-text depth="3" style="font-size: 12px">点击各阶段查看张量形状、密文形式与截断参数</n-text>
+      </template>
+      <AheFlowTimeline
+        :steps="flowSteps"
+        :running="busy"
+        :running-phase="runningPhase"
+        @select="openStepDetail"
+      />
     </n-card>
+
+    <AheTraceDrawer v-model:show="drawerOpen" :step="selectedStep" />
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useAheDemoSession } from "../../composables/useAheDemoSession.js";
+import AheFlowTimeline from "../../components/demo/AheFlowTimeline.vue";
+import AheTraceDrawer from "../../components/demo/AheTraceDrawer.vue";
+import { AHE_PHASES } from "../../constants/aheFlow.js";
 import {
   aheInfer,
   ahePreprocess,
@@ -133,7 +138,10 @@ const busy = ref(false);
 const result = ref(null);
 const timing = ref(null);
 const error = ref(null);
-const log = ref([]);
+const flowSteps = ref([]);
+const selectedStep = ref(null);
+const drawerOpen = ref(false);
+const runningPhase = ref(0);
 const selectedSample = ref(null);
 const lastUploadPath = ref(null);
 
@@ -170,10 +178,29 @@ function formatMeta(item) {
   return `#${item.mnist_index} · ${item.label}`;
 }
 
+function nowStr() {
+  return new Date().toLocaleTimeString();
+}
+
+function appendSteps(steps) {
+  for (const s of steps) {
+    flowSteps.value.push({ ...s, at: s.at || nowStr() });
+  }
+}
+
+function mergePreprocessTrace(prep) {
+  if (!prep?.preprocess_trace?.length) return;
+  flowSteps.value = flowSteps.value.filter((s) => s.category !== "预处理");
+  appendSteps(prep.preprocess_trace);
+}
+
+function openStepDetail(step) {
+  selectedStep.value = step;
+  drawerOpen.value = true;
+}
+
 function addLog(title, content) {
-  const entry = { title, content, at: new Date().toLocaleTimeString() };
-  log.value.push(entry);
-  pushLog(entry);
+  pushLog({ title, content, at: nowStr() });
 }
 
 function applySelection(prep) {
@@ -183,6 +210,7 @@ function applySelection(prep) {
     state.selectedIndex = prep.mnist_index;
   }
   state.preprocessResult = prep;
+  mergePreprocessTrace(prep);
 }
 
 function selectSample(item) {
@@ -233,10 +261,7 @@ async function loadGallery(start = 0) {
       const current = gallery.value.find((item) => item.mnist_index === index.value);
       applySelection(current || gallery.value[0]);
     }
-    addLog(
-      "数据加载",
-      `官方 ${official.length} 张${uploads.length ? `，上传 ${uploads.length} 张` : ""}`
-    );
+    addLog("数据加载", `官方 ${official.length} 张`);
   } catch (e) {
     error.value = String(e);
     state.connectionStatus = "error";
@@ -258,7 +283,8 @@ async function preprocess() {
       gallery.value.unshift(item);
     }
     applySelection(item);
-    addLog("官方预处理", `index=${index.value} digest=${prep.input_digest_hex?.slice(0, 16)}...`);
+    mergePreprocessTrace(item);
+    addLog("官方预处理", `index=${index.value}`);
   } catch (e) {
     error.value = String(e);
     state.connectionStatus = "error";
@@ -293,10 +319,8 @@ async function onUploadChange({ file }) {
       gallery.value.unshift(item);
     }
     applySelection(item);
-    addLog(
-      "上传预处理",
-      `${prep.filename || "image"} digest=${prep.input_digest_hex?.slice(0, 16)}...`
-    );
+    mergePreprocessTrace(item);
+    addLog("上传预处理", prep.filename || "image");
   } catch (e) {
     error.value = String(e);
   } finally {
@@ -309,23 +333,24 @@ async function runInfer() {
   busy.value = true;
   error.value = null;
   state.connectionStatus = "connecting";
+  runningPhase.value = 0;
+  flowSteps.value = flowSteps.value.filter((s) => s.category === "预处理");
+  const phaseTimer = setInterval(() => {
+    if (runningPhase.value < AHE_PHASES.length - 1) runningPhase.value += 1;
+  }, 8000);
   try {
     const sample = selectedSample.value;
-    addLog("P0", "SessionStart");
     const inferArgs = { modelId: modelId.value };
     if (sample.source === "upload") {
       if (isTauri() && lastUploadPath.value) {
         inferArgs.imagePath = lastUploadPath.value;
-        addLog("P2", `InputDigest upload=${sample.filename || "local"}`);
       } else if (sample.upload_id) {
         inferArgs.uploadId = sample.upload_id;
-        addLog("P2", `InputDigest upload=${sample.upload_id.slice(0, 8)}...`);
       } else {
         throw new Error("上传样本缺少 upload_id");
       }
     } else {
       inferArgs.mnistIndex = sample.mnist_index ?? index.value;
-      addLog("P2", `InputDigest mnist=#${inferArgs.mnistIndex}`);
     }
     const out = await aheInfer(inferArgs);
     result.value = out;
@@ -333,11 +358,33 @@ async function runInfer() {
     state.sessionResult = out;
     state.timing = out.timing;
     state.connectionStatus = "connected";
-    addLog("完成", `prediction=${out.prediction}${out.label != null ? ` label=${out.label}` : ""}`);
+    if (out.trace?.length) {
+      appendSteps(out.trace);
+    }
+    appendSteps([
+      {
+        id: "ui_result",
+        category: "完成",
+        title: "推理结果",
+        summary: `prediction=${out.prediction}${out.label != null ? ` label=${out.label}` : ""}`,
+        detail: {
+          prediction: out.prediction,
+          label: out.label,
+          logits_float: out.logits,
+          argmax: out.prediction,
+          num_pt_add: out.num_pt_add,
+          num_pt_mult: out.num_pt_mult,
+          crypto_infer_ms: out.timing?.crypto_infer_ms,
+        },
+      },
+    ]);
+    addLog("完成", `prediction=${out.prediction}`);
   } catch (e) {
     error.value = String(e);
     state.connectionStatus = "error";
   } finally {
+    clearInterval(phaseTimer);
+    runningPhase.value = AHE_PHASES.length;
     busy.value = false;
   }
 }

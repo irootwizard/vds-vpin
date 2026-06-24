@@ -25,7 +25,9 @@ async def _cmd_ahe_infer(args: argparse.Namespace) -> int:
     result = await run_ahe_inference(job)
     payload = result.to_dict()
 
-    if args.timing:
+    if args.timing or args.trace:
+        if not args.trace and "trace" in payload:
+            payload.pop("trace", None)
         print(json.dumps(payload, indent=2))
     else:
         print(f"prediction={result.prediction} label={result.label}")
@@ -77,6 +79,7 @@ def main(argv: list[str] | None = None) -> int:
     infer.add_argument("--image", default=None)
     infer.add_argument("--fixed-npy", default=None)
     infer.add_argument("--timing", action="store_true")
+    infer.add_argument("--trace", action="store_true", help="Include per-phase inference trace in JSON output")
     infer.add_argument("--json-out", default=None)
 
     ev = sub.add_parser("eval-mnist-ahe", help="Batch MNIST AHE evaluation")

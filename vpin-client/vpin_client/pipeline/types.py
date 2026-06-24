@@ -55,9 +55,10 @@ class InferenceResult:
     num_pt_mult: int = 0
     timing: InferenceTiming = field(default_factory=InferenceTiming)
     source: InputSource = "official"
+    trace: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        out: dict[str, Any] = {
             "prediction": self.prediction,
             "logits": self.logits,
             "label": self.label,
@@ -75,3 +76,6 @@ class InferenceResult:
                 "total_ms": self.timing.total_ms,
             },
         }
+        if self.trace:
+            out["trace"] = self.trace
+        return out

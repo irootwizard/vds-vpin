@@ -1,0 +1,20 @@
+{
+  "run_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260623_185153",
+  "model_id": "lenet-cifar10",
+  "modes": {
+    "feasibility": {
+      "deployable": true,
+      "range_ok": true,
+      "accuracy_ok": true,
+      "accuracy": {
+        "n_samples": 2048,
+        "float": 0.60400390625,
+        "fixed": 0.56103515625,
+        "delta": 0.04296875,
+        "pred_mismatches": 381,
+        "tolerance": 0.1,
+        "ok": true
+      }
+    }
+  }
+}

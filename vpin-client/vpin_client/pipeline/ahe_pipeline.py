@@ -19,8 +19,16 @@ async def run_ahe_inference(
     job: InferenceJob,
     *,
     on_progress: ProgressCallback | None = None,
+    collect_trace: bool = True,
 ) -> InferenceResult:
     """Load input → WebSocket P0–P3 session → structured result."""
+    trace: list[dict] = []
+
+    def _on_trace(step: dict) -> None:
+        if collect_trace:
+            trace.append(step)
+        _emit(on_progress, "trace", **step)
+
     _emit(on_progress, "preprocess_start", model_id=job.model_id)
 
     t0 = time.perf_counter()
@@ -51,6 +59,7 @@ async def run_ahe_inference(
         mnist_index=inp.mnist_index,
         label=inp.label,
         preprocess_ms=preprocess_ms,
+        on_trace=_on_trace if collect_trace else None,
     )
     _emit(
         on_progress,
@@ -77,4 +86,5 @@ async def run_ahe_inference(
             e2e_post_preprocess_ms=session.timing.e2e_post_preprocess_ms,
             total_ms=session.timing.total_ms,
         ),
+        trace=trace,
     )
