@@ -12,17 +12,18 @@ from vpin_backend.storage.registry import get_model, upsert_model
 
 
 def _has_npy_bundle(directory: Path, network: str) -> bool:
-    from vpin_client.models.weights_layout import is_lenet_cifar
+    try:
+        from vpin_client.models.weights_layout import is_lenet_cifar
 
-    if is_lenet_cifar(network):
-        from vpin_client.models.lenet_weights_layout import get_lenet_layout
-
-        layout = get_lenet_layout()
-    else:
-        from vpin_client.models.weights_layout import get_layout
-
-        layout = get_layout(network)
-    return all((directory / name).is_file() for name in layout.required_files)
+        if is_lenet_cifar(network):
+            from vpin_client.models.lenet_weights_layout import get_lenet_layout
+            layout = get_lenet_layout()
+        else:
+            from vpin_client.models.weights_layout import get_layout
+            layout = get_layout(network)
+        return all((directory / name).is_file() for name in layout.required_files)
+    except (KeyError, ImportError, FileNotFoundError):
+        return False
 
 
 def _restore_legacy_weights() -> Path | None:
@@ -124,7 +125,13 @@ def _register_from_output_runs() -> None:
 
 def bootstrap_ahe_models() -> None:
     """Ensure at least one AHE-capable model is registered."""
-    legacy_dir = _restore_legacy_weights()
-    if legacy_dir is not None:
-        _register_builtin_legacy(legacy_dir)
-    _register_from_output_runs()
+    try:
+        legacy_dir = _restore_legacy_weights()
+        if legacy_dir is not None:
+            _register_builtin_legacy(legacy_dir)
+        _register_from_output_runs()
+    except Exception as e:
+        # Log error but don't prevent server startup
+        import sys
+        print(f"Warning: Model bootstrap failed: {e}", file=sys.stderr)
+        print("Server starting without registered models - some features may be limited", file=sys.stderr)
