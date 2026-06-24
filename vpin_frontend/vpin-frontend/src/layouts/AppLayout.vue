@@ -42,7 +42,15 @@ const icon = (C) => () => h(NIcon, null, { default: () => h(C) });
 
 const menuOptions = [
   { label: "工作台", key: "home", icon: icon(HomeOutline) },
-  { label: "隐私样板间", key: "demo", icon: icon(SparklesOutline) },
+  {
+    label: "隐私样板间",
+    key: "demo",
+    icon: icon(SparklesOutline),
+    children: [
+      { label: "AHE 密态推理", key: "demo-ahe", icon: icon(AddCircleOutline) },
+      { label: "演示说明", key: "demo", icon: icon(HelpCircleOutline) },
+    ]
+  },
   {
     label: "模型服务",
     key: "model-group",
@@ -78,6 +86,7 @@ const menuOptions = [
 const activeKey = computed(() => {
   const n = route.name;
   if (n === "home") return "home";
+  if (n === "demo-ahe") return "demo-ahe";
   if (String(n).startsWith("demo")) return "demo";
   if (n === "task-detail") return "tasks";
   return n || "home";
@@ -99,6 +108,7 @@ function handleMenuSelect(key) {
   const map = {
     home: "/",
     demo: "/demo",
+    "demo-ahe": "/demo/ahe",
     models: "/models",
     tasks: "/tasks",
     "task-new": "/tasks/new",
