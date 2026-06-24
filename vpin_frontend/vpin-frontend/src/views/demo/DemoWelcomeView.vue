@@ -12,8 +12,9 @@ const { hasAgreedNotice, agreeNotice } = useDemoStore();
 const showNotice = ref(false);
 
 const steps = [
-  { title: "部署演示服务", desc: "选择论文 CNN/LeNet 模型", icon: "🛰️" },
-  { title: "进入隐私体验", desc: "排队就绪后上传图像推理", icon: "🖼️" },
+  { title: "AHE 密态推理", desc: "批量推理加速与性能测试", icon: "⚡", path: "/demo/ahe" },
+  { title: "部署演示服务", desc: "选择论文 CNN/LeNet 模型", icon: "🛰️", path: "/demo/deploy" },
+  { title: "进入隐私体验", desc: "排队就绪后上传图像推理", icon: "🖼️", path: "/demo/deploy" },
   { title: "查看密态效果", desc: "密文/明文对照与验证说明", icon: "🔐" },
 ];
 
@@ -43,7 +44,11 @@ function onAgree() {
 
     <div class="workflow-strip">
       <template v-for="(step, i) in steps" :key="step.title">
-        <div class="workflow-step">
+        <div
+          class="workflow-step"
+          :class="{ clickable: step.path }"
+          @click="step.path ? router.push(step.path) : null"
+        >
           <span class="icon">{{ step.icon }}</span>
           <strong>{{ step.title }}</strong>
           <span>{{ step.desc }}</span>
@@ -102,6 +107,16 @@ h1 {
   background: var(--color-surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+}
+
+.workflow-step.clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.workflow-step.clickable:hover {
+  border-color: #4f6ef7;
+  box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.1);
 }
 
 .workflow-step .icon {
