@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import os
 import traceback
 import uuid
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
+import numpy as np
 from ecdsa.ellipticcurve import Point
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from vpin_backend.config import get_settings
 from vpin_backend.crypto.ahe.curve import curve_e2_info
 from vpin_backend.crypto.ahe.topology import get_topology
-from vpin_backend.inference.ahe_engine import AheEngine
-from vpin_backend.inference.homomorphic_network_a import load_network_a_weights
+from vpin_backend.inference.ahe_engine import AheEngine, EngineStepResult
+from vpin_backend.inference.ahe_engine_lenet import AheLenetEngine
+from vpin_client.models.weights_layout import is_lenet_cifar
 from vpin_backend.models.weights_bundle import load_homomorphic_weights, resolve_weights_dir, weights_digest
 from vpin_backend.protocol.ciphertext_wire import ChunkAssembler, encode_tensor_chunks
 from vpin_backend.protocol.messages import (
@@ -37,7 +42,45 @@ from vpin_backend.storage.registry import get_model as registry_get_model
 
 router = APIRouter(tags=["session"])
 
-_BUILTIN_NETWORK = {"cnn-mnist": "A", "cnn-mnist-b": "B", "lenet-mnist": "lenet"}
+# P2: server-side process pool — offloads GIL-bound homomorphic EC compute so
+# concurrent WebSocket sessions can run in parallel. Disable with VPIN_AHE_SERVER_POOL=0.
+_SERVER_POOL: ProcessPoolExecutor | None = None
+
+
+def _server_pool_enabled() -> bool:
+    return os.environ.get("VPIN_AHE_SERVER_POOL", "1").strip().lower() not in ("0", "false", "no")
+
+
+def _get_server_pool() -> ProcessPoolExecutor:
+    global _SERVER_POOL
+    if _SERVER_POOL is None:
+        n = int(os.environ.get("VPIN_AHE_SERVER_WORKERS", "0") or 0)
+        if n <= 0:
+            n = min(3, max(1, (os.cpu_count() or 4) - 1))
+        _SERVER_POOL = ProcessPoolExecutor(max_workers=n)
+    return _SERVER_POOL
+
+
+def _pack_to_points(pack: tuple[tuple[int, ...], list[tuple[int, int]]]) -> np.ndarray:
+    shape, flat = pack
+    curve, _, _, _, _ = curve_e2_info()
+    arr = np.empty(len(flat), dtype=object)
+    for i, (x, y) in enumerate(flat):
+        arr[i] = Point(curve, int(x), int(y))
+    return arr.reshape(shape)
+
+_BUILTIN_NETWORK = {
+    "cnn-mnist": "A",
+    "cnn-mnist-b": "B",
+    "lenet-mnist": "lenet",
+    "lenet-cifar10": "lenet_cifar",
+}
+
+
+class AheEngineLike(Protocol):
+    def bind_initial_ciphertext(self, c1: Any, c2: Any) -> EngineStepResult: ...
+
+    def accept_client_ciphertext(self, phase_id: str, c1: Any, c2: Any) -> EngineStepResult: ...
 
 
 async def _asend(ws: WebSocket, msg_type: str, payload: dict[str, Any]) -> None:
@@ -86,32 +129,66 @@ def _decode_pair(assemblers: dict[tuple[str, str], ChunkAssembler], phase_id: st
 
 async def _advance_engine(
     ws: WebSocket,
-    engine: AheEngine,
+    engine: AheEngineLike,
     assemblers: dict[tuple[str, str], ChunkAssembler],
     phase_id: str,
     session_id: str,
+    offload: dict[str, Any] | None = None,
 ) -> bool:
     c1, c2 = _decode_pair(assemblers, phase_id)
-    if phase_id == "initial":
-        result = engine.bind_initial_ciphertext(c1, c2)
-    else:
-        result = engine.accept_client_ciphertext(phase_id, c1, c2)
 
-    await _send_ciphertext(ws, result.truncate.phase_id, result.output_c1, result.output_c2)
+    if offload is not None:
+        from vpin_backend.inference.ahe_engine import EnginePhase
+        from vpin_backend.inference.ahe_worker import points_to_xy, worker_step
+
+        loop = asyncio.get_event_loop()
+        res = await loop.run_in_executor(
+            _get_server_pool(),
+            worker_step,
+            offload["weights_dir"],
+            offload["network_id"],
+            offload["pubkey_xy"],
+            engine.phase.value,  # type: ignore[attr-defined]
+            phase_id,
+            points_to_xy(c1),
+            points_to_xy(c2),
+        )
+        engine.phase = EnginePhase(res["new_phase"])  # type: ignore[attr-defined]
+        offload["add"] += res["add"]
+        offload["mult"] += res["mult"]
+        out_c1 = _pack_to_points(res["out_c1"])
+        out_c2 = _pack_to_points(res["out_c2"])
+        trunc_phase, trunc_action, trunc_shift, trunc_shape = res["truncate"]
+        inference_complete = res["inference_complete"]
+        num_add, num_mult = offload["add"], offload["mult"]
+    else:
+        if phase_id == "initial":
+            result = engine.bind_initial_ciphertext(c1, c2)
+        else:
+            result = engine.accept_client_ciphertext(phase_id, c1, c2)
+        out_c1, out_c2 = result.output_c1, result.output_c2
+        trunc_phase = result.truncate.phase_id
+        trunc_action = result.truncate.client_action
+        trunc_shift = result.truncate.shift_bits
+        trunc_shape = result.truncate.shape
+        inference_complete = result.inference_complete
+        num_add, num_mult = result.num_pt_add, result.num_pt_mult
+
+    await _send_ciphertext(ws, trunc_phase, out_c1, out_c2)
     await _asend(
         ws,
         "TruncateRequest",
         TruncateRequest(
-            phase_id=result.truncate.phase_id,
-            client_action=result.truncate.client_action,
-            shift_bits=result.truncate.shift_bits,
-            shape=result.truncate.shape,
+            phase_id=trunc_phase,
+            client_action=trunc_action,
+            shift_bits=trunc_shift,
+            shape=trunc_shape,
         ).model_dump(),
     )
-    if result.inference_complete:
+    if inference_complete:
         complete = InferenceComplete(
-            num_pt_add=result.num_pt_add,
-            num_pt_mult=result.num_pt_mult,
+            num_pt_add=num_add,
+            num_pt_mult=num_mult,
             witness_root=None,
         )
         await _asend(ws, "InferenceComplete", complete.model_dump())
@@ -124,12 +201,13 @@ async def _advance_engine(
 async def session_ws(ws: WebSocket) -> None:
     await ws.accept()
     session_id = str(uuid.uuid4())
-    engine: AheEngine | None = None
+    engine: AheEngineLike | None = None
     weights_dir: Path = get_settings().cnn_networks_dir / "Pre_trained_model"
     network_id: str = "A"
     selected_model_id: str = "cnn-mnist"
     assemblers: dict[tuple[str, str], ChunkAssembler] = {}
     processed_phases: set[str] = set()
+    offload_ctx: dict[str, Any] | None = None
 
     try:
         while True:
@@ -221,13 +299,38 @@ async def session_ws(ws: WebSocket) -> None:
 
                 elif msg_type == "PublicKey":
                     msg = PublicKey(**{k: v for k, v in frame.items() if k != "type"})
-                    engine = AheEngine.for_network(
-                        public_key=_public_key_point(msg),
-                        weights=load_homomorphic_weights(weights_dir, network_id),
-                        network_id=network_id,
-                    )
+                    from vpin_backend.pipeline.gates import load_deploy_plan, orchestration_from_plan
+
+                    hw = load_homomorphic_weights(weights_dir, network_id)
+                    pk = _public_key_point(msg)
+                    if is_lenet_cifar(network_id):
+                        deploy_plan = load_deploy_plan(weights_dir) or {}
+                        orch = orchestration_from_plan(deploy_plan)
+                        engine = AheLenetEngine.for_network(
+                            public_key=pk,
+                            weights=hw,
+                            network_id=network_id,
+                            skip_return_phases=orch.get("skip_return_phases"),
+                        )
+                    else:
+                        engine = AheEngine.for_network(
+                            public_key=pk,
+                            weights=hw,
+                            network_id=network_id,
+                        )
                     assemblers.clear()
                     processed_phases.clear()
+                    # P2: enable process-pool offload for Network A/B (not LeNet).
+                    if not is_lenet_cifar(network_id) and _server_pool_enabled():
+                        offload_ctx = {
+                            "weights_dir": str(weights_dir),
+                            "network_id": network_id,
+                            "pubkey_xy": (int(pk.x()), int(pk.y())),
+                            "add": 0,
+                            "mult": 0,
+                        }
+                    else:
+                        offload_ctx = None
 
                 elif msg_type == "CiphertextPayload":
                     if engine is None:
@@ -247,7 +350,9 @@ async def session_ws(ws: WebSocket) -> None:
                         continue
 
                     processed_phases.add(msg.phase_id)
-                    done = await _advance_engine(ws, engine, assemblers, msg.phase_id, session_id)
+                    done = await _advance_engine(
+                        ws, engine, assemblers, msg.phase_id, session_id, offload_ctx
+                    )
                     if done:
                         break
 

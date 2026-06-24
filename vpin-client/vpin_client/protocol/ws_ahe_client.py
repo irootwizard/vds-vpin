@@ -20,7 +20,7 @@ from vpin_client.crypto.ahe.codec import (
     load_bsgs_table,
     prewarm_parallel_crypto,
 )
-from vpin_client.crypto.ahe.curve import key_gen
+from vpin_client.crypto.ahe.curve import KeyMaterial, key_gen
 from vpin_client.data.preprocess import compute_input_digest
 from vpin_client.protocol.ahe_trace import (
     ciphertext_summary,
@@ -86,11 +86,14 @@ async def run_ahe_session(
     label: int | None = None,
     preprocess_ms: float = 0.0,
     on_trace: TraceCallback | None = None,
+    keys: KeyMaterial | None = None,
 ) -> AheSessionResult:
     t_total_start = time.perf_counter()
     t_crypto_start = time.perf_counter()
     digest = compute_input_digest(fixed_int32)
-    keys = key_gen()
+    # P1: reuse a batch-shared keypair when provided; otherwise fresh per session.
+    if keys is None:
+        keys = key_gen()
     bsgs_path = bsgs_table_path()
     table = load_bsgs_table(bsgs_path)
     loop = asyncio.get_running_loop()

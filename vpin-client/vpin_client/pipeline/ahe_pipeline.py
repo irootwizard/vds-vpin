@@ -20,6 +20,7 @@ async def run_ahe_inference(
     *,
     on_progress: ProgressCallback | None = None,
     collect_trace: bool = True,
+    keys: object | None = None,
 ) -> InferenceResult:
     """Load input → WebSocket P0–P3 session → structured result."""
     trace: list[dict] = []
@@ -60,6 +61,7 @@ async def run_ahe_inference(
         label=inp.label,
         preprocess_ms=preprocess_ms,
         on_trace=_on_trace if collect_trace else None,
+        keys=keys,
     )
     _emit(
         on_progress,

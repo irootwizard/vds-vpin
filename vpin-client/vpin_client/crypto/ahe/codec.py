@@ -50,7 +50,8 @@ def _get_mp_decrypt_pool(bsgs_path: Path) -> ProcessPoolExecutor:
     if _MP_DECRYPT_POOL is None or _MP_DECRYPT_POOL_PATH != key:
         if _MP_DECRYPT_POOL is not None:
             _MP_DECRYPT_POOL.shutdown(wait=False, cancel_futures=True)
-        n_workers = min(3, max(1, (os.cpu_count() or 4) - 1))
+        env_n = int(os.environ.get("VPIN_AHE_DECRYPT_WORKERS", "0") or 0)
+        n_workers = env_n if env_n > 0 else min(3, max(1, (os.cpu_count() or 4) - 1))
         _MP_DECRYPT_POOL = ProcessPoolExecutor(
             max_workers=n_workers,
             initializer=_mp_worker_init,
@@ -58,6 +59,53 @@ def _get_mp_decrypt_pool(bsgs_path: Path) -> ProcessPoolExecutor:
         )
         _MP_DECRYPT_POOL_PATH = key
     return _MP_DECRYPT_POOL
+
+
+# --- Process-pool encryption (GIL-bound pure-Python EC → real parallelism) ---
+_MP_ENCRYPT_POOL: ProcessPoolExecutor | None = None
+_ENC_WORKER_CURVE: tuple[Any, int, Point] | None = None  # (curve, order, generator)
+
+
+def _enc_worker_init() -> None:
+    global _ENC_WORKER_CURVE
+    from vpin_client.crypto.ahe.curve import curve_e2_info
+
+    curve, _base, order, generator, _identity = curve_e2_info()
+    _ENC_WORKER_CURVE = (curve, order, generator)
+
+
+def _mp_worker_encrypt_batch(
+    args: tuple[tuple[int, int], list[tuple[int, int]]],
+) -> list[tuple[int, tuple[int, int], tuple[int, int]]]:
+    if _ENC_WORKER_CURVE is None:
+        raise RuntimeError("encrypt worker curve not initialized")
+    curve, order, generator = _ENC_WORKER_CURVE
+    pubkey_xy, items = args
+    public_key = Point(curve, pubkey_xy[0], pubkey_xy[1])
+    out: list[tuple[int, tuple[int, int], tuple[int, int]]] = []
+    for lin_idx, m in items:
+        c1, c2 = encrypt_scalar(
+            int(m), generator=generator, public_key=public_key, curve_order=order
+        )
+        out.append((lin_idx, (int(c1.x()), int(c1.y())), (int(c2.x()), int(c2.y()))))
+    return out
+
+
+def _enc_pool_workers() -> int:
+    n = int(os.environ.get("VPIN_AHE_ENCRYPT_WORKERS", "0") or 0)
+    if n > 0:
+        return n
+    return min(8, max(2, (os.cpu_count() or 4) - 1))
+
+
+def _get_mp_encrypt_pool() -> ProcessPoolExecutor:
+    global _MP_ENCRYPT_POOL
+    if _MP_ENCRYPT_POOL is None:
+        _MP_ENCRYPT_POOL = ProcessPoolExecutor(
+            max_workers=_enc_pool_workers(),
+            initializer=_enc_worker_init,
+        )
+    return _MP_ENCRYPT_POOL
 
 
 def _worker_decrypt_batch(
@@ -194,6 +242,34 @@ def _encrypt_parallel(
     return c1, c2
 
 
+def _encrypt_parallel_mp(
+    tensor: np.ndarray,
+    keys: KeyMaterial,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Process-pool encrypt — real parallelism for GIL-bound pure-Python EC."""
+    from vpin_client.crypto.ahe.curve import curve_e2_info
+
+    shape = tensor.shape
+    c1 = np.empty(shape, dtype=object)
+    c2 = np.empty(shape, dtype=object)
+    flat_idx = list(np.ndindex(shape))
+    items = [(i, int(tensor[idx])) for i, idx in enumerate(flat_idx)]
+
+    pubkey_xy = (int(keys.public_key.x()), int(keys.public_key.y()))
+    n_workers = _enc_pool_workers()
+    batch_size = max(16, len(items) // (n_workers * 2))
+    batches = [(pubkey_xy, chunk) for chunk in _batched(items, batch_size)]
+
+    curve, _b, _o, _g, _i = curve_e2_info()
+    pool = _get_mp_encrypt_pool()
+    for batch_results in pool.map(_mp_worker_encrypt_batch, batches):
+        for lin_idx, c1xy, c2xy in batch_results:
+            idx = flat_idx[lin_idx]
+            c1[idx] = Point(curve, c1xy[0], c1xy[1])
+            c2[idx] = Point(curve, c2xy[0], c2xy[1])
+    return c1, c2
+
+
 def encrypt_tensor(
     tensor: np.ndarray,
     keys: KeyMaterial,
@@ -203,6 +279,8 @@ def encrypt_tensor(
 ) -> tuple[np.ndarray, np.ndarray]:
     use_parallel = _parallel_enabled() if parallel is None else parallel
     n_cells = int(np.prod(tensor.shape))
+    if use_parallel and n_cells >= _PARALLEL_MP_MIN_CELLS:
+        return _encrypt_parallel_mp(tensor, keys)
     if use_parallel and n_cells >= _PARALLEL_MIN_CELLS:
         return _encrypt_parallel(tensor, keys, layout)
     return _encrypt_sequential(tensor, keys, layout)
@@ -332,9 +410,10 @@ _BSGS_CACHE: dict[str, dict[Any, int]] = {}
 
 
 def prewarm_parallel_crypto(bsgs_path: Path) -> None:
-    """Spawn decrypt worker processes early so the first large tensor decrypt avoids cold-start."""
+    """Spawn decrypt + encrypt worker processes early to avoid first-call cold-start."""
     if _parallel_enabled():
         _get_mp_decrypt_pool(bsgs_path)
+        _get_mp_encrypt_pool()
 
 
 def load_bsgs_table(path: Path) -> dict[Any, int]:

@@ -1,6 +1,6 @@
 # AHE 批量推理性能优化设计
 
-> 状态：设计评审稿（不含实现）
+> 状态：P1+P2 已实现（CLI `eval-mnist-ahe`）；P4 前端批量 UI 见 §11（待实现）
 > 范围：Network A（`cnn-mnist`）纯 AHE 同态推理 P0–P3 闭环
 > 目标：把"逐图串行 ~33s/张"优化为可并行的批量推理，并评估算法级打包可行性
 
@@ -237,6 +237,7 @@ BatchScheduler
 | P1 | §2 共享化：批内复用 keypair + bias 密文 + BSGS 池单次初始化 | 低 | 单张省 2–5s 固定成本 |
 | P2 | 方案 B+C：流水线调度 + 服务端进程池卸载 | 中高 | 批量吞吐逼近瓶颈阶段倍数（~2–3×） |
 | P3 | 算法级（打包/换 HE 后端） | 高/研究级 | 数量级，但需改密码学，暂缓 |
+| P4 | 前端批量 UI（Tauri `run_ahe_batch` + 进度/结果表） | 低 | 与 CLI 对齐；见 **§11** |
 
 ---
 
@@ -323,63 +324,366 @@ BatchScheduler
 | 变量 | 默认 | 作用 |
 |------|------|------|
 | `VPIN_AHE_ENCRYPT_WORKERS` | min(8, 核-1) | 客户端加密进程数 |
+| `VPIN_AHE_DECRYPT_WORKERS` | min(3, 核-1) | 客户端解密进程数（已可配置；见 §12 实测：放宽无收益） |
 | `VPIN_AHE_SERVER_POOL` | 1 | 服务端同态卸载开关（0 关闭回退） |
 | `VPIN_AHE_SERVER_WORKERS` | min(3, 核-1) | 服务端同态进程数 |
-| 解密 worker（硬编码） | min(3, 核-1) | `codec.py _get_mp_decrypt_pool`，16 核下可放宽至 6–8（待验证） |
 
 ### 10.8 待办（基于以上数据）
 
 1. 解密池 worker 数放宽（当前硬编码 3，16 核欠用）：§10.1 解密 6.1s 是第二大单项。
 2. Tauri 单图场景：后端常驻 + 客户端池复用，消除冷启动（§10.3 冷启动 30s+）。
+3. **前端批量推理 UI**：见 §11（当前未实现，CLI 已可用）。
+
+---
+
 ## 11. 前端 UI 适配建议（批量推理）
 
-当前 `/demo/ahe` 仅实现了单图推理交互（`aheInfer`）。底层 `vpin_client` 已支持并发批量评估，要在前端开放此能力，建议如下适配：
+> **现状**：`vpin_client eval-mnist-ahe`（P1+P2+MP 加密）已在 CLI 验证；**桌面 Demo 尚无批量提交入口**。  
+> 路由 `/demo/ahe` → `AheDemoView.vue` 仅支持单图 `run_ahe_inference`；画廊 `ahePreprocessBatch` 只做**预处理预览**，与推理无关。
 
-### 11.1 交互设计
+### 11.1 现状与缺口对照
 
-1. **入口**：在「样本预览」卡片增加「批量评估」按钮（例如：`评估当前预览的 N 张图`）。
-2. **进度反馈**：
-   - 批量模式下不展示详细的单图 P0–P3 trace（信息量过大导致 UI 卡顿）。
-   - 改为展示**进度条**（`已完成 / 总数`）和**实时指标**（`当前准确率`、`已耗时`、`ETA`）。
-3. **结果展示**：
-   - 完成后展示汇总表格：`序号 | 标签 | 预测 | 结果 (✅/❌)`。
-   - 顶部展示最终准确率和总耗时。
+| 能力 | CLI / 客户端 | 前端（Tauri） | 说明 |
+|------|--------------|---------------|------|
+| 官方 MNIST 批量预处理 | `GET /data/official/batch` | ✅ `loadGallery` | 10 张缩略图，**不含推理** |
+| 单图 AHE 推理 + trace | `ahe-infer --trace` | ✅ `aheInfer` → `run_ahe_inference` | P0–P3 时间线 + `AheTraceDrawer` |
+| 批量 AHE 评估 | `eval-mnist-ahe --limit N --concurrency C --progress` | ❌ 无 | 无 Tauri 命令、无 `aheClient` 封装、无 UI |
+| 批内共享 keypair / 并发 | `batch.py` + `ws_ahe_client.keys` | — | 仅批量路径使用 |
+| 进度回调 | stdout `[ i/N ] correct=… acc=…` | — | 需 Rust 边读 stdout 边 `emit` |
+| 结果落盘 | `reports/batch_{limit}_{ts}.json` | — | 可由 Tauri 读回或 stdout 末行 JSON |
 
-### 11.2 Tauri 接口扩展
+**设计原则**
 
-在 `src-tauri/src/lib.rs` 中新增命令绑定 `eval-mnist-ahe` CLI：
+1. **单图路径不变**：保留「运行 AHE 推理」+ 时间线 + trace 抽屉；批量为**并列模式**，不替换单图。
+2. **批量默认无 trace**：`run_mnist_batch` 并发路径 `collect_trace=False`；避免 N×trace 撑爆内存与 DOM。
+3. **仅 Tauri 可跑批量**：与单图相同，私钥在本地；浏览器模式只显示说明 + 禁用按钮。
+4. **与画廊起始序号对齐**：批量从 `galleryStartIndex`（或当前 `index`）起连续 `limit` 张官方 test，与 CLI 默认 `mnist_index=0..limit-1` 需**显式约定**（见 §11.4）。
+
+### 11.2 页面布局与交互（建议）
+
+在现有两栏布局上，于右侧「推理」卡片内增加 **模式切换**（`n-radio-group`：`单图` | `批量`）。
+
+#### 单图模式（保持现状）
+
+- 按钮：`运行 AHE 推理（#索引）`
+- 下方：`AheFlowTimeline` + `AheTraceDrawer`
+- `busy` 时禁用画廊点击与批量控件
+
+#### 批量模式（新增）
+
+**控件区**（推理卡片内）：
+
+| 控件 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| 起始序号 | `n-input-number` | 当前 `index` 或画廊 `start` | 对应 MNIST test 下标 |
+| 张数 `limit` | `n-input-number` | `10` | 与 `PREVIEW_COUNT` 对齐；上限建议 50（与 CLI 默认一致） |
+| 并发 `concurrency` | `n-input-number` | `4` | `1`=串行；>1 启用 P1+P2；可附 tooltip 引用 §10.4 |
+| 模型 | 已有 `n-select` | — | 与单图共用 `modelId` |
+| 主按钮 | `n-button type="primary"` | — | 文案：`批量评估 N 张（并发=C）` |
+| 取消 | `n-button`（可选 P1） | — | 需 CLI/Tauri 支持子进程 kill；MVP 可不做 |
+
+**进度区**（推理卡片下方或独立 `n-card`「批量进度」）：
+
+```
+┌─────────────────────────────────────────────┐
+│ 批量评估中  7 / 10                          │
+│ ████████████░░░░░░░░  70%                   │
+│ 正确 6 · 准确率 85.7% · 已用 89s · ETA 38s │
+└─────────────────────────────────────────────┘
+```
+
+- 使用 `n-progress`（`type="line"`，`percentage = completed/limit*100`）。
+- **批量运行期间**：折叠或禁用「推理流程时间线」（`v-if="!batchState.running && inferMode==='single'"`），避免与假阶段动画混淆。
+
+**结果区**（完成后）：
+
+```
+准确率 90.0%（9/10）· 总耗时 124s · 均摊 12.4s/张 · concurrency=4
+```
+
+- `n-data-table` 列：`序号(mnist_index)` | `标签` | `预测` | `正确`（`n-tag` success/error）。
+- 行点击（可选 P2）：切回单图模式并 `applySelection` 对应样本，便于对错题做 trace 复现。
+- 「导出 JSON」：直接下载 Tauri 返回的 `BatchReport`（与 `reports/batch_*.json` 同结构）。
+
+**浏览器模式**：批量区显示 `n-alert`：「批量 AHE 需在 Tauri 桌面端运行」，控件 `disabled`。
+
+### 11.3 Tauri 桥接（`lib.rs`）
+
+单图命令 `run_ahe_inference` 使用 `run_python_json`（阻塞至结束）。批量需 **流式 stdout**，建议新增异步命令，勿复用 `run_python_json`。
+
+**推荐实现要点**
+
+1. 子进程：`python -m vpin_client eval-mnist-ahe --backend … --model … --limit … --concurrency … --progress`。
+2. `tokio::process::Command` + `stdout` 行读取；stderr 合并记录，失败时返回。
+3. 进度行正则（与 `cli.py` 一致）：
+   ```text
+   [  {idx+1}/{limit} ] correct={n} acc={pct}% elapsed={s}s eta={s}s
+   ```
+4. 每匹配一行 → `window.emit("ahe-batch-progress", { index, limit, correct, accuracy, elapsed_s, eta_s })`（`accuracy` 建议传 0–1 浮点，与 `batch.py` 一致）。
+5. 进程结束后：
+   - **方案 A（推荐）**：在 Rust 侧解析末行 `Wrote reports/batch_….json`，`read_to_string` 后 `serde_json::from_str` 返回完整 `BatchReport`。
+   - **方案 B**：CLI 增加 `--json-out -` 打印最终 JSON 到 stdout（需改 `cli.py`）；Rust 取最后一行 JSON。MVP 可用方案 A，避免改 CLI。
+
+**命令签名草案**
 
 ```rust
 #[tauri::command]
 async fn run_ahe_batch(
+    start_index: u32,      // 若 CLI 暂不支持，MVP 固定 0 并在 UI 注明
     limit: u32,
     concurrency: u32,
     backend_ws: String,
     model_id: String,
     window: tauri::Window,
-) -> Result<serde_json::Value, String> {
-    // 1. 构造参数: vpin_client eval-mnist-ahe --limit {limit} --concurrency {concurrency} ...
-    // 2. 必须开启 --progress，并通过 stdout 解析进度
-    // 3. 解析到 [  3/10 ] correct=2 acc=... 时，通过 window.emit("batch-progress", payload) 推送给前端
-    // 4. 结束后读取 reports/batch_{limit}_*.json 返回最终结果
+) -> Result<serde_json::Value, String>
+```
+
+注册：`invoke_handler![..., run_ahe_batch]`。
+
+> **CLI 缺口（实现 UI 前需二选一）**  
+> 当前 `run_mnist_batch` 固定 `mnist_index=i`（`i ∈ [0, limit)`），与画廊「从任意 `start` 起连续 N 张」不一致。  
+> - **短期**：UI 固定 `start_index=0`，文案写「批量评估 test 集前 N 张」。  
+> - **完整**：为 `eval-mnist-ahe` 增加 `--start`，`batch.py` 循环改为 `range(start, start+limit)`。
+
+### 11.4 前端服务层（`aheClient.js`）
+
+```javascript
+/** @typedef {Object} AheBatchProgress
+ *  @property {number} index
+ *  @property {number} limit
+ *  @property {number} correct
+ *  @property {number} accuracy  // 0–1
+ *  @property {number} elapsed_s
+ *  @property {number} eta_s
+ */
+
+export async function aheBatch({ limit, concurrency, modelId, backendWs, onProgress }) {
+  if (!isTauri()) throw new Error("批量 AHE 需在 Tauri 桌面端运行");
+  const { invoke } = await import("@tauri-apps/api/core");
+  const { listen } = await import("@tauri-apps/api/event");
+  const unlisten = await listen("ahe-batch-progress", (e) => onProgress?.(e.payload));
+  try {
+    return await invoke("run_ahe_batch", {
+      startIndex: 0,
+      limit,
+      concurrency,
+      backendWs: backendWs ?? DEFAULT_BACKEND_WS,
+      modelId,
+    });
+  } finally {
+    unlisten();
+  }
 }
 ```
 
-### 11.3 前端状态管理
+### 11.5 状态管理（`useAheDemoSession.js`）
 
-在 `useAheDemoSession.js` 中新增批量状态：
+在 composable 中增加 `inferMode: 'single' | 'batch'` 与 `batchState`（与单图 `state` 分离，避免 `reset()` 误清批量结果）：
 
 ```javascript
 const batchState = reactive({
   running: false,
+  startIndex: 0,
   limit: 10,
+  concurrency: 4,
   completed: 0,
   correct: 0,
   accuracy: 0,
   elapsed_s: 0,
   eta_s: 0,
-  results: []
+  report: null,   // 完整 BatchReport
+  error: null,
 });
+
+function resetBatch() {
+  Object.assign(batchState, {
+    running: false, completed: 0, correct: 0, accuracy: 0,
+    elapsed_s: 0, eta_s: 0, report: null, error: null,
+  });
+}
 ```
 
-通过 Tauri 的 `listen("batch-progress", (event) => { ... })` 更新状态，驱动进度条渲染。
+`AheDemoView.vue` 中 `runBatch()` 流程：
+
+1. `resetBatch()`；`batchState.running = true`；`busy = true`。
+2. `aheBatch({ ..., onProgress: (p) => { batchState.completed = p.index + 1; ... } })`。
+3. 成功：`batchState.report = result`；`addLog('批量完成', …)`。
+4. `finally`：`batchState.running = false`；`busy = false`。
+
+**互斥**：`busy` 同时锁住单图按钮、批量按钮、画廊切换（防中途改样本）。
+
+### 11.6 与现有组件的关系
+
+| 组件 | 单图 | 批量 |
+|------|------|------|
+| `AheFlowTimeline` | 展示 P0–P3 + trace 步骤 | **隐藏**或显示静态说明「批量模式不记录逐步 trace」 |
+| `AheTraceDrawer` | 点击步骤查看密文细节 | 仅在对错题「单图复现」后使用 |
+| 画廊 `gallery` | 选一张推理 | 可高亮 `[start, start+limit)` 范围（`n-tag` 角标），**不要求**每张都已预处理（推理走 `load_inference_input`） |
+| `useAheDemoSession.state.connectionStatus` | 连接态 | 批量可映射为：`connecting`→运行中，`connected`→完成，`error`→失败 |
+
+### 11.7 返回 JSON 契约（与 CLI 一致）
+
+`BatchReport.to_dict()` 结构，供表格与导出使用：
+
+```json
+{
+  "limit": 10,
+  "correct": 9,
+  "accuracy": 0.9,
+  "elapsed_s": 124.2,
+  "concurrency": 4,
+  "results": [
+    {
+      "mnist_index": 0,
+      "label": 7,
+      "prediction": 7,
+      "correct": true,
+      "logits": […],
+      "num_pt_add": 18300,
+      "num_pt_mult": 18500
+    }
+  ]
+}
+```
+
+UI 表格行：`mnist_index`、`label`、`prediction`、`correct`；`logits` 仅在行展开或详情抽屉中显示。
+
+### 11.8 分阶段落地建议
+
+| 阶段 | 范围 | 验收 |
+|------|------|------|
+| **M0** | 仅文档 + CLI（当前） | `eval-mnist-ahe --limit 10 --concurrency 4 --progress` 与单图预测 bit-exact |
+| **M1** | Tauri `run_ahe_batch` + 最小 UI（无取消） | 桌面端点按钮可见进度条与结果表；10 张 acc 与 CLI 一致 |
+| **M2** | `--start` + 画廊起始对齐 + 并发可配置 tooltip | 从当前序号起批；文案引用 §10.4 推荐 `concurrency=4` |
+| **M3** | 错题一键单图 trace、导出 JSON、可选取消 | 提升调试体验 |
+
+### 11.9 实现时文件清单
+
+| 文件 | 改动 |
+|------|------|
+| `vpin_frontend/.../src-tauri/src/lib.rs` | `run_ahe_batch`、stdout 解析、`emit`、读 `reports/` |
+| `vpin_frontend/.../src/services/aheClient.js` | `aheBatch()` + 事件监听 |
+| `vpin_frontend/.../src/composables/useAheDemoSession.js` | `inferMode`、`batchState`、`resetBatch` |
+| `vpin_frontend/.../src/views/demo/AheDemoView.vue` | 模式切换、批量控件、进度条、`n-data-table` |
+| `vpin-client/.../cli.py`、`pipeline/batch.py` | （M2）`--start` 参数 |
+| `MVP-AHE-部署指南.md` | 补充「桌面批量评估」小节，指向本文 §11 与 CLI 示例 |
+
+**CLI 手动验收（实现 UI 前后均可）**
+
+```powershell
+cd d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main
+.\.venv\Scripts\python.exe -m vpin_client eval-mnist-ahe `
+  --limit 10 --concurrency 4 --progress `
+  --model cnn-mnist-trained `
+  --backend ws://127.0.0.1:8000/api/v1/session/ws
+```
+
+### 11.10 风险与注意
+
+1. **长时间阻塞**：10 张并发约 2 分钟量级；Tauri 命令应用 `async` + 事件推送，避免 UI 无响应（不要用同步 `invoke` 且无进度）。
+2. **冷启动**：首次批量含进程池 spawn（§10.3）；UI 文案可提示「首张较慢属正常」。
+3. **后端压力**：`concurrency` 过大可能挤占服务端进程池；默认 4，与 §10.4 实测一致，不建议 UI 默认 16。
+4. **上传样本**：当前 `eval-mnist-ahe` **仅官方 test 序号**；批量 UI 勿混入 `upload` 画廊项，或单独禁用并说明。
+5. **正确性**：UI 层无需自证 bit-exact；以 CLI 闸门为准。若批量 acc 异常，先查 `registry.json` 权重路径（见部署指南）。
+
+### 11.11 端到端交互时序（实现接线参考）
+
+> 当前**未实现**；下图为建议的批量提交数据流。单图路径（已实现）作对照保留。
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant V as AheDemoView.vue
+    participant S as aheClient.js
+    participant T as Tauri lib.rs<br/>(run_ahe_batch)
+    participant C as vpin_client CLI<br/>(eval-mnist-ahe)
+    participant B as 后端 WS<br/>(127.0.0.1:8000)
+
+    U->>V: 切到「批量」模式，设 limit/concurrency，点开始
+    V->>V: resetBatch(); batchState.running=true; busy=true
+    V->>S: aheBatch({limit, concurrency, modelId, onProgress})
+    S->>S: listen("ahe-batch-progress", onProgress)
+    S->>T: invoke("run_ahe_batch", {...})
+    T->>C: spawn: python -m vpin_client eval-mnist-ahe --concurrency C --progress
+    Note over C,B: P1: 整批共享 keypair；P2: 并发会话 + 服务端进程池
+    loop 每张完成
+        C-->>T: stdout 行 [ i/N ] correct=.. acc=.. elapsed=.. eta=..
+        T-->>S: window.emit("ahe-batch-progress", {index,limit,correct,accuracy,...})
+        S-->>V: onProgress(payload) → 更新进度条/统计
+    end
+    C->>C: 写 reports/batch_{N}_{ts}.json
+    C-->>T: 进程结束（末行 Wrote reports/...）
+    T->>T: 读回 BatchReport JSON（方案 A）
+    T-->>S: 返回完整 BatchReport
+    S-->>V: batchState.report = result; running=false; busy=false
+    V-->>U: 结果表（序号/标签/预测/正确）+ 准确率 + 导出
+```
+
+**对照：单图路径（已实现）**
+
+```mermaid
+sequenceDiagram
+    participant V as AheDemoView.vue
+    participant T as Tauri (run_ahe_inference)
+    participant C as vpin_client (ahe-infer --trace)
+    participant B as 后端 WS
+    V->>T: invoke("run_ahe_inference", {mnistIndex, modelId})
+    T->>C: spawn CLI（阻塞至结束）
+    C->>B: P0–P3 单会话（fresh keypair）
+    C-->>T: stdout 末行 JSON（prediction/logits/timing/trace）
+    T-->>V: 返回结果 → 时间线 + AheTraceDrawer
+```
+
+---
+
+## 12. 压力测试与并发上限（2026-06-24，本机 16 核 / 16.9GB）
+
+> 目的：找极限并发量。方法：同一进程内**热态**扫并发档（避免每档冷启动干扰），
+> 固定 8 张/档，共享 keypair，复用进程池。吞吐 = 8 / 总耗时 × 60（img/min）。
+
+### 12.1 串行 vs 并发（10 张，CLI，含冷启动）
+
+| 模式 | 总耗时 | 均摊/张 | acc | 加速比 |
+|------|--------|---------|-----|--------|
+| 串行 `--concurrency 1` | 278.3s | 27.8s | 90%(9/10) | 1× |
+| 并发 `--concurrency 4` | 124.0s | 12.4s | 90%(9/10) | **2.25×** |
+
+> 预测逐图一致（bit-exact 未回归）。相对最初基线（ThreadPool 加密 + 串行，330s）整体 **2.66×**。
+
+### 12.2 并发档扫描（8 张/档，热态，默认池：解密3/加密8/服务端3）
+
+| 并发 | 总耗时 | 均摊/张 | 吞吐 |
+|------|--------|---------|------|
+| 4 | 102.7s | 12.8s | 4.7 img/min |
+| 8 | 114.4s | 14.3s | 4.2 img/min |
+| 16 | 84.3s | 10.5s | 5.7 img/min |
+
+### 12.3 放宽 worker 池后（解密6/加密6，8 张/档，热态）
+
+| 并发 | 总耗时 | 均摊/张 | 吞吐 |
+|------|--------|---------|------|
+| 6 | 104.8s | 13.1s | 4.6 img/min |
+| 8 | 85.3s | 10.7s | 5.6 img/min |
+
+### 12.4 结论：极限并发 ≈ 4，瓶颈不在 worker 池
+
+1. 吞吐锁定在 **~5–6 img/min**，与并发数、与池大小（解密 3↔6、加密 8↔6）**都基本无关**。
+2. 解密/加密池放宽**无改善** → 排除"crypto worker 池是瓶颈"。
+3. 单图热态 19.4s，并发后摊销至 ~12s/张（~1.6× 重叠）即触顶；并发 >4 无收益，并发=8 偶现回退。
+
+**真正天花板**：每会话的密文序列化（pickle 进出 worker）、WS 分帧（base64）、asyncio 协调，都在**客户端/服务端各自单一主进程**内完成，受 GIL 限制不可并行。并发会话越多，主进程串行排队越重，故加 worker 无效。
+
+| 限制项 | 可并行 | 现状 |
+|--------|--------|------|
+| EC 加/解密计算 | ✅ 进程池 | 已非瓶颈 |
+| IPC pickle + WS 分帧 + 事件循环 | ❌ 主进程单线程 | **当前天花板** |
+
+### 12.5 内存约束
+
+可用内存约 6.5GB；每解密 worker 含 BSGS 表（~230MB + 开销）。解密 worker 数受内存上限约束，6 为本机安全值，8+ 需谨慎。
+
+### 12.6 突破方向（需更大改动，超出 MVP）
+
+1. **客户端/服务端多进程化**：每会话独立进程，绕开单主进程 GIL。
+2. **编译型 EC 后端**（Rust/C 绑定替代纯 Python `ecdsa`）：同时消除序列化与计算的 Python 开销，数量级杠杆。
+3. 当前 MVP：**并发设 4 为最优性价比**，UI/CLI 默认值据此设定。

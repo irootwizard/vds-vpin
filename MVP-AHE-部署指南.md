@@ -185,6 +185,20 @@ npm run tauri dev
 
 预期：`prediction=7, label=7, logit_max_diff=0.0, pass=true`
 
+### 4.4 批量 AHE 评估（CLI，前端尚未实现）
+
+桌面端 `/demo/ahe` **目前仅支持单图推理**；批量吞吐能力请先用 CLI。UI 适配方案见 [`docs/ahe/ahe-批量推理-性能优化设计.md` §11](docs/ahe/ahe-批量推理-性能优化设计.md)。
+
+```powershell
+# 批量评估 test 集前 10 张，并发 4（约 2 分钟，acc 应与串行一致）
+.\.venv\Scripts\python.exe -m vpin_client eval-mnist-ahe `
+  --backend ws://127.0.0.1:8000/api/v1/session/ws `
+  --model cnn-mnist-trained `
+  --limit 10 --concurrency 4 --progress
+```
+
+结果写入仓库根目录 `reports/batch_{limit}_{时间戳}.json`。`--concurrency 1` 为串行回退；详见设计文档 §10.4 实测数据。
+
 ---
 
 ## 5. 端口与服务架构
@@ -314,4 +328,5 @@ tauri (v2.11.3) : @tauri-apps/api (v2.10.1)
 | 预处理 | <5ms | pad + normalize + quantize |
 | 点加/乘次数 | ~18k/~18k | Network A 全链路 |
 | logit 精度 | bit-exact | AHE 与明文同态路径差为 0.0 |
-| MNIST 准确率 | ~10.4% | 当前训练权重（功能正确性验证） |
+| MNIST 准确率 (float) | 92.93% | Network A 训练后测试集准确率 |
+| 定点/AHE 推理准确率 | 90.0% (100 样本) | Q16 定点截断路径，AHE 密文与明文 bit-exact |

@@ -53,6 +53,7 @@ async def _cmd_eval_mnist(args: argparse.Namespace) -> int:
         backend_ws=args.backend,
         limit=args.limit,
         on_progress=on_progress,
+        concurrency=args.concurrency,
     )
     out_dir = Path("reports")
     out_dir.mkdir(exist_ok=True)
@@ -87,6 +88,12 @@ def main(argv: list[str] | None = None) -> int:
     ev.add_argument("--model", default="cnn-mnist")
     ev.add_argument("--limit", type=int, default=50)
     ev.add_argument("--progress", action="store_true")
+    ev.add_argument(
+        "--concurrency",
+        type=int,
+        default=1,
+        help="Parallel WS sessions (>1 enables P1+P2 batch pipeline; 1 = serial)",
+    )
 
     args = parser.parse_args(argv)
     if args.cmd == "sample-challenge":
