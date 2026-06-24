@@ -77,3 +77,45 @@ export async function aheInfer({
     modelId,
   });
 }
+
+/**
+ * Run batch AHE inference via Tauri → vpin_client eval-mnist-ahe CLI.
+ * Requires Tauri desktop client.
+ */
+export async function aheBatchInfer({
+  startIndex = 0,
+  limit = 10,
+  concurrency = 4,
+  modelId,
+  backendWs = DEFAULT_BACKEND_WS,
+  onProgress,
+}) {
+  if (!isTauri()) {
+    throw new Error(
+      "批量 AHE 推理需在 Tauri 桌面端运行（私钥不能离开本机）。请使用 npm run tauri dev 启动。"
+    );
+  }
+
+  const { invoke, getCurrentWindow } = await import("@tauri-apps/api/core");
+  const { listen } = await import("@tauri-apps/api/event");
+
+  const unlisten = await listen("ahe-batch-progress", (event) => {
+    if (onProgress && event.payload) {
+      onProgress(event.payload);
+    }
+  });
+
+  try {
+    const result = await invoke("run_ahe_batch", {
+      startIndex,
+      limit,
+      concurrency,
+      backendWs,
+      modelId,
+      window: getCurrentWindow(),
+    });
+    return result;
+  } finally {
+    unlisten();
+  }
+}

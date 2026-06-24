@@ -70,29 +70,121 @@
               placeholder="选择模型"
               :loading="modelsLoading"
             />
-            <n-button
-              type="primary"
-              :loading="busy"
-              :disabled="!canRunAheInfer"
-              @click="runInfer"
-            >
-              运行 AHE 推理（{{ inferLabel }}）
-            </n-button>
-            <n-text v-if="!canRunAheInfer && !modelsLoading" depth="3" style="font-size: 12px">
-              <template v-if="!isDesktop">请使用 Tauri 桌面端以运行推理。</template>
-              <template v-else>请先选择样本；若无可用模型，请确认后端已启动且权重已注册。</template>
-            </n-text>
-            <div v-if="result">
-              <p>预测: {{ result.prediction }}<span v-if="result.label != null"> / 标签: {{ result.label }}</span></p>
-              <p v-if="timing">crypto_infer_ms: {{ timing.crypto_infer_ms?.toFixed(0) }}</p>
-            </div>
+
+            <!-- 模式切换 -->
+            <n-radio-group v-model:value="inferMode" :disabled="busy || batchState.running">
+              <n-radio-button value="single">单图模式</n-radio-button>
+              <n-radio-button value="batch" :disabled="!isDesktop">批量模式</n-radio-button>
+            </n-radio-group>
+
+            <!-- 单图模式 -->
+            <template v-if="inferMode === 'single'">
+              <n-button
+                type="primary"
+                :loading="busy"
+                :disabled="!canRunAheInfer"
+                @click="runInfer"
+              >
+                运行 AHE 推理（{{ inferLabel }}）
+              </n-button>
+              <n-text v-if="!canRunAheInfer && !modelsLoading" depth="3" style="font-size: 12px">
+                <template v-if="!isDesktop">请使用 Tauri 桌面端以运行推理。</template>
+                <template v-else>请先选择样本；若无可用模型，请确认后端已启动且权重已注册。</template>
+              </n-text>
+              <div v-if="result">
+                <p>预测: {{ result.prediction }}<span v-if="result.label != null"> / 标签: {{ result.label }}</span></p>
+                <p v-if="timing">crypto_infer_ms: {{ timing.crypto_infer_ms?.toFixed(0) }}</p>
+              </div>
+            </template>
+
+            <!-- 批量模式 -->
+            <template v-else>
+              <n-space vertical style="width: 100%">
+                <n-space>
+                  <n-input-number
+                    v-model:value="batchConfig.startIndex"
+                    :min="0"
+                    :max="9999"
+                    placeholder="起始序号"
+                    style="width: 120px"
+                  />
+                  <n-input-number
+                    v-model:value="batchConfig.limit"
+                    :min="1"
+                    :max="50"
+                    placeholder="张数"
+                    style="width: 100px"
+                  />
+                  <n-input-number
+                    v-model:value="batchConfig.concurrency"
+                    :min="1"
+                    :max="8"
+                    placeholder="并发度"
+                    style="width: 100px"
+                  />
+                </n-space>
+                <n-button
+                  type="primary"
+                  :loading="batchState.running"
+                  :disabled="!modelId"
+                  @click="runBatchInfer"
+                >
+                  批量评估 {{ batchConfig.limit }} 张（并发={{ batchConfig.concurrency }}）
+                </n-button>
+                <n-text v-if="!isDesktop" depth="3" style="font-size: 12px">
+                  批量 AHE 需在 Tauri 桌面端运行
+                </n-text>
+              </n-space>
+            </template>
+
             <n-alert v-if="error" type="error">{{ error }}</n-alert>
           </n-space>
+        </n-card>
+
+        <!-- 批量进度 -->
+        <n-card v-if="batchState.running || batchState.completed" title="批量进度" style="margin-top: 12px">
+          <template v-if="batchState.running">
+            <n-progress
+              type="line"
+              :percentage="batchProgress"
+              :status="'info'"
+              style="margin-bottom: 12px"
+            />
+            <n-text depth="3" style="font-size: 12px">
+              {{ batchState.completedCount }} / {{ batchState.limit }} ·
+              正确 {{ batchState.correct }} ·
+              准确率 {{ (batchState.accuracy * 100).toFixed(1) }}% ·
+              已用 {{ batchState.elapsed }}s ·
+              ETA {{ batchState.eta }}s
+            </n-text>
+          </template>
+          <template v-else-if="batchState.completed">
+            <n-space vertical>
+              <n-statistic :label="'准确率'" :value="`${(batchState.accuracy * 100).toFixed(1)}%`" />
+              <n-statistic :label="'总耗时'" :value="`${batchState.totalElapsed}s`" />
+              <n-statistic :label="'均摊'" :value="`${(batchState.totalElapsed / batchState.limit).toFixed(1)}s/张`" />
+              <n-statistic :label="'并发度'" :value="batchState.concurrency" />
+            </n-space>
+            <n-button quaternary type="info" @click="exportBatchReport" style="margin-top: 8px">
+              导出 JSON
+            </n-button>
+          </template>
+        </n-card>
+
+        <!-- 批量结果 -->
+        <n-card v-if="batchState.results.length" title="批量结果" style="margin-top: 12px">
+          <n-data-table
+            :columns="batchColumns"
+            :data="batchState.results"
+            :single-line="false"
+            :max-height="300"
+            @row-click="onBatchRowClick"
+          />
         </n-card>
       </n-gi>
     </n-grid>
 
-    <n-card title="推理流程时间线" style="margin-top: 16px">
+    <n-card v-if="!batchState.running && inferMode === 'single'" title="推理流程时间线" style="margin-top: 16px">
       <template #header-extra>
         <n-text depth="3" style="font-size: 12px">点击各阶段查看张量形状、密文形式与截断参数</n-text>
       </template>
@@ -109,13 +201,14 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, h } from "vue";
 import { useAheDemoSession } from "../../composables/useAheDemoSession.js";
 import AheFlowTimeline from "../../components/demo/AheFlowTimeline.vue";
 import AheTraceDrawer from "../../components/demo/AheTraceDrawer.vue";
 import { AHE_PHASES } from "../../constants/aheFlow.js";
 import {
   aheInfer,
+  aheBatchInfer,
   ahePreprocess,
   ahePreprocessBatch,
   fetchAheModels,
@@ -144,6 +237,48 @@ const drawerOpen = ref(false);
 const runningPhase = ref(0);
 const selectedSample = ref(null);
 const lastUploadPath = ref(null);
+const inferMode = ref("single");
+const batchConfig = ref({
+  startIndex: 0,
+  limit: 10,
+  concurrency: 4,
+});
+const batchState = ref({
+  running: false,
+  completed: false,
+  completedCount: 0,
+  limit: 10,
+  correct: 0,
+  accuracy: 0,
+  elapsed: 0,
+  eta: 0,
+  totalElapsed: 0,
+  concurrency: 4,
+  results: [],
+});
+
+const batchColumns = [
+  { title: "序号", key: "mnist_index", width: 80 },
+  { title: "标签", key: "label", width: 60 },
+  { title: "预测", key: "prediction", width: 60 },
+  {
+    title: "正确",
+    key: "correct",
+    width: 80,
+    render: (row) => {
+      return h(
+        "n-tag",
+        { type: row.correct ? "success" : "error", size: "small" },
+        () => (row.correct ? "✓" : "✗")
+      );
+    },
+  },
+];
+
+const batchProgress = computed(() => {
+  if (batchState.value.limit === 0) return 0;
+  return Math.round((batchState.value.completedCount / batchState.value.limit) * 100);
+});
 
 const canRunAheInfer = computed(
   () =>
@@ -387,6 +522,102 @@ async function runInfer() {
     runningPhase.value = AHE_PHASES.length;
     busy.value = false;
   }
+}
+
+async function runBatchInfer() {
+  if (!isDesktop || !modelId.value) return;
+
+  batchState.value.running = true;
+  batchState.value.completed = false;
+  batchState.value.completedCount = 0;
+  batchState.value.correct = 0;
+  batchState.value.accuracy = 0;
+  batchState.value.elapsed = 0;
+  batchState.value.eta = 0;
+  batchState.value.totalElapsed = 0;
+  batchState.value.limit = batchConfig.value.limit;
+  batchState.value.concurrency = batchConfig.value.concurrency;
+  batchState.value.results = [];
+  error.value = null;
+  state.connectionStatus = "connecting";
+
+  const startTime = Date.now();
+
+  try {
+    const report = await aheBatchInfer({
+      startIndex: batchConfig.value.startIndex,
+      limit: batchConfig.value.limit,
+      concurrency: batchConfig.value.concurrency,
+      modelId: modelId.value,
+      onProgress: (progress) => {
+        batchState.value.completedCount = progress.index;
+        batchState.value.correct = progress.correct;
+        batchState.value.accuracy = progress.accuracy;
+        batchState.value.elapsed = progress.elapsed_s;
+        batchState.value.eta = progress.eta_s;
+      },
+    });
+
+    batchState.value.totalElapsed = Math.round((Date.now() - startTime) / 1000);
+    batchState.value.running = false;
+    batchState.value.completed = true;
+
+    // Parse results from report
+    if (report.results && Array.isArray(report.results)) {
+      batchState.value.results = report.results.map((r) => ({
+        mnist_index: r.mnist_index,
+        label: r.label,
+        prediction: r.prediction,
+        correct: r.correct,
+        logits: r.logits,
+      }));
+    }
+
+    state.connectionStatus = "connected";
+    addLog("批量完成", `准确率 ${(batchState.value.accuracy * 100).toFixed(1)}%`);
+  } catch (e) {
+    error.value = String(e);
+    state.connectionStatus = "error";
+    batchState.value.running = false;
+  }
+}
+
+function onBatchRowClick(row) {
+  inferMode.value = "single";
+  index.value = row.mnist_index;
+  preprocess().then(() => {
+    selectSample(gallery.value.find((g) => g.mnist_index === row.mnist_index) || null);
+  });
+}
+
+function exportBatchReport() {
+  const report = {
+    config: {
+      start_index: batchConfig.value.startIndex,
+      limit: batchConfig.value.limit,
+      concurrency: batchConfig.value.concurrency,
+      model_id: modelId.value,
+    },
+    results: batchState.value.results,
+    summary: {
+      total: batchState.value.limit,
+      correct: batchState.value.correct,
+      accuracy: batchState.value.accuracy,
+      total_elapsed_s: batchState.value.totalElapsed,
+      avg_time_per_item: batchState.value.totalElapsed / batchState.value.limit,
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `batch_${batchConfig.value.limit}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  addLog("导出", `批量报告 ${a.download}`);
 }
 
 onMounted(async () => {
