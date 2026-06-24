@@ -2,7 +2,7 @@
   "commitment_bytes": 128,
   "kind": "spartan_pc",
   "num_scalars": 13,
-  "prove_ms": 3,
+  "prove_ms": 5,
   "task": "Z-5",
-  "verify_ms": 2
+  "verify_ms": 7
 }

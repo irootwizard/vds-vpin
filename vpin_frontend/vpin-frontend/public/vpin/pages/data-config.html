@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据配置 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/theme.css">
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <h1>数据配置</h1>
+                    </div>
+                    
+                    <!-- 步骤指示器 -->
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <div class="step-label">选择数据源</div>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">2</div>
+                            <div class="step-label">隐私配置</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-label">预览确认</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据源选择 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/database.svg" alt="数据源">
+                            选择数据源
+                        </h2>
+                        
+                        <div class="data-source-options">
+                            <div class="source-option active">
+                                <div class="option-header">
+                                    <img src="../assets/icons/upload.svg" alt="上传">
+                                    <h3>上传本地文件</h3>
+                                </div>
+                                <div class="option-body">
+                                    <div class="upload-area">
+                                        <img src="../assets/icons/folder.svg" alt="文件夹">
+                                        <p>拖拽文件到此处，或点击选择</p>
+                                        <p class="upload-hint">支持.csv, .json, .parquet格式，最大10GB</p>
+                                        <button class="btn-outline">选择文件</button>
+                                    </div>
+                                    <div class="file-list">
+                                        <div class="file-item">
+                                            <img src="../assets/icons/file-csv.svg" alt="CSV">
+                                            <div class="file-info">
+                                                <div class="file-name">customer_data_2024.csv</div>
+                                                <div class="file-size">128.4 MB</div>
+                                            </div>
+                                            <div class="file-status">
+                                                <span class="status-success">已上传</span>
+                                                <button class="btn-icon">
+                                                    <img src="../assets/icons/delete.svg" alt="删除">
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="source-option">
+                                <div class="option-header">
+                                    <img src="../assets/icons/database.svg" alt="数据库">
+                                    <h3>连接数据库</h3>
+                                </div>
+                                <div class="option-body">
+                                    <div class="database-form">
+                                        <div class="form-group">
+                                            <label>数据库类型</label>
+                                            <select class="form-control">
+                                                <option>MySQL</option>
+                                                <option>PostgreSQL</option>
+                                                <option>ClickHouse</option>
+                                                <option>Hive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="source-option">
+                                <div class="option-header">
+                                    <img src="../assets/icons/history.svg" alt="历史">
+                                    <h3>使用历史数据集</h3>
+                                </div>
+                                <div class="option-body">
+                                    <p>选择之前上传的数据集</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图像精度预处理 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/upload.svg" alt="图像精度">
+                            图像精度预处理
+                        </h2>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <label for="imageInput">上传图像</label>
+                            <input id="imageInput" type="file" accept="image/*">
+                            <label for="precisionBits">浮点转定点精度（小数位）</label>
+                            <input id="precisionBits" type="number" min="0" max="8" value="4" style="width: 80px;">
+                            <button id="btnInitPreprocess" class="btn-primary">初始化并预处理（AHE）</button>
+                            <button id="btnPreviewCompare" class="btn-secondary" disabled>查看精度对比</button>
+                            <button id="btnConfirmPreprocess" class="btn-primary" disabled>确认</button>
+                        </div>
+                        <p id="preprocessStatus" style="margin: 12px 0 0; color: #8c8c8c;">等待图像与精度配置</p>
+                    </div>
+                    
+                    <!-- 隐私配置 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/security.svg" alt="隐私">
+                            隐私保护配置
+                        </h2>
+                        
+                        <div class="privacy-config">
+                            <!-- 全局设置 -->
+                            <div class="privacy-global">
+                                <h3>全局安全设置</h3>
+                                <div class="toggle-group">
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/encryption.svg" alt="加密">
+                                                启用端到端加密
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            所有数据在传输和存储过程中进行加密
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/access-control.svg" alt="访问控制">
+                                                启用访问控制
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            基于角色的数据访问权限管理
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox">
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/dp.svg" alt="差分隐私">
+                                                启用本地差分隐私
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            在数据源头添加噪声保护隐私
+                                            <button class="btn-link">配置参数</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input id="privacyAhe" type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/encryption.svg" alt="AHE">
+                                                启用 AHE 同态加密
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            用于推理过程中的同态密文计算，可与 CP-SNARK 同时启用。
+                                        </div>
+                                    </div>
+
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input id="privacySnark" type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/verification.svg" alt="CP-SNARK">
+                                                启用 CP-SNARK 零知识证明
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            提供结果可验证性证明，可与 AHE 多选组合。
+                                        </div>
+                                    </div>
+                                </div>
+                                <p id="privacyProtocolStatus" style="margin-top: 12px; color:#8c8c8c;">
+                                    当前隐私机制：AHE 同态加密、CP-SNARK 零知识证明
+                                </p>
+                            </div>
+                            
+                            <!-- 字段级配置 -->
+                            <div class="privacy-field">
+                                <h3>字段级隐私配置</h3>
+                                <div class="table-responsive">
+                                    <table class="field-table">
+                                        <thead>
+                                            <tr>
+                                                <th>字段名</th>
+                                                <th>数据类型</th>
+                                                <th>敏感级别</th>
+                                                <th>隐私保护</th>
+                                                <th>处理方法</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    
+                                                    user_id
+                                                </td>
+                                                <td>
+                                                    <span class="data-type string">字符串</span>
+                                                </td>
+                                                <td>
+                                                    <div class="sensitivity-level high">
+                                                        高敏感
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control-sm">
+                                                        <option>标识符脱敏</option>
+                                                        <option>哈希处理</option>
+                                                        <option>保留原值</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <span class="processing-method">
+                                                        
+                                                        SHA256哈希
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    
+                                                    age
+                                                </td>
+                                                <td>
+                                                    <span class="data-type number">数值</span>
+                                                </td>
+                                                <td>
+                                                    <div class="sensitivity-level medium">
+                                                        中敏感
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control-sm">
+                                                        <option>添加噪声</option>
+                                                        <option>范围泛化</option>
+                                                        <option>保留原值</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <span class="processing-method">
+                                                        
+                                                        Laplace噪声
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="action-bar">
+                        <a href="task-dashboard.html" class="btn-secondary">
+                            <img src="../assets/icons/chevron-right.svg" alt="上一步" style="transform: rotate(180deg);">
+                            上一步
+                        </a>
+                        <button class="btn-primary">
+                            下一步：预览确认
+                            <img src="../assets/icons/chevron-right.svg" alt="下一步">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const state = {
+            hasPreprocessedImage: false
+        };
+        const privacyStorageKey = "vpinPrivacyProtocols";
+
+        document.getElementById("btnInitPreprocess").addEventListener("click", function() {
+            const imageInput = document.getElementById("imageInput");
+            const precisionBits = Number(document.getElementById("precisionBits").value);
+            if (!imageInput.files || imageInput.files.length === 0) {
+                document.getElementById("preprocessStatus").textContent = "请先上传图像。";
+                return;
+            }
+            state.hasPreprocessedImage = true;
+            document.getElementById("preprocessStatus").textContent =
+                "已完成图像浮点精度(" + precisionBits + "位)转定点并执行 AHE 预处理（Mock）。";
+            document.getElementById("btnPreviewCompare").disabled = false;
+            document.getElementById("btnConfirmPreprocess").disabled = false;
+        });
+
+        document.getElementById("btnPreviewCompare").addEventListener("click", function() {
+            if (!state.hasPreprocessedImage) {
+                return;
+            }
+            const imageInput = document.getElementById("imageInput");
+            const file = imageInput.files[0];
+            const precisionBits = document.getElementById("precisionBits").value;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewWindow = window.open("", "_blank", "width=900,height=600");
+                if (!previewWindow) {
+                    document.getElementById("preprocessStatus").textContent = "浏览器阻止了弹窗，请允许后重试。";
+                    return;
+                }
+                previewWindow.document.write(
+                    "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>图像精度对比</title></head><body style='font-family:Arial,sans-serif;background:#f5faff;padding:24px;'>" +
+                    "<h2 style='color:#096dd9;'>图像精度对比窗口</h2>" +
+                    "<p>原始图像与定点精度处理结果（模拟展示，精度位数：" + precisionBits + "）</p>" +
+                    "<div style='display:flex;gap:24px;'>" +
+                    "<div><h3>原始图像</h3><img src='" + e.target.result + "' style='max-width:360px;border:1px solid #d9d9d9;'/></div>" +
+                    "<div><h3>定点精度后图像（Mock）</h3><img src='" + e.target.result + "' style='max-width:360px;border:1px solid #d9d9d9;filter: contrast(1.05) saturate(0.9);'/></div>" +
+                    "</div>" +
+                    "</body></html>"
+                );
+                previewWindow.document.close();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById("btnConfirmPreprocess").addEventListener("click", function() {
+            if (!state.hasPreprocessedImage) {
+                return;
+            }
+            document.getElementById("preprocessStatus").textContent = "图像精度处理结果已确认，可进入下一步预览确认。";
+        });
+
+        const privacyAhe = document.getElementById("privacyAhe");
+        const privacySnark = document.getElementById("privacySnark");
+        const privacyProtocolStatus = document.getElementById("privacyProtocolStatus");
+
+        function renderPrivacyProtocolStatus() {
+            const selected = [];
+            if (privacyAhe.checked) {
+                selected.push("AHE 同态加密");
+            }
+            if (privacySnark.checked) {
+                selected.push("CP-SNARK 零知识证明");
+            }
+            privacyProtocolStatus.textContent = selected.length > 0
+                ? ("当前隐私机制：" + selected.join("、"))
+                : "当前隐私机制：未启用（建议至少启用一种）";
+        }
+
+        function loadPrivacyProtocolSelection() {
+            const raw = localStorage.getItem(privacyStorageKey);
+            if (!raw) {
+                renderPrivacyProtocolStatus();
+                return;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                privacyAhe.checked = !!parsed.ahe;
+                privacySnark.checked = !!parsed.snark;
+            } catch (error) {
+                // ignore parse error and use default selection
+            }
+            renderPrivacyProtocolStatus();
+        }
+
+        function persistPrivacyProtocolSelection() {
+            localStorage.setItem(privacyStorageKey, JSON.stringify({
+                ahe: privacyAhe.checked,
+                snark: privacySnark.checked
+            }));
+            renderPrivacyProtocolStatus();
+        }
+
+        [privacyAhe, privacySnark].forEach(item => {
+            item.addEventListener("change", persistPrivacyProtocolSelection);
+        });
+
+        loadPrivacyProtocolSelection();
+    });
+    </script>
+</body>
+</html>

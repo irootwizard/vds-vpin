@@ -1,0 +1,91 @@
+/**
+ * vPIN 设计 Token（单一数据源）
+ * Vue 应用：src/main.js 引入
+ * 静态页：theme.css @import
+ */
+:root {
+  /* 品牌色 */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-primary-light: #60a5fa;
+  --color-accent: #6366f1;
+
+  /* 导航（隐语云浅色侧栏） */
+  --color-nav-bg: #0f172a;
+  --color-nav-text: #94a3b8;
+  --color-nav-active: #93c5fd;
+  --color-sider-bg: #f4f6fc;
+  --color-sider-active-bg: rgba(79, 110, 247, 0.12);
+  --color-page-bg: #eef1f8;
+
+  /* 语义色 */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --color-info: #0891b2;
+
+  /* 表面 */
+  --color-surface: #ffffff;
+  --color-bg: #f8fafc;
+  --color-bg-gradient-end: #eef2ff;
+  --color-border: #e2e8f0;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+
+  /* 字体 */
+  --font-sans: "Inter", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  /* 字号 */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 16px 40px rgba(37, 99, 235, 0.12);
+
+  /* 布局 */
+  --header-height: 56px;
+  --sidebar-width: 240px;
+  --content-max-width: 1200px;
+
+  /* 兼容旧变量名（components.css） */
+  --primary-color: var(--color-primary);
+  --primary-dark: var(--color-primary-dark);
+  --success-color: var(--color-success);
+  --warning-color: var(--color-warning);
+  --error-color: var(--color-error);
+  --info-color: var(--color-info);
+  --gray-1: var(--color-surface);
+  --gray-2: var(--color-bg);
+  --gray-3: #f1f5f9;
+  --gray-4: var(--color-border);
+  --gray-5: #cbd5e1;
+  --gray-6: var(--color-text-muted);
+  --gray-7: var(--color-text-secondary);
+  --gray-8: #475569;
+  --gray-9: var(--color-text-primary);
+  --border-radius-sm: var(--radius-sm);
+  --border-radius-md: var(--radius-md);
+  --border-radius-lg: var(--radius-lg);
+}

@@ -1,6 +1,6 @@
 {
   "proof_bytes": 9400,
-  "prove_ms": 84,
+  "prove_ms": 168,
   "task": "Z-2",
-  "verify_ms": 48
+  "verify_ms": 72
 }

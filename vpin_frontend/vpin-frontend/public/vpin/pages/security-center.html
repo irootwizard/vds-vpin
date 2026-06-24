@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全中心 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <style>
+        /* 只修复图标大小问题 */
+        .status-icon img {
+            width: 24px !important;
+            height: 24px !important;
+        }
+        
+        .report-footer img {
+            width: 14px !important;
+            height: 14px !important;
+        }
+        
+        /* 如果图标文件不存在，用CSS内容替代 */
+        img[src*="shield-check.svg"],
+        img[src*="lock.svg"],
+        img[src*="download.svg"] {
+            display: inline-block;
+            font-size: 0; /* 隐藏alt文字 */
+        }
+        
+        /* 当图片加载失败时显示替代符号 */
+        img[src*="shield-check.svg"]::after,
+        img[src*="lock.svg"]::after,
+        img[src*="download.svg"]::after {
+            content: "";
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <h1>安全中心</h1>
+                        <p>隐私计算安全状态监控与验证</p>
+                    </div>
+                    
+                    <!-- 安全状态卡片 -->
+                    <div class="security-status-grid">
+                        <div class="status-card secure">
+                            <div class="status-icon">
+                                <img src="../assets/icons/shield-check.svg">
+                            </div>
+                            <div class="status-content">
+                                <h3>TEE保护状态</h3>
+                                <p>当前任务在可信执行环境中运行</p>
+                                <div class="status-details">
+                                    <span class="detail-item">
+                                        ✅ 硬件隔离: 启用
+                                    </span>
+                                    <span class="detail-item">
+                                        ✅ 内存加密: 启用
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-card secure">
+                            <div class="status-icon">
+                                <img src="../assets/icons/shield-check.svg">
+                            </div>
+                            <div class="status-content">
+                                <h3>加密通信</h3>
+                                <p>端到端TLS 1.3加密</p>
+                                <div class="status-details">
+                                    <span class="detail-item">
+                                        ✅ 证书验证: 通过
+                                    </span>
+                                    <span class="detail-item">
+                                        ✅ 前向保密: 启用
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-card warning">
+                            <div class="status-icon">
+                                <img src="../assets/icons/privacy.svg">
+                            </div>
+                            <div class="status-content">
+                                <h3>隐私预算</h3>
+                                <p>剩余预算: 42%</p>
+                                <div class="status-details">
+                                    <span class="detail-item">
+                                        ⚠️ 本周已使用: 58%
+                                    </span>
+                                    <button class="btn-link">调整预算</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="status-card info">
+                            <div class="status-icon">
+                                <img src="../assets/icons/dashboard.svg">
+                            </div>
+                            <div class="status-content">
+                                <h3>远程证明</h3>
+                                <p>最新验证: 2小时前</p>
+                                <div class="status-details">
+                                    <span class="detail-item">
+                                        ✅ TEE完整性: 已验证
+                                    </span>
+                                    <button class="btn-link">查看报告</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 远程证明报告 -->
+                    <div class="verification-section">
+                        <h2>远程证明报告</h2>
+                        <div class="report-card">
+                            <div class="report-header">
+                                <h3>TEE完整性验证报告</h3>
+                                <span class="report-time">生成时间: 2024-01-23 14:30:25</span>
+                            </div>
+                            <div class="report-body">
+                                <div class="verification-result success">
+                                    <h4>✅ 验证通过</h4>
+                                    <p>硬件TEE环境完整可信，未发现篡改痕迹</p>
+                                </div>
+                                <div class="verification-details">
+                                    <div class="detail-item">
+                                        <strong>验证项目:</strong> SGX Enclave完整性
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>哈希值:</strong> 0x8a3f...c7d2
+                                    </div>
+                                    <div class="detail-item">
+                                        <strong>签名机构:</strong> Intel Attestation Service
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="report-footer">
+                                <button class="btn-secondary">
+                                    <!-- 直接换成文字符号，避免文件问题 -->
+                                    <span style="margin-right: 6px;">⬇️</span>
+                                    下载完整报告
+                                </button>
+                                <button class="btn-primary">
+                                    重新验证
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+</body>
+</html>

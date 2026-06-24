@@ -75,6 +75,7 @@ def cmd_register(args: argparse.Namespace) -> None:
         "network": network,
         "topology": "cnn_mnist_v1",
         "weight_dir": str(dest),
+        "weights_dir": str(dest),
         "updated": datetime.now(timezone.utc).isoformat(),
         "commitment_digest": commitment_digest,
     }

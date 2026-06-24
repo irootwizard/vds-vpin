@@ -1,0 +1,85 @@
+/* 响应式设计 */
+
+/* 平板设备 */
+@media (max-width: 1024px) {
+    .model-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    
+    .data-source-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .security-status-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    
+    .resource-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 平板竖屏 */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: var(--spacing-md);
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+    
+    .page-stats {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: var(--spacing-xs);
+    }
+    
+    .stat-card {
+        min-width: 140px;
+    }
+    
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacing-md);
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .filter-tags {
+        overflow-x: auto;
+        padding-bottom: var(--spacing-xs);
+    }
+    
+    .tag-group {
+        flex-wrap: nowrap;
+    }
+    
+    .quick-actions {
+        flex-wrap: wrap;
+    }
+    
+    .btn-primary, .btn-secondary {
+        flex: 1;
+        min-width: 140px;
+    }
+    
+    .task-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+    
+    .field-table {
+        display: block;
+    }
+    
+    .field-table thead {
+        display: none;
+    }
+    
+    .

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模型中心 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <style>
+        /* 按钮对齐修复 */
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-actions button {
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+        }
+		
+		/* 仅在此页面隐藏隐私徽章 */
+		.privacy-badges {
+		    display: none !important;
+		}
+
+        .model-filter-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .model-filter-grid input,
+        .model-filter-grid select {
+            height: 34px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 0 10px;
+            background: #fff;
+        }
+
+        .model-result-list {
+            background: #fff;
+            border: 1px solid #d6e8ff;
+            border-radius: 10px;
+            max-height: 320px;
+            overflow: auto;
+            margin-bottom: 14px;
+        }
+
+        .model-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .model-row:last-child {
+            border-bottom: 0;
+        }
+
+        .model-row-title {
+            font-weight: 600;
+            color: #1f1f1f;
+            margin-bottom: 4px;
+        }
+
+        .model-row-meta {
+            color: #595959;
+            font-size: 13px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .model-empty {
+            padding: 18px 14px;
+            color: #8c8c8c;
+        }
+
+        .selected-model-hint {
+            margin: 10px 0 0;
+            color: #8c8c8c;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <!-- 页面头部 -->
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>模型中心</h1>
+                            <p>选择或上传用于隐私推理的AI模型</p>
+                        </div>
+                        
+                        <div class="page-actions">
+                            <button class="btn-primary">
+                                <img src="../assets/icons/upload.svg" alt="上传">
+                                上传模型
+                            </button>
+                            <button class="btn-secondary">
+
+                                <span style="margin-right: 6px;">↻</span>
+                                刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 24px;">
+                        <h2 style="color: #096dd9; margin-bottom: 16px;">模型上传与选择</h2>
+                        <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                            <label><input type="radio" name="modelSource" value="remote" checked> 远程服务器模型选择</label>
+                            <label><input type="radio" name="modelSource" value="local"> 本地模型上传</label>
+                        </div>
+
+                        <div id="remoteModelPanel" style="background: #f5faff; border: 1px solid #d6e8ff; border-radius: 12px; padding: 16px;">
+                            <p style="margin: 0 0 12px; color: #8c8c8c;">
+                                隐私机制（AHE / CP-SNARK）请在
+                                <a href="../pages/data-config.html" style="color:#1890ff; text-decoration:none;">新建任务-隐私保护配置</a>
+                                中多选设置。
+                            </p>
+                            <div class="model-filter-grid">
+                                <input id="modelSearch" type="text" placeholder="按模型名搜索">
+                                <select id="frameworkFilter">
+                                    <option value="all">框架：全部</option>
+                                </select>
+                                <select id="taskFilter">
+                                    <option value="all">任务：全部</option>
+                                </select>
+                                <select id="paramFilter">
+                                    <option value="all">参数量：全部</option>
+                                    <option value="lt1">小于 1M</option>
+                                    <option value="1to10">1M - 10M</option>
+                                    <option value="10to100">10M - 100M</option>
+                                    <option value="gt100">大于 100M</option>
+                                </select>
+                                <select id="sortFilter">
+                                    <option value="trending">排序：热度优先</option>
+                                    <option value="accuracy">排序：准确率优先</option>
+                                    <option value="paramsAsc">排序：参数量升序</option>
+                                    <option value="paramsDesc">排序：参数量降序</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <button id="btnResetModelFilter" class="btn-secondary">重置筛选</button>
+                            </div>
+                            <div id="modelResultList" class="model-result-list"></div>
+                            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap;">
+                                <label for="remoteModelSelect" style="min-width: 80px;">远程模型</label>
+                                <select id="remoteModelSelect" style="min-width: 280px;">
+                                    <option value="">请选择模型</option>
+                                </select>
+                                <button id="btnLoadModelInfo" class="btn-primary">获取模型信息（Mock）</button>
+                            </div>
+                            <p id="selectedModelHint" class="selected-model-hint">未选择模型</p>
+                            <div id="modelInfoCard" style="display:none; background: white; border: 1px solid #e6f4ff; border-radius: 8px; padding: 12px;"></div>
+                        </div>
+
+                        <div id="localModelPanel" style="display:none; margin-top: 12px; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 12px; padding: 16px;">
+                            <label for="localModelFile">上传本地模型文件</label>
+                            <input id="localModelFile" type="file" accept=".onnx,.pt,.pth,.h5" style="display:block; margin-top:8px;">
+                            <p id="localModelHint" style="margin: 10px 0 0; color: #8c8c8c;">支持 onnx / pt / pth / h5。</p>
+                        </div>
+                    </div>
+
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px;">
+                        <h2 style="color: #096dd9; margin: 0 0 16px;">推荐模型浏览</h2>
+                        <div class="model-grid">
+                            <div data-include="../components/model-card.html"></div>
+                            <div class="model-card upload-card">
+                                <div class="upload-content">
+                                    <img src="../assets/icons/upload.svg" alt="上传">
+                                    <h3>上传新模型</h3>
+                                    <p>支持 .pth, .onnx, .pb 格式</p>
+                                    <button class="btn-outline">
+                                        选择文件
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mockRemoteModels = [
+            {
+                id: "cnn-mnist",
+                name: "CNN (MNIST 预训练)",
+                framework: "PyTorch",
+                task: "图像分类",
+                paramsCountM: 1.21,
+                inputShape: "1x28x28",
+                accuracy: 99.1,
+                updated: "5天前",
+                trending: 880
+            },
+            {
+                id: "lenet-mnist",
+                name: "LeNet (MNIST 预训练)",
+                framework: "PyTorch",
+                task: "图像分类",
+                paramsCountM: 0.06,
+                inputShape: "1x28x28",
+                accuracy: 98.3,
+                updated: "3天前",
+                trending: 420
+            },
+            {
+                id: "lenet-cifar10",
+                name: "LeNet (CIFAR-10 预训练)",
+                framework: "PyTorch",
+                task: "图像分类",
+                paramsCountM: 0.08,
+                inputShape: "3x32x32",
+                accuracy: 74.8,
+                updated: "2天前",
+                trending: 390
+            },
+            {
+                id: "resnet50-cifar10",
+                name: "ResNet50 (CIFAR-10 微调)",
+                framework: "PyTorch",
+                task: "图像分类",
+                paramsCountM: 25.6,
+                inputShape: "3x224x224",
+                accuracy: 92.4,
+                updated: "7天前",
+                trending: 1320
+            },
+            {
+                id: "mobilenetv3-imagenet",
+                name: "MobileNetV3 (ImageNet)",
+                framework: "TensorFlow",
+                task: "图像分类",
+                paramsCountM: 5.4,
+                inputShape: "3x224x224",
+                accuracy: 75.6,
+                updated: "1天前",
+                trending: 970
+            },
+            {
+                id: "yolov8n-coco",
+                name: "YOLOv8n (COCO)",
+                framework: "PyTorch",
+                task: "目标检测",
+                paramsCountM: 3.2,
+                inputShape: "3x640x640",
+                accuracy: 69.2,
+                updated: "9天前",
+                trending: 1580
+            },
+            {
+                id: "unet-medical",
+                name: "U-Net (医学分割)",
+                framework: "ONNX",
+                task: "图像分割",
+                paramsCountM: 31.0,
+                inputShape: "1x512x512",
+                accuracy: 88.4,
+                updated: "4天前",
+                trending: 760
+            },
+            {
+                id: "vit-base-imagenet",
+                name: "ViT-Base (ImageNet)",
+                framework: "TensorFlow",
+                task: "图像分类",
+                paramsCountM: 86.0,
+                inputShape: "3x224x224",
+                accuracy: 81.3,
+                updated: "6天前",
+                trending: 1490
+            }
+        ];
+
+        const modelResultList = document.getElementById("modelResultList");
+        const modelSearch = document.getElementById("modelSearch");
+        const frameworkFilter = document.getElementById("frameworkFilter");
+        const taskFilter = document.getElementById("taskFilter");
+        const paramFilter = document.getElementById("paramFilter");
+        const sortFilter = document.getElementById("sortFilter");
+        const selectedModelHint = document.getElementById("selectedModelHint");
+        const remoteModelSelect = document.getElementById("remoteModelSelect");
+        const modelInfoCard = document.getElementById("modelInfoCard");
+
+        const frameworks = Array.from(new Set(mockRemoteModels.map(model => model.framework)));
+        frameworks.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = "框架：" + item;
+            frameworkFilter.appendChild(option);
+        });
+
+        const tasks = Array.from(new Set(mockRemoteModels.map(model => model.task)));
+        tasks.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = "任务：" + item;
+            taskFilter.appendChild(option);
+        });
+
+        document.querySelectorAll('input[name="modelSource"]').forEach(el => {
+            el.addEventListener("change", function() {
+                const isRemote = this.value === "remote";
+                document.getElementById("remoteModelPanel").style.display = isRemote ? "block" : "none";
+                document.getElementById("localModelPanel").style.display = isRemote ? "none" : "block";
+            });
+        });
+
+        function formatParams(paramsCountM) {
+            return paramsCountM >= 1000
+                ? (paramsCountM / 1000).toFixed(2) + "B"
+                : paramsCountM.toFixed(2) + "M";
+        }
+
+        function renderRemoteModelSelect(modelList) {
+            remoteModelSelect.innerHTML = "<option value=''>请选择模型</option>";
+            modelList.forEach(model => {
+                const option = document.createElement("option");
+                option.value = model.id;
+                option.textContent = model.name;
+                remoteModelSelect.appendChild(option);
+            });
+        }
+
+        function getFilteredModels() {
+            const searchValue = modelSearch.value.trim().toLowerCase();
+            const frameworkValue = frameworkFilter.value;
+            const taskValue = taskFilter.value;
+            const paramValue = paramFilter.value;
+            const sortValue = sortFilter.value;
+
+            let filtered = mockRemoteModels.filter(model => {
+                if (searchValue && !model.name.toLowerCase().includes(searchValue)) {
+                    return false;
+                }
+                if (frameworkValue !== "all" && model.framework !== frameworkValue) {
+                    return false;
+                }
+                if (taskValue !== "all" && model.task !== taskValue) {
+                    return false;
+                }
+                if (paramValue === "lt1" && model.paramsCountM >= 1) {
+                    return false;
+                }
+                if (paramValue === "1to10" && (model.paramsCountM < 1 || model.paramsCountM > 10)) {
+                    return false;
+                }
+                if (paramValue === "10to100" && (model.paramsCountM < 10 || model.paramsCountM > 100)) {
+                    return false;
+                }
+                if (paramValue === "gt100" && model.paramsCountM <= 100) {
+                    return false;
+                }
+                return true;
+            });
+
+            filtered = filtered.sort((a, b) => {
+                if (sortValue === "accuracy") {
+                    return b.accuracy - a.accuracy;
+                }
+                if (sortValue === "paramsAsc") {
+                    return a.paramsCountM - b.paramsCountM;
+                }
+                if (sortValue === "paramsDesc") {
+                    return b.paramsCountM - a.paramsCountM;
+                }
+                return b.trending - a.trending;
+            });
+
+            return filtered;
+        }
+
+        function renderModelList(modelList) {
+            if (modelList.length === 0) {
+                modelResultList.innerHTML = "<div class='model-empty'>没有符合条件的模型，请调整筛选条件。</div>";
+                return;
+            }
+            modelResultList.innerHTML = modelList.map(model => (
+                "<div class='model-row'>" +
+                    "<div>" +
+                        "<div class='model-row-title'>" + model.name + "</div>" +
+                        "<div class='model-row-meta'>" +
+                            "<span>任务：" + model.task + "</span>" +
+                            "<span>框架：" + model.framework + "</span>" +
+                            "<span>参数量：" + formatParams(model.paramsCountM) + "</span>" +
+                            "<span>准确率：" + model.accuracy.toFixed(1) + "%</span>" +
+                            "<span>更新：" + model.updated + "</span>" +
+                            "<span>热度：" + model.trending + "</span>" +
+                        "</div>" +
+                    "</div>" +
+                    "<div style='display:flex;align-items:center;'>" +
+                        "<button class='btn-primary btn-select-model' data-model-id='" + model.id + "'>选择</button>" +
+                    "</div>" +
+                "</div>"
+            )).join("");
+        }
+
+        function applyModelFilters() {
+            const filtered = getFilteredModels();
+            renderModelList(filtered);
+            renderRemoteModelSelect(filtered);
+        }
+
+        [modelSearch, frameworkFilter, taskFilter, paramFilter, sortFilter].forEach(el => {
+            el.addEventListener("input", applyModelFilters);
+            el.addEventListener("change", applyModelFilters);
+        });
+
+        document.getElementById("btnResetModelFilter").addEventListener("click", function() {
+            modelSearch.value = "";
+            frameworkFilter.value = "all";
+            taskFilter.value = "all";
+            paramFilter.value = "all";
+            sortFilter.value = "trending";
+            modelInfoCard.style.display = "none";
+            selectedModelHint.textContent = "未选择模型";
+            applyModelFilters();
+        });
+
+        modelResultList.addEventListener("click", function(event) {
+            const target = event.target;
+            if (!target.classList.contains("btn-select-model")) {
+                return;
+            }
+            const modelId = target.getAttribute("data-model-id");
+            const model = mockRemoteModels.find(item => item.id === modelId);
+            if (!model) {
+                return;
+            }
+            remoteModelSelect.value = model.id;
+            selectedModelHint.textContent = "当前选择：" + model.name;
+        });
+
+        remoteModelSelect.addEventListener("change", function() {
+            if (!this.value) {
+                selectedModelHint.textContent = "未选择模型";
+                return;
+            }
+            const model = mockRemoteModels.find(item => item.id === this.value);
+            selectedModelHint.textContent = model ? ("当前选择：" + model.name) : "未选择模型";
+        });
+
+        document.getElementById("btnLoadModelInfo").addEventListener("click", function() {
+            const selectedId = remoteModelSelect.value;
+            if (!selectedId) {
+                modelInfoCard.style.display = "block";
+                modelInfoCard.innerHTML = "<span style='color:#cf1322;'>请先选择远程模型。</span>";
+                return;
+            }
+            const model = mockRemoteModels.find(item => item.id === selectedId);
+            modelInfoCard.style.display = "block";
+            modelInfoCard.innerHTML =
+                "<div style='color:#262626; line-height:1.8;'>" +
+                "<div><strong>模型名称：</strong>" + model.name + "</div>" +
+                "<div><strong>任务类型：</strong>" + model.task + "</div>" +
+                "<div><strong>框架：</strong>" + model.framework + "</div>" +
+                "<div><strong>参数量：</strong>" + formatParams(model.paramsCountM) + "</div>" +
+                "<div><strong>输入维度：</strong>" + model.inputShape + "</div>" +
+                "<div><strong>参考准确率：</strong>" + model.accuracy.toFixed(1) + "%</div>" +
+                "<div><strong>热度：</strong>" + model.trending + "，<strong>更新时间：</strong>" + model.updated + "</div>" +
+                "<div style='color:#8c8c8c;'>模型信息由后端接口 Mock 返回（可替换真实 API）。</div>" +
+                "</div>";
+        });
+
+        applyModelFilters();
+    });
+    </script>
+</body>
+</html>
