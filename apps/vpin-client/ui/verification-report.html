@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证报告 - VDS-VPIN</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .report-filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: #595959;
+            font-size: 14px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .report-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .report-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .report-card:hover {
+            box-shadow: 0 4px 16px rgba(24, 144, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .report-id {
+            color: #096dd9;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .report-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .report-status.passed {
+            background: rgba(82, 196, 26, 0.1);
+            color: #52c41a;
+        }
+
+        .report-status.failed {
+            background: rgba(255, 77, 79, 0.1);
+            color: #ff4d4f;
+        }
+
+        .report-status.pending {
+            background: rgba(250, 173, 20, 0.1);
+            color: #faad14;
+        }
+
+        .report-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            color: #8c8c8c;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            color: #262626;
+            font-weight: 500;
+        }
+
+        .report-summary {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            color: #8c8c8c;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            color: #096dd9;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .report-details-panel {
+            display: none;
+        }
+
+        .report-details-panel.active {
+            display: block;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section h4 {
+            color: #096dd9;
+            margin-bottom: 12px;
+        }
+
+        .proof-chain {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .chain-step {
+            display: flex;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .chain-step:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-title {
+            color: #262626;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .step-description {
+            color: #595959;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="header-container"></div>
+
+        <div class="main-content">
+            <div id="sidebar-container"></div>
+
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>验证报告</h1>
+                            <p>查看和管理CP-SNARK计算量证明验证报告</p>
+                        </div>
+
+                        <div class="quick-actions">
+                            <button class="btn-primary tauri-action" data-action="refresh-reports">
+                                <img src="assets/icons/refresh.svg" alt="刷新">
+                                刷新报告
+                            </button>
+                            <button class="btn-secondary tauri-action" data-action="export-all-reports">
+                                <img src="assets/icons/download.svg" alt="导出">
+                                导出全部
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 报告筛选 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/filter.svg" alt="筛选" style="width: 24px; height: 24px;">
+                            报告筛选
+                        </h2>
+
+                        <div class="report-filters">
+                            <div class="filter-group">
+                                <label>状态:</label>
+                                <select id="statusFilter" class="tauri-action" data-action="filter-reports">
+                                    <option value="all">全部</option>
+                                    <option value="passed">通过</option>
+                                    <option value="failed">失败</option>
+                                    <option value="pending">进行中</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label>模型:</label>
+                                <select id="modelFilter" class="tauri-action" data-action="filter-reports">
+                                    <option value="all">全部模型</option>
+                                    <option value="CNN">CNN模型</option>
+                                    <option value="XGBoost">XGBoost模型</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label>时间范围:</label>
+                                <select id="timeFilter" class="tauri-action" data-action="filter-reports">
+                                    <option value="today">今天</option>
+                                    <option value="week">本周</option>
+                                    <option value="month" selected>本月</option>
+                                    <option value="all">全部时间</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label>搜索:</label>
+                                <input type="text" id="searchInput" placeholder="输入报告ID..." style="width: 200px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 报告列表 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/audit.svg" alt="报告列表" style="width: 24px; height: 24px;">
+                            验证报告列表
+                        </h2>
+
+                        <div id="reportList" class="report-list">
+                            <!-- 报告列表将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+
+                    <!-- 报告详情面板 -->
+                    <div id="reportDetailsPanel" class="report-details-panel tech-card" style="border-radius: 16px; padding: 24px;">
+                        <div class="detail-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="color: #096dd9; margin: 0;">验证报告详情</h2>
+                            <button class="btn-secondary" onclick="window.verificationReport.closeDetails()">
+                                <img src="assets/icons/delete.svg" alt="关闭" style="width: 16px; height: 16px;">
+                                关闭
+                            </button>
+                        </div>
+
+                        <div id="reportDetailsContent">
+                            <!-- 详情内容将通过JavaScript动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tauri-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/verification-report.js"></script>
+</body>
+</html>

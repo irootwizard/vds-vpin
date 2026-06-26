@@ -1,0 +1,14 @@
+# Node modules
+node_modules/
+
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Tauri specific
+src-tauri/target/
+src-tauri/gen/
+
+# IDE
+.vscode/
+.idea/

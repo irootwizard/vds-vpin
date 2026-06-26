@@ -1,0 +1,10 @@
+{
+  "network_id": "A",
+  "conv_filter_flat": ["1", "0", "1", "2", "0", "2", "1", "0", "1"],
+  "pool": {
+    "kernel": 2,
+    "stride": 2,
+    "inv_k_squared_fp": "256"
+  },
+  "fc": []
+}

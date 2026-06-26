@@ -1,0 +1,138 @@
+{
+  "deployable": true,
+  "range_ok": true,
+  "accuracy_ok": true,
+  "plan": {
+    "shift_pool": 26,
+    "shift_fc1": 32,
+    "pool_inv_bits": 10,
+    "fixed_point_bits": 16,
+    "pool_inv_fp": 64,
+    "intrinsic_shift_pool": 26,
+    "intrinsic_shift_fc1": 32,
+    "phases": [
+      {
+        "phase_id": "after_conv",
+        "client_action": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "phase_id": "after_pool",
+        "client_action": "shift",
+        "from_bits": 26,
+        "to_bits": 16,
+        "shift_bits": 26
+      },
+      {
+        "phase_id": "after_fc1",
+        "client_action": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16,
+        "shift_bits": 32
+      },
+      {
+        "phase_id": "after_fc2",
+        "client_action": "relu_only",
+        "from_bits": 16,
+        "to_bits": 16
+      }
+    ]
+  },
+  "static_bounds": {
+    "fc1_w_fp_max": 135863,
+    "fc1_b_fp_max": 47354,
+    "fc2_w_fp_max": 87163,
+    "fc2_b_fp_max": 44909,
+    "mac_fc1_bound": 4518512137082,
+    "mac_fc2_bound": 2625405389229
+  },
+  "calibration": {
+    "n_samples": 512,
+    "max_after_pool_pre_shift": 532125696.0,
+    "max_after_fc1_pre_relu": 123374188390.0,
+    "max_after_fc2_pre_relu": 176640154595.0,
+    "max_post_pool_shift": 519654.0,
+    "max_post_fc1_shift": 1882540.7164001465,
+    "percentile": 100.0
+  },
+  "checkpoints": [
+    {
+      "name": "after_pool",
+      "from_bits": 26,
+      "pre_shift_max": 532125696.0,
+      "post_shift_max": 519654.0,
+      "pre_shift_bits": 29,
+      "bsgs_ok": true,
+      "int32_reencrypt_ok": true,
+      "paper35_ok": true
+    },
+    {
+      "name": "after_fc1",
+      "from_bits": 32,
+      "pre_shift_max": 123374188390.0,
+      "post_shift_max": 1882540.7164001465,
+      "pre_shift_bits": 37,
+      "bsgs_ok": true,
+      "int32_reencrypt_ok": true,
+      "paper35_ok": false
+    },
+    {
+      "name": "after_fc2",
+      "from_bits": 32,
+      "pre_shift_max": 176640154595.0,
+      "post_shift_max": 176640154595.0,
+      "pre_shift_bits": 38,
+      "bsgs_ok": true,
+      "int32_reencrypt_ok": true,
+      "paper35_ok": false
+    }
+  ],
+  "truncation_boundaries": {
+    "shift_pool": {
+      "from_bits": 26,
+      "max_lost_real": 6.67572021484375e-06,
+      "mean_lost_real": 6.67572021484375e-06,
+      "pct_exact": 0.0
+    },
+    "shift_fc1": {
+      "from_bits": 32,
+      "max_lost_real": 1.2463191524147987e-05,
+      "mean_lost_real": 1.2463191524147987e-05,
+      "pct_exact": 0.0
+    }
+  },
+  "margin_risk": {
+    "n_samples": 1024,
+    "n_float_fixed_mismatch": 72,
+    "n_margin_below_bound": 10,
+    "logit_perturbation_bound": 0.07894023668065664,
+    "mismatches_with_small_float_margin": 11
+  },
+  "accuracy": {
+    "n_samples": 10,
+    "reference_acc": 0.9,
+    "ahe_acc": 0.9,
+    "acc_gap": 0.0,
+    "pred_mismatches": 0,
+    "pass_tolerance": true,
+    "tolerance": 0.1,
+    "ahe_mode": "websocket",
+    "float_fixed_gap": null,
+    "float_acc": null,
+    "fixed_acc": null,
+    "float_fixed_diagnostic": {
+      "n_samples": 256,
+      "float_acc": 0.9453125,
+      "fixed_acc": 0.91015625,
+      "float_fixed_gap": 0.03515625,
+      "pred_mismatches": 16,
+      "diagnostic_only": true
+    }
+  },
+  "errors": [],
+  "warnings": [
+    "after_fc1: pre-shift max exceeds paper ~35-bit budget (3.436e+10) \u2014 may stress decrypt latency",
+    "after_fc2: pre-shift max exceeds paper ~35-bit budget (3.436e+10) \u2014 may stress decrypt latency"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "run_id": "20260622_174721",
+  "phases": [
+    {
+      "name": "float",
+      "best_test_acc": 0.9194
+    },
+    {
+      "name": "fixed",
+      "best_test_acc": 0.1047
+    }
+  ],
+  "truncation": {
+    "shift_pool": 24,
+    "shift_fc1": 30,
+    "pool_inv_bits": 10,
+    "fixed_point_bits": 16,
+    "pool_inv_fp": 64,
+    "phases": [
+      {
+        "phase_id": "after_conv",
+        "client_action": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "phase_id": "after_pool",
+        "client_action": "shift",
+        "from_bits": 24,
+        "to_bits": 16,
+        "shift_bits": 24
+      },
+      {
+        "phase_id": "after_fc1",
+        "client_action": "relu_then_shift",
+        "from_bits": 30,
+        "to_bits": 16,
+        "shift_bits": 30
+      },
+      {
+        "phase_id": "after_fc2",
+        "client_action": "relu_only",
+        "from_bits": 16,
+        "to_bits": 16
+      }
+    ]
+  },
+  "topology_synced": false,
+  "float_fixed_acc": 0.1047,
+  "target_acc": 0.9,
+  "weights_exported": true,
+  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_174721"
+}

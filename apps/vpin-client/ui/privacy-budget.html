@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隐私预算 - VDS-VPIN</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .budget-overview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .budget-card {
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .budget-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #096dd9;
+            margin: 16px 0;
+        }
+
+        .budget-progress {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .budget-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #52c41a, #faad14, #ff4d4f);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .usage-history {
+            margin-top: 24px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .budget-settings {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .setting-row:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="header-container"></div>
+
+        <div class="main-content">
+            <div id="sidebar-container"></div>
+
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>隐私预算管理</h1>
+                            <p>监控和管理差分隐私预算使用情况</p>
+                        </div>
+
+                        <div class="quick-actions">
+                            <button class="btn-primary tauri-action" data-action="refresh-budget">
+                                <img src="assets/icons/refresh.svg" alt="刷新">
+                                刷新预算
+                            </button>
+                            <button class="btn-secondary tauri-action" data-action="export-report">
+                                <img src="assets/icons/download.svg" alt="导出">
+                                导出报告
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 预算概览 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/dp.svg" alt="隐私预算" style="width: 24px; height: 24px;">
+                            预算概览
+                        </h2>
+
+                        <div class="budget-overview">
+                            <div class="budget-card">
+                                <div style="color: #8c8c8c; font-size: 14px; margin-bottom: 8px;">总预算</div>
+                                <div class="budget-value" id="totalBudget">--</div>
+                                <div style="color: #595959; font-size: 12px;">本周可用总额</div>
+                            </div>
+
+                            <div class="budget-card">
+                                <div style="color: #8c8c8c; font-size: 14px; margin-bottom: 8px;">已使用</div>
+                                <div class="budget-value" style="color: #faad14;" id="usedBudget">--</div>
+                                <div style="color: #595959; font-size: 12px;">本周已使用</div>
+                            </div>
+
+                            <div class="budget-card">
+                                <div style="color: #8c8c8c; font-size: 14px; margin-bottom: 8px;">剩余预算</div>
+                                <div class="budget-value" style="color: #52c41a;" id="remainingBudget">--</div>
+                                <div style="color: #595959; font-size: 12px;">还可使用</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 24px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #595959;">预算使用进度</span>
+                                <span style="color: #096dd9; font-weight: 600;" id="budgetProgressPercent">--</span>
+                            </div>
+                            <div class="budget-progress">
+                                <div class="budget-progress-bar" id="budgetProgressBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 预算使用详情 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/history.svg" alt="使用记录" style="width: 24px; height: 24px;">
+                            使用记录
+                        </h2>
+
+                        <div id="usageHistoryList" class="usage-history">
+                            <!-- 使用记录将通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+
+                    <!-- 预算设置 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/settings.svg" alt="设置" style="width: 24px; height: 24px;">
+                            预算设置
+                        </h2>
+
+                        <div class="budget-settings">
+                            <div class="setting-row">
+                                <div>
+                                    <div style="color: #262626; font-weight: 500; margin-bottom: 4px;">周预算上限</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">设置每周最大隐私预算值</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="weeklyBudgetInput" placeholder="设置预算" step="0.1" min="0.1"
+                                           style="width: 100px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                                    <span style="color: #595959;">ε</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div style="color: #262626; font-weight: 500; margin-bottom: 4px;">告警阈值</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">当使用超过此比例时发出告警</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="alertThresholdInput" placeholder="80" min="1" max="100"
+                                           style="width: 80px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                                    <span style="color: #595959;">%</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div style="color: #262626; font-weight: 500; margin-bottom: 4px;">自动重置周期</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">选择预算自动重置的时间周期</div>
+                                </div>
+                                <select id="resetPeriodSelect" style="padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px;">
+                                    <option value="weekly">每周</option>
+                                    <option value="monthly">每月</option>
+                                    <option value="daily">每日</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; margin-top: 16px;">
+                            <button class="btn-primary tauri-action" data-action="save-settings" style="flex: 1;">
+                                保存设置
+                            </button>
+                            <button class="btn-secondary" onclick="window.privacyBudget.resetToDefault()" style="flex: 1;">
+                                重置默认
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 差分隐私参数 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-top: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/generalize.svg" alt="参数" style="width: 24px; height: 24px;">
+                            差分隐私参数
+                        </h2>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px;">
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">ε (Epsilon)</h4>
+                                <div style="color: #595959; margin-bottom: 8px; font-size: 14px;">隐私损失参数</div>
+                                <div style="background: white; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px;">
+                                    <div style="color: #096dd9; font-weight: 600;">0.1 - 10.0</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">推荐值: 1.0</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">δ (Delta)</h4>
+                                <div style="color: #595959; margin-bottom: 8px; font-size: 14px;">失败概率</div>
+                                <div style="background: white; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px;">
+                                    <div style="color: #096dd9; font-weight: 600;">10⁻⁵ - 10⁻³</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">推荐值: 10⁻⁵</div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">机制</h4>
+                                <div style="color: #595959; margin-bottom: 8px; font-size: 14px;">隐私保护机制</div>
+                                <div style="background: white; padding: 12px; border: 1px solid #e8e8e8; border-radius: 6px;">
+                                    <div style="color: #096dd9; font-weight: 600;">拉普拉斯机制</div>
+                                    <div style="color: #8c8c8c; font-size: 12px;">适用于数值查询</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tauri-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/privacy-budget.js"></script>
+</body>
+</html>

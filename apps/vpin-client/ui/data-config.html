@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据配置 - VDS-VPIN</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div class="app-container">
+        <div id="header-container"></div>
+
+        <div class="main-content">
+            <div id="sidebar-container"></div>
+
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>数据配置</h1>
+                            <p>上传和配置用于隐私推理的数据集</p>
+                        </div>
+                    </div>
+
+                    <!-- 数据上传区域 -->
+                    <div class="upload-section tech-card" style="border-radius: 16px; padding: 32px; margin-bottom: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/upload.svg" alt="上传" style="width: 24px; height: 24px; filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                            上传数据
+                        </h2>
+
+                        <div id="uploadArea" class="upload-area"
+                             style="border: 2px dashed #d9d9d9; border-radius: 12px; padding: 48px; text-align: center; cursor: pointer; transition: all 0.3s; background: #fafafa;">
+
+                            <div class="upload-icon">
+                                <img src="assets/icons/upload.svg" alt="上传" style="width: 64px; height: 64px; margin-bottom: 24px; opacity: 0.3;">
+                            </div>
+
+                            <h3 style="color: #262626; margin-bottom: 8px;">拖拽文件到此处或点击上传</h3>
+                            <p style="color: #8c8c8c; margin-bottom: 24px;">支持CSV、图像文件 (PNG, JPG)、NPY等格式</p>
+
+                            <button class="btn-primary tauri-action" data-action="select-file" style="padding: 12px 24px;">
+                                选择文件
+                            </button>
+
+                            <input type="file" id="fileInput" style="display: none;" accept=".csv,.png,.jpg,.npy">
+                        </div>
+
+                        <div id="uploadProgress" class="upload-progress" style="display: none; margin-top: 24px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span id="uploadFileName" style="color: #595959;">文件名</span>
+                                <span id="uploadPercent" style="color: #1890ff;">0%</span>
+                            </div>
+                            <div class="progress" style="background: #f0f0f0;">
+                                <div id="uploadProgressBar" class="progress-bar" style="width: 0%; background: #1890ff;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 已上传数据列表 -->
+                    <div class="uploaded-data-section tech-card" style="border-radius: 16px; padding: 24px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/database.svg" alt="数据" style="width: 24px; height: 24px; filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                            已上传数据
+                        </h2>
+
+                        <div id="uploadedDataList" class="data-list">
+                            <!-- 数据列表通过JavaScript动态加载 -->
+                        </div>
+                    </div>
+
+                    <!-- 数据预处理说明 -->
+                    <div class="data-preprocess-info tech-card" style="border-radius: 16px; padding: 24px; margin-top: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 24px; display: flex; align-items: center; gap: 12px;">
+                            <img src="assets/icons/help.svg" alt="帮助" style="width: 24px; height: 24px; filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                            数据预处理要求
+                        </h2>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">图像数据</h4>
+                                <ul style="color: #595959; line-height: 1.8;">
+                                    <li>格式：PNG, JPG, NPY</li>
+                                    <li>尺寸：根据模型要求 (如28x28, 224x224)</li>
+                                    <li>归一化：0-1或-1到1</li>
+                                    <li>通道：RGB或灰度</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">表格数据</h4>
+                                <ul style="color: #595959; line-height: 1.8;">
+                                    <li>格式：CSV</li>
+                                    <li>编码：UTF-8</li>
+                                    <li>分隔符：逗号</li>
+                                    <li>缺失值：需要预先处理</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 style="color: #262626; margin-bottom: 12px;">加密要求</h4>
+                                <ul style="color: #595959; line-height: 1.8;">
+                                    <li>数据将在客户端自动加密</li>
+                                    <li>支持同态加密格式</li>
+                                    <li>保持数值范围合理性</li>
+                                    <li>避免极端数值影响精度</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tauri-api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/data-config.js"></script>
+</body>
+</html>

@@ -1,14 +1,24 @@
 # 隐私保护的可验证神经网络推理服务
 
-本仓库是基于 [**vPIN** 论文](https://arxiv.org/pdf/2411.07468)（[ACSAC 2024](https://www.acsac.org/2024/)）的工程化可信推理平台实现。我们在复现与扩展过程中引用该论文，并复用了原作者开源仓库 [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) 中的部分源代码。
+本仓库是基于 [**vPIN** 论文](https://arxiv.org/pdf/2411.07468)（[ACSAC 2024](https://www.acsac.org/2024/)）的工程化可信推理平台实现。我们在复现与扩展过程中引用该论文，并复用了原作者开源仓库 [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) 中的部分源代码；在此基础上构建了独立客户端/服务端架构、`vpin-backend`、`vpin-client` 与 CP-SNARK 协议编排等能力。
 
+### 开发与路线图
+
+**所有阶段排期、计划与改动请以 **[`docs/综合未来工作路线图.md`](docs/综合未来工作路线图.md)** 为准**（含 CP-SNARK M1–M5、设计定稿、Plan A→D 状态）。
+
+CP-SNARK 三线分工摘要：
+
+- **[A]** `Server.py` `rLCL`/`rLCR`：式 (9)(10) **计算侧**（原论文实现路径）
+- **[B]** `vPIN_proof_generation`：PtAdd/PtMul EC gadget SNARK（整批）
+- **[C]** `cp-snark-full`：协议编排、客户端 γ、按层 π（演进中；`mac_rlc` 桩已停用）
 
 ## 代码结构
 - **src/cnn_networks/Pre_computed_table/**: 包含用于生成预计算表的 `baby-step-giant-step.py`。
 - **src/cnn_networks/**: 包含用于生成图 2 结果的五个不同 CNN 网络的 `Server.py` 和 `Client.py` 文件。
 - **src/convolution/**: 包含用于生成图 3 结果的具有不同过滤器大小和输入大小的卷积层的 `Server.py` 和 `Client.py` 文件。
 - **src/LeNet/**: 包含用于生成表 2 结果的 LeNet 模型的 `Server.py` 和 `Client.py` 文件。
-- **src/proof_generation/vPIN_proof_generation/src/**: 包含用于生成点加法和点乘法证明的文件。
+- **src/proof_generation/vPIN_proof_generation/src/**: 点加/点乘 Spartan 证明（路径 [B]）。
+- **src/cp-snark-full/**: CP-SNARK 协议编排（路径 [C]）；设计见上节定稿文档。
 - **src/accuracy/**: 包含用于评估准确率的 `train_test_lenet5.py`。
 
 ## 前置要求

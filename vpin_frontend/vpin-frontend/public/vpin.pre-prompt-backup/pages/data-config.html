@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据配置 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <h1>数据配置</h1>
+                    </div>
+                    
+                    <!-- 步骤指示器 -->
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <div class="step-label">选择数据源</div>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">2</div>
+                            <div class="step-label">隐私配置</div>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-label">预览确认</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 数据源选择 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/database.svg" alt="数据源">
+                            选择数据源
+                        </h2>
+                        
+                        <div class="data-source-options">
+                            <div class="source-option active">
+                                <div class="option-header">
+                                    <img src="../assets/icons/upload.svg" alt="上传">
+                                    <h3>上传本地文件</h3>
+                                </div>
+                                <div class="option-body">
+                                    <div class="upload-area">
+                                        <img src="../assets/icons/folder.svg" alt="文件夹">
+                                        <p>拖拽文件到此处，或点击选择</p>
+                                        <p class="upload-hint">支持.csv, .json, .parquet格式，最大10GB</p>
+                                        <button class="btn-outline">选择文件</button>
+                                    </div>
+                                    <div class="file-list">
+                                        <div class="file-item">
+                                            <img src="../assets/icons/file-csv.svg" alt="CSV">
+                                            <div class="file-info">
+                                                <div class="file-name">customer_data_2024.csv</div>
+                                                <div class="file-size">128.4 MB</div>
+                                            </div>
+                                            <div class="file-status">
+                                                <span class="status-success">已上传</span>
+                                                <button class="btn-icon">
+                                                    <img src="../assets/icons/delete.svg" alt="删除">
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="source-option">
+                                <div class="option-header">
+                                    <img src="../assets/icons/database.svg" alt="数据库">
+                                    <h3>连接数据库</h3>
+                                </div>
+                                <div class="option-body">
+                                    <div class="database-form">
+                                        <div class="form-group">
+                                            <label>数据库类型</label>
+                                            <select class="form-control">
+                                                <option>MySQL</option>
+                                                <option>PostgreSQL</option>
+                                                <option>ClickHouse</option>
+                                                <option>Hive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="source-option">
+                                <div class="option-header">
+                                    <img src="../assets/icons/history.svg" alt="历史">
+                                    <h3>使用历史数据集</h3>
+                                </div>
+                                <div class="option-body">
+                                    <p>选择之前上传的数据集</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 隐私配置 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/security.svg" alt="隐私">
+                            隐私保护配置
+                        </h2>
+                        
+                        <div class="privacy-config">
+                            <!-- 全局设置 -->
+                            <div class="privacy-global">
+                                <h3>全局安全设置</h3>
+                                <div class="toggle-group">
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/encryption.svg" alt="加密">
+                                                启用端到端加密
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            所有数据在传输和存储过程中进行加密
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox" checked>
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/access-control.svg" alt="访问控制">
+                                                启用访问控制
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            基于角色的数据访问权限管理
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="toggle-item">
+                                        <label class="toggle-label">
+                                            <input type="checkbox">
+                                            <span class="toggle-slider"></span>
+                                            <span class="toggle-text">
+                                                <img src="../assets/icons/dp.svg" alt="差分隐私">
+                                                启用本地差分隐私
+                                            </span>
+                                        </label>
+                                        <div class="toggle-description">
+                                            在数据源头添加噪声保护隐私
+                                            <button class="btn-link">配置参数</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 字段级配置 -->
+                            <div class="privacy-field">
+                                <h3>字段级隐私配置</h3>
+                                <div class="table-responsive">
+                                    <table class="field-table">
+                                        <thead>
+                                            <tr>
+                                                <th>字段名</th>
+                                                <th>数据类型</th>
+                                                <th>敏感级别</th>
+                                                <th>隐私保护</th>
+                                                <th>处理方法</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    
+                                                    user_id
+                                                </td>
+                                                <td>
+                                                    <span class="data-type string">字符串</span>
+                                                </td>
+                                                <td>
+                                                    <div class="sensitivity-level high">
+                                                        高敏感
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control-sm">
+                                                        <option>标识符脱敏</option>
+                                                        <option>哈希处理</option>
+                                                        <option>保留原值</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <span class="processing-method">
+                                                        
+                                                        SHA256哈希
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    
+                                                    age
+                                                </td>
+                                                <td>
+                                                    <span class="data-type number">数值</span>
+                                                </td>
+                                                <td>
+                                                    <div class="sensitivity-level medium">
+                                                        中敏感
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control-sm">
+                                                        <option>添加噪声</option>
+                                                        <option>范围泛化</option>
+                                                        <option>保留原值</option>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <span class="processing-method">
+                                                        
+                                                        Laplace噪声
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="action-bar">
+                        <a href="task-dashboard.html" class="btn-secondary">
+                            <img src="../assets/icons/chevron-right.svg" alt="上一步" style="transform: rotate(180deg);">
+                            上一步
+                        </a>
+                        <button class="btn-primary">
+                            下一步：预览确认
+                            <img src="../assets/icons/chevron-right.svg" alt="下一步">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-include]').forEach(function(element) {
+            const file = element.getAttribute('data-include');
+            fetch(file)
+                .then(response => response.text())
+                .then(data => {
+                    element.innerHTML = data;
+                });
+        });
+    });
+    </script>
+</body>
+</html>

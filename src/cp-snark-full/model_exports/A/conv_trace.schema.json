@@ -1,0 +1,6 @@
+{
+  "$comment": "Export from Python after myConv2d ciphertext path. One file per inference run.",
+  "filter_flat": ["string u128 per filter coeff, k² entries"],
+  "windows": [["string u128 per window cell", "..."], "one row per output cell"],
+  "output_flat": ["string u128 per flattened conv output"]
+}

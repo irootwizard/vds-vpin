@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vpin-client"
+version = "0.1.0"
+description = "vPIN independent client: M1 scalar verify, gamma challenge, P6 pipeline"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["ecdsa>=0.19", "numpy>=2.0", "websockets>=12.0", "pillow>=10.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+vpin-client = "vpin_client.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vpin_client*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

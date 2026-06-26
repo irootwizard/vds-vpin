@@ -1,0 +1,13 @@
+{
+  "run_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254",
+  "modes": {
+    "ahe": {
+      "limit": 10,
+      "fixed_acc": 0.9,
+      "ahe_acc": 0.9,
+      "acc_gap": 0.0,
+      "pred_mismatches": 0,
+      "pass": true
+    }
+  }
+}
