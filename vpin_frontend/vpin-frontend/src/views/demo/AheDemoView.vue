@@ -100,14 +100,10 @@
             <!-- 批量模式 -->
             <template v-else>
               <n-space vertical style="width: 100%">
+                <n-alert type="info" style="margin-bottom: 12px">
+                  批量评估 test 集前 N 张（从索引 0 开始）
+                </n-alert>
                 <n-space>
-                  <n-input-number
-                    v-model:value="batchConfig.startIndex"
-                    :min="0"
-                    :max="9999"
-                    placeholder="起始序号"
-                    style="width: 120px"
-                  />
                   <n-input-number
                     v-model:value="batchConfig.limit"
                     :min="1"

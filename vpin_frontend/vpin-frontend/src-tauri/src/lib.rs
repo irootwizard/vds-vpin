@@ -131,7 +131,8 @@ async fn run_ahe_inference(
 /// Runs batch AHE inference with streaming progress updates.
 #[tauri::command]
 async fn run_ahe_batch(
-    start_index: u32,
+    #[allow(dead_code)]
+    start_index: u32,  // Reserved for future CLI --start-index support
     limit: u32,
     concurrency: u32,
     backend_ws: String,
@@ -151,8 +152,7 @@ async fn run_ahe_batch(
         backend_ws,
         "--model".into(),
         model_id,
-        "--start-index".into(),
-        start_index.to_string(),
+        // Note: --start-index not supported in CLI MVP, always starts from 0
         "--limit".into(),
         limit.to_string(),
         "--concurrency".into(),

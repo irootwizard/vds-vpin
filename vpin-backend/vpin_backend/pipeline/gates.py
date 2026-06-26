@@ -109,3 +109,26 @@ def assert_range_ok(weights_dir: Path) -> dict[str, Any]:
             f"homomorphic deploy plan range_ok=false for {weights_dir}"
         )
     return plan
+
+
+def orchestration_from_plan(deploy_plan: dict[str, Any]) -> dict[str, Any]:
+    """Extract orchestration configuration from deploy plan.
+
+    Args:
+        deploy_plan: The deployment plan dictionary
+
+    Returns:
+        Orchestration configuration with defaults for missing fields
+    """
+    if not deploy_plan:
+        return {}
+
+    # Extract common orchestration fields
+    return {
+        "adapter_id": deploy_plan.get("adapter_id"),
+        "deployable": deploy_plan.get("deployable", True),
+        "range_ok": deploy_plan.get("range_ok", True),
+        "accuracy_ok": deploy_plan.get("accuracy_ok", True),
+        "network": deploy_plan.get("network"),
+        "topology": deploy_plan.get("topology"),
+    }

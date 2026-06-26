@@ -53,9 +53,9 @@ def _load_mnist_test() -> tuple[np.ndarray, np.ndarray]:
 
 
 def _pad_to_32x32(x_f: np.ndarray) -> np.ndarray:
-    """Pad 28x28 to 32x32."""
-    out = np.zeros((32, 32), dtype=np.float32)
-    out[2:30, 2:30] = x_f
+    """Pad 28x28 to 32x32 in 4D format (1,1,32,32)."""
+    out = np.zeros((1, 1, 32, 32), dtype=np.float32)
+    out[0, 0, 2:30, 2:30] = x_f
     return out
 
 
@@ -81,10 +81,10 @@ def load_official_test(mnist_index: int) -> PreprocessResult:
 
     # Preprocess
     x_f = image.astype(np.float32) / 255.0
-    x_padded = _pad_to_32x32(x_f)
+    x_padded = _pad_to_32x32(x_f)  # Now returns (1, 1, 32, 32)
 
     # Convert to fixed point (simplified)
-    x_fixed = (x_padded * 2**16).astype(np.int32)
+    x_fixed = (x_padded * 2**16).astype(np.int32)  # Will be (1, 1, 32, 32)
 
     return PreprocessResult(
         raw_uint8=image,
