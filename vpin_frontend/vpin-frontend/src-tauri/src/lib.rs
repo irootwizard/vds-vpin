@@ -190,7 +190,7 @@ async fn run_ahe_batch(
 
     // Read stdout line by line for progress updates
     let mut report_path: Option<String> = None;
-    let progress_regex = Regex::new(r"\[\s*(\d+)/(\d+)\s*\]\s*correct=(\d+)\s*acc=([\d.]+)%?\s*elapsed=(\d+)s?\s*eta=(\d+)s?")
+    let progress_regex = Regex::new(r"\[\s*(\d+)/(\d+)\s*\]\s*correct=(\d+)\s*acc=([\d.]+)%?\s*elapsed=([\d.]+)s?\s*eta=([\d.]+)s?")
         .map_err(|e| format!("Failed to compile regex: {}", e))?;
 
     let mut line = String::new();
@@ -206,8 +206,8 @@ async fn run_ahe_batch(
                 let limit_val: u32 = limit_str.as_str().parse().unwrap_or(0);
                 let correct: u32 = correct_str.as_str().parse().unwrap_or(0);
                 let accuracy: f64 = acc_str.as_str().parse().unwrap_or(0.0) / 100.0;
-                let elapsed: u32 = elapsed_str.as_str().parse().unwrap_or(0);
-                let eta: u32 = eta_str.as_str().parse().unwrap_or(0);
+                let elapsed: f64 = elapsed_str.as_str().parse().unwrap_or(0.0);
+                let eta: f64 = eta_str.as_str().parse().unwrap_or(0.0);
 
                 let _ = window.emit("ahe-batch-progress", serde_json::json!({
                     "index": idx,
