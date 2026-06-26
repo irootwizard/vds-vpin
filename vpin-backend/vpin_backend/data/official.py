@@ -1,8 +1,4 @@
-"""Official MNIST data loading for vPIN backend.
-
-This is a minimal implementation to fix the 500 error.
-For production, should integrate with actual MNIST dataset.
-"""
+"""Official MNIST data loading for vPIN backend."""
 
 from __future__ import annotations
 
@@ -10,6 +6,7 @@ import base64
 import hashlib
 import io
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -26,41 +23,27 @@ class OfficialSample:
     # Additional fields for compatibility
     upload_id: str | None = None
     filename: str | None = None
-    input_digest_hex: str = ""
-    preview_png_base64: str = ""
 
 
 def _load_mnist_test() -> tuple[np.ndarray, np.ndarray]:
-    """Load MNIST test data.
-
-    This is a placeholder that generates synthetic MNIST-like data.
-    In production, this should load actual MNIST test dataset.
-    """
-    # Placeholder: generate synthetic MNIST-like 28x28 images
-    # Real implementation should use actual MNIST dataset
+    """Load MNIST test data from torchvision MNIST dataset."""
     try:
-        from sklearn.datasets import load_digits
-        digits = load_digits()
-        # digits.images are 8x8, we need 28x28 - use as placeholder
-        test_images = np.zeros((10000, 28, 28), dtype=np.uint8)
-        test_labels = np.zeros((10000,), dtype=np.uint8)
+        from torchvision import datasets
 
-        # Use digits as placeholder for first few samples
-        for i in range(min(len(digits.images), 1000)):
-            # Upscale 8x8 to 28x28
-            img = digits.images[i]
-            # Simple upsampling
-            img_upscaled = np.zeros((28, 28), dtype=np.uint8)
-            for r in range(8):
-                for c in range(8):
-                    img_upscaled[r*3:(r+1)*3, c*3:(c+1)*3] = img[r, c] * 255
+        # Download and load MNIST test dataset
+        mnist_root = Path("./data/mnist")
+        test_dataset = datasets.MNIST(root=mnist_root, train=False, download=True)
 
-            test_images[i] = img_upscaled
-            test_labels[i] = digits.target[i]
+        # Convert to numpy arrays
+        test_images = test_dataset.data.numpy()  # Shape: (10000, 28, 28)
+        test_labels = test_dataset.targets.numpy()  # Shape: (10000,)
 
         return test_images, test_labels
+
     except ImportError:
-        # Fallback to synthetic data
+        # Fallback to random data if torchvision not available
+        import warnings
+        warnings.warn("torchvision not available, using random MNIST data")
         test_images = np.random.randint(0, 256, (10000, 28, 28), dtype=np.uint8)
         test_labels = np.random.randint(0, 10, (10000,), dtype=np.uint8)
         return test_images, test_labels

@@ -85,10 +85,10 @@ def preview_png_base64(result: PreprocessResult, stage: str = "raw") -> str:
     if stage == "raw":
         Image.fromarray(result.raw_uint8, mode="L").save(buf, format="PNG")
     elif stage == "padded":
-        pad = result.padded_float[0, 0]
+        pad = result.padded_float[0, 0] if result.padded_float.ndim == 4 else result.padded_float
         Image.fromarray((pad * 255).astype(np.uint8), mode="L").save(buf, format="PNG")
-    else:
-        norm = result.normalized_float[0, 0]
+    else:  # normalized
+        norm = result.normalized_float[0, 0] if result.normalized_float.ndim == 4 else result.normalized_float
         Image.fromarray((norm * 255).astype(np.uint8), mode="L").save(buf, format="PNG")
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
