@@ -21,7 +21,7 @@ if (-not (Test-Path $bsgs)) {
     Write-Host "[ERROR] 缺少 BSGS 预计算表: $bsgs" -ForegroundColor Red
     Write-Host "  首次部署须生成（约 30 分钟）:" -ForegroundColor Yellow
     Write-Host "    cd src\Pre_computed_table" -ForegroundColor Yellow
-    Write-Host "    ..\..\..\.venv\Scripts\python.exe baby-step-giant-step.py" -ForegroundColor Yellow
+    Write-Host "    ..\..\.venv\Scripts\python.exe baby-step-giant-step.py" -ForegroundColor Yellow
     exit 1
 }
 
@@ -51,7 +51,7 @@ Write-Host "[CHECK] BSGS 表: $('{0:N0}' -f ((Get-Item $bsgs).Length / 1MB)) MB"
 # ---------- 检查依赖 ----------
 $missing = & $python -c "
 import importlib, sys
-pkgs = ['fastapi','uvicorn','ecdsa','numpy','websockets','PIL','torch','torchvision','pydantic','pydantic_settings']
+pkgs = ['fastapi','uvicorn','ecdsa','numpy','websockets','PIL','torch','torchvision','pydantic','pydantic_settings','gmpy2']
 miss = [p for p in pkgs if importlib.util.find_spec(p.split('.')[0] if '.' in p else p) is None]
 if miss: print(','.join(miss))
 " 2>&1

@@ -77,3 +77,5 @@ model_training/outputs/**/checkpoint_float.pt
 
 # vPIN server-crypto generated artifacts (regenerated from setup.json + challenge.json)
 vpin-backend/crates/vpin-server-crypto/artifacts/*/protocol.json
+
+# Model registry is tracked in git (vpin-backend/data/models/registry.json)

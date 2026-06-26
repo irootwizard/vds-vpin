@@ -13,6 +13,8 @@ MNIST-CNN 加法同态加密推理（Network A）端到端部署，含后端（P
 | **Node.js** | 18+ (含 npm) | 前端 Vite 构建 |
 | **Git** | 2.30+ | 仓库管理 |
 
+> **当前指南与一键脚本仅验证 Windows**（PowerShell、`.venv\Scripts\python.exe`、Tauri `lib.rs` 路径）。Linux/macOS 可参考 CLI 与后端部分，桌面端需自行适配 Python 路径。
+
 > Windows：确保已安装 [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) C++ 工作负载（Tauri 编译需要）。
 
 ### 当前验证通过的版本
@@ -84,8 +86,22 @@ python -m venv .venv
 | `python-multipart` | >=0.0.9 | 文件上传 |
 | `torch` | >=2.0 | MNIST 数据加载（仅 CPU） |
 | `torchvision` | >=0.15 | 官方 MNIST 数据集 |
+| `gmpy2` | >=2.1 | 大整数运算（`pip install -e vpin-client` 时安装） |
 
-### 3.3 安装前端依赖
+### 3.3 官方 MNIST 数据集（首次需联网）
+
+MNIST **不随仓库分发**（`model_training/data/` 已在 `.gitignore` 中排除）。首次访问官方预处理 API 时，torchvision 会自动下载测试集到：
+
+```
+model_training/data/MNIST/raw/
+  t10k-images-idx3-ubyte
+  t10k-labels-idx1-ubyte
+  ...
+```
+
+加载逻辑见 `vpin-client/vpin_client/data/mnist_loader.py`（`download=True`）。**克隆后第一次**调用 `GET /api/v1/data/official/test/0` 需要可访问外网；下载完成后可离线使用。
+
+### 3.4 安装前端依赖
 
 ```powershell
 cd vpin_frontend\vpin-frontend
@@ -93,7 +109,7 @@ npm install
 cd ..\..
 ```
 
-### 3.4 模型权重（已随仓库分发，无需重新训练）
+### 3.5 模型权重（已随仓库分发，无需重新训练）
 
 仓库在 `model_training/outputs/` 中包含 **4 个预训练 run**，克隆后即可直接使用：
 
@@ -106,10 +122,12 @@ cd ..\..
 
 每个 run 含：npy 权重 + `registry_snippet.json` + `metrics.json` + `truncation_config.json`。
 
+> **MVP-AHE 桌面演示**当前仅支持 **Network A**（`cnn-mnist-trained` / `cnn-mnist`）。LeNet-CIFAR 权重在仓内供训练/后续扩展，**不会**出现在 `?capability=ahe` 列表。
+
 > **注意**：`.pt` checkpoint 文件已被 `.gitignore` 排除（可由 npy 完全替代）。
 > `src/cnn_networks/Pre_trained_model/` 下的 legacy 权重已随原仓库跟踪，用于 `cnn-mnist` legacy 模型。
 
-### 3.5 BSGS 预计算表
+### 3.6 BSGS 预计算表
 
 | 文件 | 路径 | 大小 | 说明 |
 |------|------|------|------|
@@ -119,31 +137,40 @@ BSGS 表因体积过大已被 `.gitignore` 排除。**首次部署须生成**：
 
 ```powershell
 cd src\Pre_computed_table
-..\..\..\.venv\Scripts\python.exe baby-step-giant-step.py
+..\..\.venv\Scripts\python.exe baby-step-giant-step.py
 # 约 30 分钟，生成 table.pickle (~230MB)
 ```
 
-### 3.6 模型注册表
+### 3.7 模型注册表
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
-| 注册表 | `vpin-backend/data/models/registry.json` | 后端启动时自动 bootstrap |
+| 注册表 | `vpin-backend/data/models/registry.json` | **随仓库分发**，克隆即可用 |
 
-后端首次启动会扫描 `model_training/outputs/` 下含 `registry_snippet.json` 的 run，自动注册为可用模型。无需手动配置。
+仓库已包含默认注册表（`cnn-mnist`、`cnn-mnist-trained`、`lenet-cifar10` 等）。后端每次启动仍会执行 `bootstrap_ahe_models()`：扫描 `model_training/outputs/` 中含 `registry_snippet.json` 的 run 并合并更新，**一般无需手动编辑**。
 
 ---
 
 ## 4. 一键启动
 
-### 4.1 PowerShell 启动脚本
+### 4.1 推荐：`start-ahe.ps1`（项目根目录）
 
-项目已提供一键启动，在 **项目根目录** 按顺序在两个终端执行：
-
-**终端 1 — 后端**：
+完成 §3 环境初始化且已生成 BSGS 表后，在 **项目根目录** 执行：
 
 ```powershell
 cd vPIN-main
-.\.venv\Scripts\python.exe -m vpin_backend.main
+.\start-ahe.ps1
+```
+
+脚本会检查：`.venv`、BSGS 表、模型 npy 权重、Python 依赖、端口占用；随后启动后端（工作目录 `vpin-backend/`）与 `npm run tauri dev`。按 Enter 停止全部服务。
+
+### 4.2 手动分终端启动（与脚本等价）
+
+**终端 1 — 后端**（须在 `vpin-backend/` 下运行，`vpin_backend` 包不在仓库根目录）：
+
+```powershell
+cd vPIN-main\vpin-backend
+..\.venv\Scripts\python.exe -m vpin_backend.main
 # 输出：Uvicorn running on http://127.0.0.1:8000
 ```
 
@@ -156,19 +183,21 @@ npm run tauri dev
 # 弹出「VDS-VPIN 工作台」桌面窗口
 ```
 
+> **注意**：不要在根目录直接 `python -m vpin_backend.main`（会报 `No module named 'vpin_backend'`），除非已执行 `pip install -e vpin-backend`。
+>
 > **注意**：不要单独运行 `npm run dev`（会占用 1420 端口），`tauri dev` 会自动管理 Vite。
 
-### 4.2 验证部署成功
+### 4.3 验证部署成功
 
 | 检查项 | 方式 | 预期 |
 |--------|------|------|
 | 后端健康 | 浏览器访问 `http://127.0.0.1:8000/docs` | Swagger UI |
 | 模型列表 | `http://127.0.0.1:8000/api/v1/models?capability=ahe` | JSON 含 `cnn-mnist-trained` |
-| MNIST 预处理 | `http://127.0.0.1:8000/api/v1/data/official/test/0` | JSON 含 `preview_png_base64` |
+| MNIST 预处理 | `http://127.0.0.1:8000/api/v1/data/official/test/0` | JSON 含 `preview_png_base64`（**首次需联网**下载 MNIST） |
 | Tauri 窗口 | 桌面 | 「VDS-VPIN 工作台」窗口 |
 | AHE 推理页 | 窗口内 → 模型仓库 → AHE 推理 | `/demo/ahe` 页面 |
 
-### 4.3 CLI 快速验证（无需前端）
+### 4.4 CLI 快速验证（无需前端）
 
 ```powershell
 # 单图 AHE 推理（约 45–70s）
@@ -185,7 +214,7 @@ npm run tauri dev
 
 预期：`prediction=7, label=7, logit_max_diff=0.0, pass=true`
 
-### 4.4 批量 AHE 评估（CLI，前端尚未实现）
+### 4.5 批量 AHE 评估（CLI，前端尚未实现）
 
 桌面端 `/demo/ahe` **目前仅支持单图推理**；批量吞吐能力请先用 CLI。UI 适配方案见 [`docs/ahe/ahe-批量推理-性能优化设计.md` §11](docs/ahe/ahe-批量推理-性能优化设计.md)。
 
@@ -298,13 +327,17 @@ Stop-Process -Id <PID> -Force
 
 ```powershell
 cd src\Pre_computed_table
-..\..\..\.venv\Scripts\python.exe baby-step-giant-step.py
+..\..\.venv\Scripts\python.exe baby-step-giant-step.py
 # 生成 table.pickle（约 230MB，需 30 分钟）
 ```
 
+### MNIST 预处理失败 / 超时
+
+确认本机可访问外网。首次请求会下载到 `model_training/data/MNIST/raw/`。若公司网络拦截，可在一台能下载的机器上拷贝该目录到克隆仓库的相同路径。
+
 ### 模型权重未被识别
 
-确认 `model_training/outputs/` 下的 run 包含 npy 文件和 `registry_snippet.json`。后端启动时 `bootstrap_ahe_models()` 会自动扫描并注册。可手动检查：`http://127.0.0.1:8000/api/v1/models?capability=ahe`
+确认 `model_training/outputs/` 下的 run 包含 npy 文件；检查 `vpin-backend/data/models/registry.json` 是否随 clone 存在。后端启动时 `bootstrap_ahe_models()` 会再次扫描 `registry_snippet.json` 并合并。可手动检查：`http://127.0.0.1:8000/api/v1/models?capability=ahe`
 
 ### 推理超时 / WebSocket 断连
 

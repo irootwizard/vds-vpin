@@ -1,0 +1,46 @@
+{
+  "models": [
+    {
+      "id": "cnn-mnist",
+      "name": "CNN (MNIST \u9884\u8bad\u7ec3 / legacy)",
+      "framework": "npy",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 1.21,
+      "input_shape": "1x28x28",
+      "accuracy": 99.1,
+      "network": "A",
+      "topology": "cnn_mnist_v1",
+      "weights_dir": "src/cnn_networks/Pre_trained_model"
+    },
+    {
+      "id": "lenet-cifar10",
+      "name": "LeNet CIFAR-10 (trained)",
+      "framework": "PyTorch",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 0.062,
+      "input_shape": "3x32x32",
+      "accuracy": 56.19,
+      "network": "lenet_cifar",
+      "topology": "lenet_cifar_v1",
+      "weights_dir": "model_training/outputs/20260623_185153",
+      "deployable": true,
+      "range_ok": true,
+      "accuracy_ok": true,
+      "updated": "2026-06-23T19:00:19.773666+00:00"
+    },
+    {
+      "id": "cnn-mnist-trained",
+      "name": "CNN MNIST Network A (trained)",
+      "framework": "PyTorch",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 1.21,
+      "input_shape": "1x28x28",
+      "accuracy": 92.93,
+      "accuracy_fixed": 10.41,
+      "network": "A",
+      "topology": "cnn_mnist_v1",
+      "weights_dir": "model_training/outputs/20260622_184254",
+      "updated": "2026-06-22T18:50:32.216503+00:00"
+    }
+  ]
+}
