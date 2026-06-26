@@ -2,15 +2,45 @@
   "models": [
     {
       "id": "cnn-mnist",
-      "name": "CNN (MNIST \u9884\u8bad\u7ec3 / legacy)",
+      "name": "CNN (MNIST 预训练 / legacy)",
       "framework": "npy",
-      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "task": "图像分类",
       "params_count_m": 1.21,
       "input_shape": "1x28x28",
       "accuracy": 99.1,
       "network": "A",
       "topology": "cnn_mnist_v1",
       "weights_dir": "C:\\Users\\liurj\\Desktop\\vdsvpin\\vds-vpin\\src\\cnn_networks\\Pre_trained_model"
+    },
+    {
+      "id": "cnn-mnist-trained",
+      "name": "CNN MNIST Network A (trained)",
+      "framework": "PyTorch",
+      "task": "图像分类",
+      "params_count_m": 1.21,
+      "input_shape": "1x28x28",
+      "accuracy": 92.93,
+      "network": "A",
+      "topology": "cnn_mnist_v1",
+      "weights_dir": "C:\\Users\\liurj\\Desktop\\vdsvpin\\vds-vpin\\model_training\\outputs\\20260622_184254"
+    },
+    {
+      "id": "cnn-mnist-b",
+      "name": "CNN Network B (64→32→10)",
+      "framework": "npy",
+      "task": "图像分类",
+      "params_count_m": 2.5,
+      "input_shape": "1x28x28",
+      "accuracy": 0.0
+    },
+    {
+      "id": "lenet-mnist",
+      "name": "LeNet (MNIST 预训练)",
+      "framework": "PyTorch",
+      "task": "图像分类",
+      "params_count_m": 0.06,
+      "input_shape": "1x28x28",
+      "accuracy": 98.3
     }
   ]
 }
