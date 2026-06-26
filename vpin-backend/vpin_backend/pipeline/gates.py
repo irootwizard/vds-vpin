@@ -109,3 +109,13 @@ def assert_range_ok(weights_dir: Path) -> dict[str, Any]:
             f"homomorphic deploy plan range_ok=false for {weights_dir}"
         )
     return plan
+
+
+def orchestration_from_plan(plan: dict[str, Any] | None) -> dict[str, Any]:
+    """Extract LeNet WS orchestration hints from homomorphic_deploy_plan."""
+    plan = plan or {}
+    out: dict[str, Any] = {}
+    skip = plan.get("skip_return_phases")
+    if skip is not None:
+        out["skip_return_phases"] = skip
+    return out

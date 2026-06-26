@@ -110,6 +110,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useAheDemoSession } from "../../composables/useAheDemoSession.js";
 import AheFlowTimeline from "../../components/demo/AheFlowTimeline.vue";
 import AheTraceDrawer from "../../components/demo/AheTraceDrawer.vue";
@@ -124,7 +125,14 @@ import {
 import { listUploads, uploadAndPreprocess } from "../../services/dataApi.js";
 
 const PREVIEW_COUNT = 10;
+const FALLBACK_MODEL_ID = "cnn-mnist-trained";
+const FALLBACK_MODEL_OPTION = {
+  label: "CNN MNIST Network A (trained)",
+  value: FALLBACK_MODEL_ID,
+};
+
 const isDesktop = isTauri();
+const route = useRoute();
 
 const { state, log: pushLog } = useAheDemoSession();
 const index = ref(0);
@@ -217,6 +225,22 @@ function selectSample(item) {
   applySelection(item);
 }
 
+/** Prefer route query, then current value, then cnn-mnist-trained, then first option. */
+function resolveModelId(options, preferredId) {
+  const ids = new Set(options.map((o) => o.value));
+  const candidates = [
+    preferredId,
+    route.query.model,
+    modelId.value,
+    FALLBACK_MODEL_ID,
+    options[0]?.value,
+  ].filter(Boolean);
+  for (const id of candidates) {
+    if (ids.has(id)) return id;
+  }
+  return FALLBACK_MODEL_ID;
+}
+
 async function loadModels() {
   modelsLoading.value = true;
   try {
@@ -226,15 +250,14 @@ async function loadModels() {
       label: `${m.name} (Network ${m.network})`,
       value: m.id,
     }));
-    if (!modelId.value && modelOptions.value.length) {
-      const trained = modelOptions.value.find((m) => m.value === "cnn-mnist-trained");
-      modelId.value = trained?.value ?? modelOptions.value[0].value;
+    if (modelOptions.value.length) {
+      modelId.value = resolveModelId(modelOptions.value, route.query.model);
+    } else if (!modelId.value) {
+      modelId.value = FALLBACK_MODEL_ID;
     }
   } catch (e) {
-    modelOptions.value = [
-      { label: "cnn-mnist（legacy）", value: "cnn-mnist" },
-    ];
-    if (!modelId.value) modelId.value = "cnn-mnist-trained";
+    modelOptions.value = [FALLBACK_MODEL_OPTION];
+    modelId.value = FALLBACK_MODEL_ID;
     error.value = `模型列表加载失败: ${e}`;
   } finally {
     modelsLoading.value = false;

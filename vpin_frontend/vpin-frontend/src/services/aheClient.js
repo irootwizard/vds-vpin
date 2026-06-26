@@ -45,9 +45,7 @@ export async function fetchAheModels() {
   }
   const body = await res.json();
   if (Array.isArray(body)) {
-    return {
-      models: body.filter((m) => m.id === "cnn-mnist-trained" || m.id === "cnn-mnist" || m.network === "A" || m.network === "B"),
-    };
+    return { models: body };
   }
   return body;
 }
