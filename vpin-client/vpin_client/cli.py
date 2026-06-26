@@ -74,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
 
     infer = sub.add_parser("ahe-infer", help="Run pure AHE inference over WebSocket")
     infer.add_argument("--backend", default="ws://127.0.0.1:8000/api/v1/session/ws")
-    infer.add_argument("--model", default="cnn-mnist")
+    infer.add_argument("--model", default="cnn-mnist-trained")
     infer.add_argument("--mnist-index", type=int, default=None)
     infer.add_argument("--upload-id", default=None)
     infer.add_argument("--image", default=None)
@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
 
     ev = sub.add_parser("eval-mnist-ahe", help="Batch MNIST AHE evaluation")
     ev.add_argument("--backend", default="ws://127.0.0.1:8000/api/v1/session/ws")
-    ev.add_argument("--model", default="cnn-mnist")
+    ev.add_argument("--model", default="cnn-mnist-trained")
     ev.add_argument("--limit", type=int, default=50)
     ev.add_argument("--progress", action="store_true")
     ev.add_argument(
