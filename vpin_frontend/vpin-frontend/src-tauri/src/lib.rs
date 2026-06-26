@@ -220,10 +220,12 @@ async fn run_ahe_batch(
             }
         }
 
-        // Capture report path: "Wrote reports/batch_....json"
-        if line.contains("Wrote reports/batch_") {
+        // Capture report path: "Wrote reports\batch_....json"
+        if line.contains("Wrote reports") {
             if let Some(path_part) = line.strip_prefix("Wrote ") {
-                report_path = Some(path_part.trim().to_string());
+                // Convert Windows backslashes to forward slashes
+                let normalized_path = path_part.trim().replace('\\', "/");
+                report_path = Some(normalized_path.to_string());
             }
         }
 
