@@ -8,6 +8,6 @@
   "accuracy": 10.47,
   "network": "A",
   "topology": "cnn_mnist_v1",
-  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_174721",
+  "weights_dir": "model_training/outputs/20260622_174721",
   "updated": "2026-06-22T18:00:57.727319+00:00"
 }

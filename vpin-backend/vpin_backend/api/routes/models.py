@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from vpin_backend.config import get_settings
 from vpin_backend.crypto.server_crypto.bridge import ServerCryptoBridge
+from vpin_backend.models.weights_bundle import resolve_weights_dir, store_weights_path
 from vpin_backend.protocol.server_inputs import SetupRequest
 from vpin_backend.storage.registry import upsert_model
 
@@ -145,13 +146,19 @@ def _weights_dir_for_model(model_id: str) -> Path | None:
     entry = _merged_catalog().get(model_id)
     if not entry:
         return None
-    wd = entry.get("weights_dir")
-    if wd:
-        return Path(wd)
+    settings = get_settings()
+    default = settings.cnn_networks_dir / "Pre_trained_model"
+    if entry.get("weights_dir") or entry.get("weight_dir") or entry.get("storage_path"):
+        resolved = resolve_weights_dir(entry, default)
+        if resolved.is_dir():
+            return resolved
     sp = entry.get("storage_path")
     if sp:
-        p = Path(sp) / "npy"
-        return p if p.is_dir() else Path(sp)
+        p = Path(sp)
+        if not p.is_absolute():
+            p = settings.repo_root / p
+        npy = p / "npy"
+        return npy if npy.is_dir() else p
     return None
 
 
@@ -268,7 +275,7 @@ async def register_model(
         zip_path.write_bytes(bundle_bytes)
         npy_dest = dest / "npy"
         install_bundle(zip_path, npy_dest, req.network)
-        weights_dir = str(npy_dest.resolve())
+        weights_dir = store_weights_path(npy_dest, repo_root=get_settings().repo_root)
 
     commitment_digest: str | None = None
     bridge = ServerCryptoBridge()

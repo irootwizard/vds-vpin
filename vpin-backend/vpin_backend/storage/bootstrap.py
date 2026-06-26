@@ -8,7 +8,12 @@ import sys
 from pathlib import Path
 
 from vpin_backend.config import get_settings
-from vpin_backend.storage.registry import get_model, upsert_model
+from vpin_backend.models.weights_bundle import (
+    normalize_weights_path,
+    resolve_weights_dir,
+    store_weights_path,
+)
+from vpin_backend.storage.registry import get_model, load_registry, save_registry, upsert_model
 
 
 def _has_npy_bundle(directory: Path, network: str) -> bool:
@@ -51,6 +56,7 @@ def _restore_legacy_weights() -> Path | None:
 def _register_builtin_legacy(weights_dir: Path) -> None:
     if get_model("cnn-mnist"):
         return
+    settings = get_settings()
     upsert_model(
         {
             "id": "cnn-mnist",
@@ -62,9 +68,31 @@ def _register_builtin_legacy(weights_dir: Path) -> None:
             "accuracy": 99.1,
             "network": "A",
             "topology": "cnn_mnist_v1",
-            "weights_dir": str(weights_dir.resolve()),
+            "weights_dir": store_weights_path(weights_dir, repo_root=settings.repo_root),
         }
     )
+
+
+def repair_registry_paths() -> None:
+    """Rewrite stale absolute weights_dir entries to repo-relative paths."""
+    settings = get_settings()
+    root = settings.repo_root
+    default = settings.cnn_networks_dir / "Pre_trained_model"
+    reg = load_registry()
+    changed = False
+    for entry in reg.get("models", []):
+        raw = entry.get("weights_dir")
+        if not raw:
+            continue
+        resolved = resolve_weights_dir(entry, default)
+        if not resolved.is_dir():
+            continue
+        stored = store_weights_path(resolved, repo_root=root)
+        if entry.get("weights_dir") != stored:
+            entry["weights_dir"] = stored
+            changed = True
+    if changed:
+        save_registry(reg)
 
 
 def _register_from_output_runs() -> None:
@@ -80,9 +108,10 @@ def _register_from_output_runs() -> None:
         snippet = run_dir / "registry_snippet.json"
         if snippet.is_file():
             entry = json.loads(snippet.read_text(encoding="utf-8"))
-            weights_dir = Path(entry.get("weights_dir", run_dir))
-            if not weights_dir.is_absolute():
-                weights_dir = (settings.repo_root / weights_dir).resolve()
+            weights_dir = normalize_weights_path(
+                entry.get("weights_dir", run_dir),
+                repo_root=settings.repo_root,
+            )
             if not weights_dir.is_dir():
                 weights_dir = run_dir.resolve()
         elif _has_npy_bundle(run_dir, "A"):
@@ -108,14 +137,21 @@ def _register_from_output_runs() -> None:
     candidates.sort(key=lambda x: x[0], reverse=True)
     _, weights_dir, entry = candidates[0]
     model_id = entry.get("id", "cnn-mnist-trained")
-    if get_model(model_id):
-        return
+    default = settings.cnn_networks_dir / "Pre_trained_model"
+    stored = store_weights_path(weights_dir, repo_root=settings.repo_root)
+    existing = get_model(model_id)
+    if existing:
+        if (
+            resolve_weights_dir(existing, default) == weights_dir.resolve()
+            and existing.get("weights_dir") == stored
+        ):
+            return
 
     upsert_model(
         {
             **entry,
             "id": model_id,
-            "weights_dir": str(weights_dir.resolve()),
+            "weights_dir": stored,
             "framework": entry.get("framework", "npy"),
             "network": entry.get("network", "A"),
         }
@@ -128,3 +164,4 @@ def bootstrap_ahe_models() -> None:
     if legacy_dir is not None:
         _register_builtin_legacy(legacy_dir)
     _register_from_output_runs()
+    repair_registry_paths()

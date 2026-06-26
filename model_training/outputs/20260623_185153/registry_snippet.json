@@ -8,7 +8,7 @@
   "accuracy": 56.19,
   "network": "lenet_cifar",
   "topology": "lenet_cifar_v1",
-  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260623_185153",
+  "weights_dir": "model_training/outputs/20260623_185153",
   "deployable": true,
   "range_ok": true,
   "accuracy_ok": true,

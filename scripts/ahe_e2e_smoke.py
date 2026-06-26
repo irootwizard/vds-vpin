@@ -58,16 +58,18 @@ def _plan_for_model(model_id: str, weights_dir: Path) -> TruncationPlan:
 
 
 def _resolve_weights_dir(model_id: str) -> Path:
-    entry = get_model(model_id)
-    if entry and entry.get("weights_dir"):
-        return Path(entry["weights_dir"])
     from vpin_backend.config import get_settings
+    from vpin_backend.models.weights_bundle import resolve_weights_dir
 
+    entry = get_model(model_id)
+    default = get_settings().cnn_networks_dir / "Pre_trained_model"
+    if entry:
+        return resolve_weights_dir(entry, default)
     if model_id == "lenet-cifar10":
         run = REPO / "model_training" / "outputs" / "20260623_185935"
         if run.is_dir():
             return run
-    return get_settings().cnn_networks_dir / "Pre_trained_model"
+    return default
 
 
 def _resolve_network(model_id: str) -> str:
