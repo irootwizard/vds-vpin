@@ -1,0 +1,2 @@
+src/Pre_computed_table/*.pickle filter=lfs diff=lfs merge=lfs -text
+vpin-client/tests/fixtures/table.bin filter=lfs diff=lfs merge=lfs -text
