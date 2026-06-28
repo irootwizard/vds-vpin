@@ -33,14 +33,21 @@ class VerifyReport:
 
 
 def _trace_ints(raw: list) -> list[int]:
-    return [int(x) for x in raw]
+    mod = 1 << 32
+    out: list[int] = []
+    for x in raw:
+        v = int(x)
+        if v < 0:
+            v %= mod
+        out.append(v)
+    return out
 
 
 def _trace_windows(raw: list) -> list[list[int]]:
-    return [[int(x) for x in row] for row in raw]
+    return [_trace_ints(row) for row in raw]
 
 
-def build_stack_from_traces(traces: TraceBundle, skip_fc: bool = True) -> ServerLinearProofStack:
+def build_stack_from_traces(traces: TraceBundle, skip_fc: bool = False) -> ServerLinearProofStack:
     """Build M1 stack from trace JSON-shaped dicts (A4-2 export format)."""
     from vpin_client.verify.conv import ConvLayerProofSpec
     from vpin_client.verify.fc import FcLayerProofSpec
@@ -81,7 +88,7 @@ def verify_session(
     challenge: ClientChallenge,
     traces: TraceBundle,
     *,
-    skip_fc: bool = True,
+    skip_fc: bool = False,
     cm_w_point_hex: str = "",
     cm_w_digest_hex: str = "",
     num_weights: int | None = None,

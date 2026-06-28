@@ -16,11 +16,10 @@ pub struct PoolTraceBundle {
     pub output_flat: Vec<String>,
 }
 
+use crate::trace::paths::trace_file;
+
 fn path(network: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("model_exports")
-        .join(network)
-        .join("pool_trace.json")
+    trace_file(network, "pool_trace.json")
 }
 
 fn parse_u128_vec(v: &[String]) -> Result<Vec<u128>, String> {

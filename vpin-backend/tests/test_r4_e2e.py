@@ -50,6 +50,7 @@ def test_r4_setup_and_prove(bridge: ServerCryptoBridge) -> None:
             network_id=net,
             challenge=_to_backend_challenge(ch),
             setup_artifact=setup.setup_path,
+            run_dir=REPO / "model_training" / "outputs" / "20260622_184254",
         )
     )
     assert prove.ok, prove.stderr
@@ -84,6 +85,7 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
             network_id=net,
             challenge=_to_backend_challenge(ch),
             setup_artifact=setup.setup_path,
+            run_dir=REPO / "model_training" / "outputs" / "20260622_184254",
         )
     )
     assert prove.ok
@@ -100,6 +102,10 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
         if pool_path.is_file()
         else [],
     )
+    fc_path = REPO / "model_training" / "outputs" / "20260622_184254" / "proof_artifacts" / "fc_trace.json"
+    if fc_path.is_file():
+        fc_raw = json.loads(fc_path.read_text(encoding="utf-8"))
+        traces.fc_traces = fc_raw.get("layers", [])
     bundle = ProofBundle(
         proof_coverage=str(artifact.get("proof_coverage", "skeleton_ec_stub")),
         prove_time_ms=int(artifact.get("prove_time_ms", 0)),
@@ -111,10 +117,13 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
         opening,
         ch,
         traces,
-        skip_fc=True,
+        skip_fc=not fc_path.is_file(),
         cm_w_point_hex=str(cm.get("point_hex", "")),
         cm_w_digest_hex=str(cm.get("digest_hex", "")),
         num_weights=mc.get("num_weights"),
     )
     assert report.scalar_ok, report.detail
     assert report.opening_ok, "Pedersen opening should verify against protocol artifact"
+    assert "layer_proofs" in str(artifact.get("proof_coverage", "")) or artifact.get(
+        "cps_commitment"
+    ), "expected B′ path artifacts"

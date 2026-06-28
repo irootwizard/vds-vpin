@@ -56,6 +56,11 @@ class ServerCryptoBridge:
         ]
 
     def _cargo_bin(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
+        return self._cargo_bin_with_env(*extra_args, env=None)
+
+    def _cargo_bin_with_env(
+        self, *extra_args: str, env: dict[str, str] | None
+    ) -> subprocess.CompletedProcess[str]:
         cmd = self._crypto_cmd(*extra_args)
         return subprocess.run(
             cmd,
@@ -65,6 +70,7 @@ class ServerCryptoBridge:
             encoding="utf-8",
             errors="replace",
             timeout=600,
+            env=env,
         )
 
     def run_setup(self, request: SetupRequest) -> ServerCryptoResult:
@@ -86,6 +92,25 @@ class ServerCryptoBridge:
                 stdout="",
                 stderr="missing client gamma — server must not sample γ",
             )
+        import os
+
+        from vpin_backend.proof.registry import load_proof_plan, resolve_run_dir
+
+        model_id = request.model_id or request.network_id
+        try:
+            run_dir = resolve_run_dir(model_id, request.run_dir)
+            plan = load_proof_plan(model_id, run_dir=run_dir)
+            os.environ["VPIN_RUN_DIR"] = str(plan.run_dir)
+            os.environ["VPIN_EC_WITNESS_ROOT"] = str(plan.witness.root)
+            os.environ["VPIN_TRACE_ROOT"] = str(plan.run_dir / "proof_artifacts")
+        except KeyError as exc:
+            return ServerCryptoResult(
+                ok=False,
+                phase="prove-with-challenge",
+                network=request.network_id,
+                stdout="",
+                stderr=str(exc),
+            )
         ch_dir = self.crypto_root / "artifacts" / request.network_id
         ch_dir.mkdir(parents=True, exist_ok=True)
         ch_path = ch_dir / "client_challenge.json"
@@ -96,7 +121,10 @@ class ServerCryptoBridge:
         args = ["prove-with-challenge", request.network_id, str(ch_path)]
         if request.setup_artifact:
             args.append(str(request.setup_artifact))
-        proc = self._cargo_bin(*args)
+        import os
+
+        env = os.environ.copy()
+        proc = self._cargo_bin_with_env(*args, env=env)
         artifact = ch_dir / "protocol.json"
         return self._result(proc, "prove-with-challenge", request.network_id, artifact)
 

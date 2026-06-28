@@ -26,8 +26,10 @@ pub fn ec_trace_dir(network: &str) -> PathBuf {
 }
 
 pub fn load_ec_trace(network: &str) -> std::io::Result<EcTrace> {
-    let (num_mults, weights, px, py, bits) = crate::load_data::load_data(network);
-    let (num_adds, _, _, _, _, _) = crate::load_data_add::load_data_add(network);
+    let (num_mults, weights, px, py, bits) = crate::load_data::load_data(network)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    let (num_adds, _, _, _, _, _) = crate::load_data_add::load_data_add(network)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
     Ok(EcTrace {
         network: network.to_string(),
         pt_mul_weights: weights,
@@ -59,9 +61,12 @@ mod tests {
 
     #[test]
     fn load_ec_trace_a_if_present() {
-        if ec_trace_dir("A").join("pointMult/weight.json").exists() {
-            let t = load_ec_trace("A").unwrap();
-            assert_eq!(t.pt_mul_weights.len(), 178);
+        let legacy = ec_trace_dir("A").join("pointMult/weight.json");
+        if !legacy.exists() {
+            return;
         }
+        std::env::set_var("VPIN_ALLOW_LEGACY_WITNESS", "1");
+        let t = load_ec_trace("A").unwrap();
+        assert_eq!(t.pt_mul_weights.len(), 178);
     }
 }

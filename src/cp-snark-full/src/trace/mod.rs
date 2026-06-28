@@ -4,6 +4,7 @@ pub mod conv;
 pub mod ec;
 pub mod ec_layer;
 pub mod fc;
+pub mod paths;
 pub mod pool;
 
 mod build;

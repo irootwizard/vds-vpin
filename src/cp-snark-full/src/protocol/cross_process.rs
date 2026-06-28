@@ -12,8 +12,8 @@ use crate::verify::pipeline::verifier_pipeline;
 
 /// Client-side: sample challenge and return JSON for TLS transfer to prover.
 pub fn sample_challenge_json(network: &str) -> Result<String, String> {
-    let (num_mults, _, _, _, _) = load_data::load_data(network);
-    let (num_adds, _, _, _, _, _) = load_data_add::load_data_add(network);
+    let (num_mults, _, _, _, _) = load_data::load_data(network).map_err(|e| e.to_string())?;
+    let (num_adds, _, _, _, _, _) = load_data_add::load_data_add(network).map_err(|e| e.to_string())?;
     let challenge = ClientChallenge::sample(num_adds, num_mults);
     serde_json::to_string_pretty(&challenge).map_err(|e| e.to_string())
 }

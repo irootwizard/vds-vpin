@@ -4,6 +4,9 @@ idea
 vscode
 .vscode/
 
+# Local documents (not part of repo)
+Documents/
+
 # Logs
 logs/
 *.log

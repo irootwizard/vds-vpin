@@ -1,20 +1,33 @@
 <template>
   <div class="flow-timeline">
+    <div v-if="engineLabel" class="engine-badge">
+      <n-tag size="small" type="info">{{ engineLabel }}</n-tag>
+      <n-text v-if="running" depth="3" style="font-size: 12px; margin-left: 8px">推理进行中…</n-text>
+    </div>
+
     <n-steps v-if="running" :current="runningPhase" size="small" style="margin-bottom: 16px">
-      <n-step v-for="p in expectedPhases" :key="p.id" :title="p.layer" :description="p.server" />
+      <n-step
+        v-for="p in expectedPhases"
+        :key="p.id"
+        :title="p.layer"
+        :description="p.server"
+      />
     </n-steps>
 
     <n-timeline>
       <n-timeline-item
         v-for="item in steps"
-        :key="item.id"
+        :key="item.id + (item.at || '')"
         :type="itemType(item)"
         :title="item.title"
-        :time="item.at"
+        :time="stepTime(item)"
       >
         <button type="button" class="step-btn" @click="emit('select', item)">
           <n-tag size="tiny" :bordered="false">{{ item.category }}</n-tag>
           <span class="step-summary">{{ item.summary }}</span>
+          <n-text v-if="item.elapsed_ms != null" depth="3" class="step-elapsed">
+            +{{ item.elapsed_ms.toFixed(0) }} ms
+          </n-text>
           <n-text depth="3" class="step-hint">点击查看数据形式 →</n-text>
         </button>
       </n-timeline-item>
@@ -25,10 +38,11 @@
 <script setup>
 import { AHE_PHASES } from "../../constants/aheFlow.js";
 
-const props = defineProps({
+defineProps({
   steps: { type: Array, default: () => [] },
   running: { type: Boolean, default: false },
   runningPhase: { type: Number, default: 0 },
+  engineLabel: { type: String, default: "" },
 });
 
 const emit = defineEmits(["select"]);
@@ -41,9 +55,22 @@ function itemType(item) {
   if (item.category === "服务端") return "info";
   return "default";
 }
+
+function stepTime(item) {
+  const parts = [];
+  if (item.at) parts.push(item.at);
+  if (item.elapsed_ms != null) parts.push(`${item.elapsed_ms.toFixed(0)}ms`);
+  return parts.join(" · ");
+}
 </script>
 
 <style scoped>
+.engine-badge {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .step-btn {
   display: flex;
   flex-direction: column;
@@ -68,6 +95,11 @@ function itemType(item) {
 .step-summary {
   font-size: 13px;
   color: #333;
+}
+
+.step-elapsed {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .step-hint {

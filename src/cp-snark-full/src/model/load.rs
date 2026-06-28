@@ -67,22 +67,29 @@ pub struct FullWeightsJson {
     pub w_star_flat: Vec<String>,
 }
 
-/// Load complete $\mathbf{W}^*$ vector for commitment / L1 binding.
-///
-/// Reads `model_exports/{network}/full_weights.json` produced by
-/// `python/export_full_weights.py`.
-pub fn load_w_star(network: &str) -> Result<Vec<u128>, ModelLoadError> {
-    let path = full_weights_path(network);
-    let json = fs::read_to_string(&path)
+/// Load complete $\mathbf{W}^*$ from an explicit path (model run export).
+pub fn load_w_star_from_path(path: &std::path::Path) -> Result<Vec<u128>, ModelLoadError> {
+    let json = fs::read_to_string(path)
         .map_err(|e| ModelLoadError::Io(format!("{path:?}: {e}")))?;
-    let exp: FullWeightsJson =
-        serde_json::from_str(&json).map_err(|e| ModelLoadError::Parse(e.to_string()))?;
-    if exp.network_id != network {
+    parse_full_weights_json(&json)
+}
+
+pub fn load_w_star_from_run_dir(network: &str, run_dir: &std::path::Path) -> Result<Vec<u128>, ModelLoadError> {
+    let path = run_dir.join("proof_artifacts").join("full_weights.json");
+    let mut w = load_w_star_from_path(&path)?;
+    if network == "A" && w.len() != NETWORK_A_W_STAR_LEN {
         return Err(ModelLoadError::Parse(format!(
-            "full_weights network_id {:?} != {:?}",
-            exp.network_id, network
+            "network A: expected {} weights, got {}",
+            NETWORK_A_W_STAR_LEN,
+            w.len()
         )));
     }
+    Ok(w)
+}
+
+fn parse_full_weights_json(json: &str) -> Result<Vec<u128>, ModelLoadError> {
+    let exp: FullWeightsJson =
+        serde_json::from_str(json).map_err(|e| ModelLoadError::Parse(e.to_string()))?;
     let weights: Vec<u128> = exp
         .w_star_flat
         .iter()
@@ -98,6 +105,29 @@ pub fn load_w_star(network: &str) -> Result<Vec<u128>, ModelLoadError> {
             weights.len()
         )));
     }
+    Ok(weights)
+}
+
+/// Load complete $\mathbf{W}^*$ vector for commitment / L1 binding.
+///
+/// Reads `model_exports/{network}/full_weights.json` produced by
+/// `python/export_full_weights.py`.
+pub fn load_w_star(network: &str) -> Result<Vec<u128>, ModelLoadError> {
+    if let Ok(run) = std::env::var("VPIN_RUN_DIR") {
+        return load_w_star_from_run_dir(network, std::path::Path::new(&run));
+    }
+    let path = full_weights_path(network);
+    let json = fs::read_to_string(&path)
+        .map_err(|e| ModelLoadError::Io(format!("{path:?}: {e}")))?;
+    let exp: FullWeightsJson =
+        serde_json::from_str(&json).map_err(|e| ModelLoadError::Parse(e.to_string()))?;
+    if exp.network_id != network {
+        return Err(ModelLoadError::Parse(format!(
+            "full_weights network_id {:?} != {:?}",
+            exp.network_id, network
+        )));
+    }
+    let weights = parse_full_weights_json(&json)?;
     if network == "A" && weights.len() != NETWORK_A_W_STAR_LEN {
         return Err(ModelLoadError::Parse(format!(
             "network A: expected {} weights, got {}",

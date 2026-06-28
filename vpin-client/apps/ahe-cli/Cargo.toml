@@ -1,0 +1,23 @@
+[package]
+name = "ahe-cli"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ahe-cli"
+path = "src/main.rs"
+
+[dependencies]
+ahe-client.workspace = true
+ahe-homomorphic.workspace = true
+ahe-model-bundle.workspace = true
+ahe-codec.workspace = true
+ahe-codec-ec.workspace = true
+ahe-crypto-e2.workspace = true
+num-bigint.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true

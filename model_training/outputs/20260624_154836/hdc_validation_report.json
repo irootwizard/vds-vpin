@@ -1,0 +1,153 @@
+{
+  "model_id": "lenet-cifar10",
+  "family": "lenet_cifar",
+  "formula_pi": [
+    {
+      "id": "after_conv1",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool1",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_conv2",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool2",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc1",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc2",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16
+    }
+  ],
+  "actual_pi": [
+    {
+      "id": "after_conv1",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool1",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_conv2",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool2",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc1",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc2",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16
+    }
+  ],
+  "pi_match": true,
+  "pi_diffs": [],
+  "checkpoints": {
+    "after_conv1": {
+      "from_bits": 16,
+      "to_bits": 16,
+      "M_pre_cal": 107961.0,
+      "M_post_cal": 107961.0,
+      "bsgs_ok": true,
+      "int32_ok": true
+    },
+    "after_pool1": {
+      "from_bits": 28,
+      "to_bits": 16,
+      "M_pre_cal": 420959232.0,
+      "M_post_cal": 102773.25,
+      "bsgs_ok": true,
+      "int32_ok": true
+    },
+    "after_conv2": {
+      "from_bits": 16,
+      "to_bits": 16,
+      "M_pre_cal": 0.0,
+      "M_post_cal": 0.0,
+      "bsgs_ok": true,
+      "int32_ok": true
+    },
+    "after_pool2": {
+      "from_bits": 28,
+      "to_bits": 16,
+      "M_pre_cal": 581273600.0,
+      "M_post_cal": 141912.5,
+      "bsgs_ok": true,
+      "int32_ok": true
+    },
+    "after_fc1": {
+      "from_bits": 32,
+      "to_bits": 16,
+      "M_pre_cal": 24140387931.0,
+      "M_post_cal": 368353.0873260498,
+      "bsgs_ok": true,
+      "int32_ok": true
+    },
+    "after_fc2": {
+      "from_bits": 32,
+      "to_bits": 16,
+      "M_pre_cal": 21406302406.0,
+      "M_post_cal": 326634.25302124023,
+      "bsgs_ok": true,
+      "int32_ok": true
+    }
+  },
+  "range_ok": true,
+  "accuracy": {
+    "n_samples": 2048,
+    "reference_acc": 0.58056640625,
+    "ahe_acc": 0.58056640625,
+    "acc_gap": 0.0,
+    "pred_mismatches": 0,
+    "tolerance": 0.1,
+    "ok": true,
+    "ahe_mode": "plain_homomorphic_proxy",
+    "float_fixed_diagnostic": {
+      "n_samples": 2048,
+      "float_acc": 0.560546875,
+      "fixed_acc": 0.58056640625,
+      "float_fixed_gap": 0.02001953125,
+      "pred_mismatches": 383,
+      "diagnostic_only": true
+    }
+  },
+  "deployable": true,
+  "untrained_smoke": false
+}

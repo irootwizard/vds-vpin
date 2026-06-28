@@ -26,10 +26,6 @@ from model_training.network_a.evaluate import _numpy_homomorphic_plain
 from model_training.network_a.truncation_config import TruncationPlan, plan_from_topology
 from vpin_backend.crypto.ahe.codec import fixed_point_to_real
 from vpin_backend.inference.homomorphic_network_a import load_network_a_weights
-from vpin_backend.inference.homomorphic_network_lenet import (
-    lenet_homomorphic_plain_logits,
-    load_lenet_weights,
-)
 from vpin_backend.storage.registry import get_model
 from vpin_client.data.preprocess import load_mnist_test
 from vpin_client.hdc.data_adapters.cifar10_rgb import adapt_cifar_rgb
@@ -109,6 +105,11 @@ async def run_smoke(
     weights_dir = _resolve_weights_dir(model_id)
 
     if is_lenet_cifar(network):
+        from vpin_backend.inference.homomorphic_network_lenet import (
+            lenet_homomorphic_plain_logits,
+            load_lenet_weights,
+        )
+
         fixed, label = _load_cifar10_test(sample_index)
         weights = load_lenet_weights(weights_dir)
         plain_logits_i32 = lenet_homomorphic_plain_logits(fixed, weights)

@@ -15,7 +15,8 @@ pub fn point_addition(network: &str) -> (
    ) {
 
     // Read the JSON file
-    let (len, point_add_px_byte, point_add_py_byte, point_add_rx_byte, point_add_ry_byte, point_add_rz_byte) = load_data_add(network);
+    let (len, point_add_px_byte, point_add_py_byte, point_add_rx_byte, point_add_ry_byte, point_add_rz_byte) =
+        load_data_add(network).expect("load_data_add: set VPIN_EC_WITNESS_ROOT or activate ProofPlan");
 
     println!("Point Addition Gadget...");
     println!("Number of Point Additions: {}", len);

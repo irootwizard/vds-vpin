@@ -411,9 +411,14 @@ _BSGS_CACHE: dict[str, dict[Any, int]] = {}
 
 def prewarm_parallel_crypto(bsgs_path: Path) -> None:
     """Spawn decrypt + encrypt worker processes early to avoid first-call cold-start."""
-    if _parallel_enabled():
+    if not _parallel_enabled():
+        return
+    try:
         _get_mp_decrypt_pool(bsgs_path)
         _get_mp_encrypt_pool()
+    except Exception:
+        # Tauri 管道子进程 / Windows spawn 下 pool 可能初始化失败；后续走线程/串行路径
+        pass
 
 
 def load_bsgs_table(path: Path) -> dict[Any, int]:

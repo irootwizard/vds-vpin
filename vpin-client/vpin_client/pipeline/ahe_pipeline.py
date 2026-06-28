@@ -52,7 +52,7 @@ async def run_ahe_inference(
         preprocess_ms=preprocess_ms,
     )
 
-    _emit(on_progress, "session_start", backend=job.backend_ws)
+    _emit(on_progress, "session_start", backend=job.backend_ws, engine="python")
     session = await run_ahe_session(
         job.backend_ws,
         job.model_id,

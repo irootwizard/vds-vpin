@@ -45,6 +45,22 @@ pub fn verify_conv_eq5_per_cell(spec: &ConvLayerProofSpec) -> LayerProofResult<(
     Ok(())
 }
 
+/// Verify compressed RLC (paper Eq. 9) with verifier γ (RLC only, no per-cell Eq. 5).
+pub fn verify_conv_eq9_rlc_only(
+    spec: &ConvLayerProofSpec,
+    challenge: &ClientChallenge,
+) -> LayerProofResult<()> {
+    let gamma = challenge_for_stage(LayerProofStage::Convolution, challenge);
+    let left = conv_rlc_left(&spec.output_flat, &gamma);
+    let right = conv_rlc_right(&spec.filter_flat, &spec.windows, &gamma);
+    if left != right {
+        return Err(LayerProofError::RlcMismatch {
+            stage: LayerProofStage::Convolution,
+        });
+    }
+    Ok(())
+}
+
 /// Verify compressed RLC (paper Eq. 9) with verifier γ.
 pub fn verify_conv_eq9_rlc(
     spec: &ConvLayerProofSpec,
@@ -113,6 +129,27 @@ pub fn verify_fc_eq8_per_output(spec: &FcLayerProofSpec) -> LayerProofResult<()>
                 detail: format!("output {j}"),
             });
         }
+    }
+    Ok(())
+}
+
+/// FC compressed RLC (paper Eq. 10) with verifier γ′ (RLC only, no per-output Eq. 8).
+pub fn verify_fc_eq10_rlc_only(
+    spec: &FcLayerProofSpec,
+    challenge: &ClientChallenge,
+) -> LayerProofResult<()> {
+    let gamma_prime = challenge_for_stage(LayerProofStage::FullyConnected, challenge);
+    let left = fc_rlc_left(&spec.outputs, &gamma_prime);
+    let right = fc_rlc_right(
+        &spec.inputs,
+        &spec.weights_in_out,
+        &spec.bias,
+        &gamma_prime,
+    );
+    if left != right {
+        return Err(LayerProofError::RlcMismatch {
+            stage: LayerProofStage::FullyConnected,
+        });
     }
     Ok(())
 }

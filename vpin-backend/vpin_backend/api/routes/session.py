@@ -84,7 +84,23 @@ class AheEngineLike(Protocol):
 
 
 async def _asend(ws: WebSocket, msg_type: str, payload: dict[str, Any]) -> None:
-    await ws.send_text(json.dumps({"type": msg_type, **payload}))
+    try:
+        await ws.send_text(json.dumps({"type": msg_type, **payload}))
+    except WebSocketDisconnect:
+        raise
+    except RuntimeError as exc:
+        # Starlette/uvicorn after client already closed the socket.
+        if "close message has been sent" in str(exc).lower():
+            raise WebSocketDisconnect() from exc
+        raise
+
+
+def _is_disconnect_error(exc: BaseException) -> bool:
+    if isinstance(exc, WebSocketDisconnect):
+        return True
+    if isinstance(exc, RuntimeError) and "close message has been sent" in str(exc).lower():
+        return True
+    return False
 
 
 def _resolve_network(model_id: str) -> str:
@@ -359,9 +375,16 @@ async def session_ws(ws: WebSocket) -> None:
                 else:
                     await _asend(ws, "Error", {"message": f"unknown type: {msg_type}"})
 
+            except WebSocketDisconnect:
+                break
             except Exception as exc:
+                if _is_disconnect_error(exc):
+                    break
                 traceback.print_exc()
-                await _asend(ws, "Error", {"message": str(exc)})
+                try:
+                    await _asend(ws, "Error", {"message": str(exc)})
+                except (WebSocketDisconnect, RuntimeError):
+                    break
                 break
 
     except WebSocketDisconnect:
