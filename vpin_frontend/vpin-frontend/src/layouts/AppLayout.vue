@@ -20,10 +20,7 @@ import {
   SparklesOutline,
   HomeOutline,
   CubeOutline,
-  ListOutline,
   AddCircleOutline,
-  ServerOutline,
-  ShieldCheckmarkOutline,
   DocumentTextOutline,
   WalletOutline,
   HelpCircleOutline,
@@ -54,23 +51,8 @@ const menuOptions = [
     key: "task-group",
     type: "group",
     children: [
-      { label: "任务列表", key: "tasks", icon: icon(ListOutline) },
       { label: "新建任务", key: "task-new", icon: icon(AddCircleOutline) },
-    ],
-  },
-  {
-    label: "数据管理",
-    key: "data-group",
-    type: "group",
-    children: [{ label: "数据配置", key: "data-config", icon: icon(ServerOutline) }],
-  },
-  {
-    label: "安全中心",
-    key: "security-group",
-    type: "group",
-    children: [
-      { label: "运行状态", key: "security", icon: icon(ShieldCheckmarkOutline) },
-      { label: "验证报告", key: "verification", icon: icon(DocumentTextOutline) },
+      { label: "任务报告", key: "verification", icon: icon(DocumentTextOutline) },
     ],
   },
 ];
@@ -79,13 +61,12 @@ const activeKey = computed(() => {
   const n = route.name;
   if (n === "home") return "home";
   if (String(n).startsWith("demo")) return "demo";
-  if (n === "task-detail") return "tasks";
   return n || "home";
 });
 
 const showProtocolChrome = computed(
   () =>
-    ["home", "task-detail", "task-new", "data-config"].includes(route.name) &&
+    ["home", "task-detail", "task-new"].includes(route.name) &&
     !String(route.name).startsWith("demo"),
 );
 
@@ -100,10 +81,7 @@ function handleMenuSelect(key) {
     home: "/",
     demo: "/demo",
     models: "/models",
-    tasks: "/tasks",
     "task-new": "/tasks/new",
-    "data-config": "/data-config",
-    security: "/security",
     verification: "/security/verification",
   };
   if (map[key]) router.push(map[key]);

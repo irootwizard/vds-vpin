@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import AppLayout from "../layouts/AppLayout.vue";
 import HomeView from "../views/HomeView.vue";
 import ModelWarehouseView from "../views/ModelWarehouseView.vue";
-import TaskListView from "../views/TaskListView.vue";
 import TaskDetailView from "../views/TaskDetailView.vue";
 import EmbedPage from "../views/EmbedPage.vue";
 import DemoWelcomeView from "../views/demo/DemoWelcomeView.vue";
@@ -27,31 +26,12 @@ const routes = [
         component: EmbedPage,
         meta: { page: "data-config.html", title: "新建任务" },
       },
-      { path: "tasks", name: "tasks", component: TaskListView, meta: { title: "推理任务" } },
       { path: "tasks/:id", name: "task-detail", component: TaskDetailView, meta: { title: "任务详情" } },
-      {
-        path: "data-config",
-        name: "data-config",
-        component: EmbedPage,
-        meta: { page: "data-config.html", title: "数据配置" },
-      },
-      {
-        path: "security",
-        name: "security",
-        component: EmbedPage,
-        meta: { page: "security-center.html", title: "安全中心" },
-      },
       {
         path: "security/verification",
         name: "verification",
         component: EmbedPage,
-        meta: { page: "verification-report.html", title: "验证报告" },
-      },
-      {
-        path: "security/privacy",
-        name: "privacy",
-        component: EmbedPage,
-        meta: { page: "privacy-budget.html", title: "隐私预算" },
+        meta: { page: "verification-report.html", title: "任务报告" },
       },
     ],
   },
@@ -62,10 +42,7 @@ const routes = [
         "index.html": "/",
         "model-center.html": "/models",
         "data-config.html": "/tasks/new",
-        "task-dashboard.html": "/tasks",
-        "security-center.html": "/security",
         "verification-report.html": "/security/verification",
-        "privacy-budget.html": "/security/privacy",
       };
       return map[to.params.page] || "/";
     },

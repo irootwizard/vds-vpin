@@ -7,6 +7,25 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/theme.css">
+    <style>
+        .data-source-options { grid-template-columns: 1fr !important; }
+        .upload-area {
+            padding: 40px 24px !important;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload-area.drag-over {
+            border-color: var(--primary-color) !important;
+            background: rgba(24, 144, 255, 0.05) !important;
+        }
+        .upload-area img { width: 52px; height: 52px; opacity: 0.45; margin-bottom: 12px; }
+        .upload-area p { margin: 4px 0; font-size: 14px; }
+        .upload-area .btn-outline { margin-top: 14px; }
+        .file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .file-item img { width: 20px; height: 20px; flex-shrink: 0; }
+        .status-pending { color: #faad14; font-size: 12px; }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -51,57 +70,14 @@
                                     <h3>上传本地文件</h3>
                                 </div>
                                 <div class="option-body">
-                                    <div class="upload-area">
+                                    <input type="file" id="fileInput" multiple accept=".csv,.json,.parquet" style="display:none;">
+                                    <div class="upload-area" id="uploadArea">
                                         <img src="../assets/icons/folder.svg" alt="文件夹">
                                         <p>拖拽文件到此处，或点击选择</p>
-                                        <p class="upload-hint">支持.csv, .json, .parquet格式，最大10GB</p>
-                                        <button class="btn-outline">选择文件</button>
+                                        <p class="upload-hint">支持 .csv、.json、.parquet 格式，最大 10GB</p>
+                                        <button class="btn-outline" id="selectFileBtn" type="button">选择文件</button>
                                     </div>
-                                    <div class="file-list">
-                                        <div class="file-item">
-                                            <img src="../assets/icons/file-csv.svg" alt="CSV">
-                                            <div class="file-info">
-                                                <div class="file-name">customer_data_2024.csv</div>
-                                                <div class="file-size">128.4 MB</div>
-                                            </div>
-                                            <div class="file-status">
-                                                <span class="status-success">已上传</span>
-                                                <button class="btn-icon">
-                                                    <img src="../assets/icons/delete.svg" alt="删除">
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="source-option">
-                                <div class="option-header">
-                                    <img src="../assets/icons/database.svg" alt="数据库">
-                                    <h3>连接数据库</h3>
-                                </div>
-                                <div class="option-body">
-                                    <div class="database-form">
-                                        <div class="form-group">
-                                            <label>数据库类型</label>
-                                            <select class="form-control">
-                                                <option>MySQL</option>
-                                                <option>PostgreSQL</option>
-                                                <option>ClickHouse</option>
-                                                <option>Hive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="source-option">
-                                <div class="option-header">
-                                    <img src="../assets/icons/history.svg" alt="历史">
-                                    <h3>使用历史数据集</h3>
-                                </div>
-                                <div class="option-body">
-                                    <p>选择之前上传的数据集</p>
+                                    <div class="file-list" id="fileList"></div>
                                 </div>
                             </div>
                         </div>
@@ -213,88 +189,11 @@
                                 </p>
                             </div>
                             
-                            <!-- 字段级配置 -->
-                            <div class="privacy-field">
-                                <h3>字段级隐私配置</h3>
-                                <div class="table-responsive">
-                                    <table class="field-table">
-                                        <thead>
-                                            <tr>
-                                                <th>字段名</th>
-                                                <th>数据类型</th>
-                                                <th>敏感级别</th>
-                                                <th>隐私保护</th>
-                                                <th>处理方法</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>
-                                                    
-                                                    user_id
-                                                </td>
-                                                <td>
-                                                    <span class="data-type string">字符串</span>
-                                                </td>
-                                                <td>
-                                                    <div class="sensitivity-level high">
-                                                        高敏感
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <select class="form-control-sm">
-                                                        <option>标识符脱敏</option>
-                                                        <option>哈希处理</option>
-                                                        <option>保留原值</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <span class="processing-method">
-                                                        
-                                                        SHA256哈希
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    
-                                                    age
-                                                </td>
-                                                <td>
-                                                    <span class="data-type number">数值</span>
-                                                </td>
-                                                <td>
-                                                    <div class="sensitivity-level medium">
-                                                        中敏感
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <select class="form-control-sm">
-                                                        <option>添加噪声</option>
-                                                        <option>范围泛化</option>
-                                                        <option>保留原值</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <span class="processing-method">
-                                                        
-                                                        Laplace噪声
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
                     <!-- 操作按钮 -->
                     <div class="action-bar">
-                        <a href="task-dashboard.html" class="btn-secondary">
-                            <img src="../assets/icons/chevron-right.svg" alt="上一步" style="transform: rotate(180deg);">
-                            上一步
-                        </a>
                         <button class="btn-primary">
                             下一步：预览确认
                             <img src="../assets/icons/chevron-right.svg" alt="下一步">
@@ -308,6 +207,90 @@
     <script src="../js/app.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // ── 文件上传 ──────────────────────────────────────────────
+        const fileInput    = document.getElementById('fileInput');
+        const uploadArea   = document.getElementById('uploadArea');
+        const fileList     = document.getElementById('fileList');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const ALLOWED_EXT  = ['.csv', '.json', '.parquet'];
+        let uploadedFiles  = [];
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            if (bytes < 1024 * 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+            return (bytes / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+        }
+
+        function iconFor(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            return ext === 'csv' ? '../assets/icons/file-csv.svg' : '../assets/icons/database.svg';
+        }
+
+        function renderFileList() {
+            fileList.innerHTML = uploadedFiles.map(function(f, i) {
+                return '<div class="file-item">' +
+                    '<img src="' + iconFor(f.name) + '" alt="">' +
+                    '<div class="file-info">' +
+                        '<div class="file-name">' + f.name + '</div>' +
+                        '<div class="file-size">' + formatSize(f.size) + '</div>' +
+                    '</div>' +
+                    '<div class="file-status">' +
+                        '<span class="status-success">已选择</span>' +
+                        '<button class="btn-icon" type="button" data-idx="' + i + '">' +
+                            '<img src="../assets/icons/delete.svg" alt="删除">' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function addFiles(files) {
+            Array.from(files).forEach(function(f) {
+                var ext = '.' + f.name.split('.').pop().toLowerCase();
+                if (!ALLOWED_EXT.includes(ext)) return;
+                if (!uploadedFiles.some(function(u) { return u.name === f.name && u.size === f.size; })) {
+                    uploadedFiles.push(f);
+                }
+            });
+            renderFileList();
+        }
+
+        fileList.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-idx]');
+            if (!btn) return;
+            uploadedFiles.splice(Number(btn.dataset.idx), 1);
+            renderFileList();
+        });
+
+        selectFileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        uploadArea.addEventListener('click', function() { fileInput.click(); });
+
+        fileInput.addEventListener('change', function() {
+            addFiles(this.files);
+            this.value = '';
+        });
+
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            addFiles(e.dataTransfer.files);
+        });
+
+        // ── 图像精度预处理 ────────────────────────────────────────
         const state = {
             hasPreprocessedImage: false
         };
