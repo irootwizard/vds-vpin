@@ -1,0 +1,13 @@
+{
+  "model_id": "vpin-network-a",
+  "source": {
+    "kind": "vpin_npy",
+    "version": 1
+  },
+  "topology_hash_hex": null,
+  "vpin_layout": {
+    "version": 1,
+    "network_folder": "A",
+    "conv_filter_inline": true
+  }
+}

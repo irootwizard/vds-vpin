@@ -1,0 +1,16 @@
+{
+  "variant": "network_a_compact",
+  "source_run": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254",
+  "files": [
+    "weight_fc1_64_16.npy",
+    "bias_fc1_16.npy",
+    "weight_fc2_16_10.npy",
+    "bias_fc2_10.npy"
+  ],
+  "client_rounds": 3,
+  "skipped_phases": [
+    "after_pool_shift",
+    "after_fc1_shift"
+  ],
+  "pool_strategy": "server sum//16 (plain) or pool_f26 + MAC>>10 (ciphertext)"
+}

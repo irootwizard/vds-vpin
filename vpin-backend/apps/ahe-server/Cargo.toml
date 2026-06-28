@@ -1,0 +1,29 @@
+﻿[package]
+name = "ahe-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ahe-server"
+path = "src/main.rs"
+
+[dependencies]
+ahe-client.workspace = true
+ahe-codec-ec.workspace = true
+ahe-crypto-e2-ec.workspace = true
+ahe-crypto-e2.workspace = true
+ahe-engine.workspace = true
+ahe-homomorphic.workspace = true
+ahe-model-bundle.workspace = true
+ahe-protocol.workspace = true
+axum.workspace = true
+base64.workspace = true
+futures-util.workspace = true
+num-bigint.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

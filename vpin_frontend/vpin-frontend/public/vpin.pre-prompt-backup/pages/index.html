@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VDS-VPIN 工作台</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <style>
+        /* 科技感蓝色增强样式 */
+        .gradient-bg {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 50%, #d0e8ff 100%);
+        }
+        
+        .tech-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(24, 144, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 80, 179, 0.1);
+        }
+        
+        .glow-effect {
+            position: relative;
+        }
+        
+        .glow-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: var(--border-radius-lg);
+            background: linear-gradient(135deg, rgba(24, 144, 255, 0.2), transparent);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .glow-effect:hover::before {
+            opacity: 1;
+        }
+        
+        .data-flow {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .data-flow::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                transparent 30%,
+                rgba(24, 144, 255, 0.08) 50%,
+                transparent 70%
+            );
+            animation: flow 20s linear infinite;
+            transform: rotate(45deg);
+        }
+        
+        @keyframes flow {
+            0% { transform: translateY(-100%) rotate(45deg); }
+            100% { transform: translateY(100%) rotate(45deg); }
+        }
+        
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1890ff;
+            box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7);
+            animation: pulse-blue 2s infinite;
+        }
+        
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(24, 144, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(24, 144, 255, 0); }
+        }
+        
+        /* 蓝色文字样式 */
+        .blue-text {
+            color: #1890ff;
+        }
+        
+        .dark-blue-text {
+            color: #096dd9;
+        }
+        
+        .light-blue-text {
+            color: #69c0ff;
+        }
+        
+        .blue-heading {
+            color: #096dd9;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container gradient-bg">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <!-- 科技感欢迎区域 -->
+                    <div class="welcome-section tech-card data-flow" style="border-radius: 16px; margin-bottom: 32px; padding: 32px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h1 style="font-size: 32px; font-weight: 700; color: #096dd9; margin-bottom: 8px;">
+                                    VDS-VPIN <span style="color: #69c0ff; font-weight: 300;">工作台</span>
+                                </h1>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 统计数据卡片组 -->
+                    <div class="page-stats" style="margin-bottom: 32px;">
+                        <div class="stat-card tech-card glow-effect" style="border: 1px solid rgba(24, 144, 255, 0.3);">
+                            <div class="stat-icon running" style="background: rgba(24, 144, 255, 0.1);">
+                                <img src="../assets/icons/play.svg" alt="运行中" style="filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" style="color: #096dd9;">12</div>
+                                <div class="stat-label" style="color: #1890ff;">运行中</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card tech-card glow-effect" style="border: 1px solid rgba(250, 173, 20, 0.3);">
+                            <div class="stat-icon queued" style="background: rgba(250, 173, 20, 0.1);">
+                                <img src="../assets/icons/clock.svg" alt="排队中" style="filter: invert(65%) sepia(86%) saturate(425%) hue-rotate(350deg) brightness(99%) contrast(98%);">
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" style="color: #d48806;">5</div>
+                                <div class="stat-label" style="color: #faad14;">排队中</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card tech-card glow-effect" style="border: 1px solid rgba(82, 196, 26, 0.3);">
+                            <div class="stat-icon success" style="background: rgba(82, 196, 26, 0.1);">
+                                <img src="../assets/icons/check-circle.svg" alt="已完成" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" style="color: #389e0d;">128</div>
+                                <div class="stat-label" style="color: #52c41a;">已完成</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card tech-card glow-effect" style="border: 1px solid rgba(255, 77, 79, 0.3);">
+                            <div class="stat-icon failed" style="background: rgba(255, 77, 79, 0.1);">
+                                <img src="../assets/icons/x-circle.svg" alt="失败" style="filter: invert(39%) sepia(91%) saturate(7483%) hue-rotate(347deg) brightness(99%) contrast(105%);">
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value" style="color: #cf1322;">3</div>
+                                <div class="stat-label" style="color: #ff4d4f;">失败</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 快速操作区域 - 科技感按钮 -->
+                    <div class="quick-actions" style="margin-bottom: 32px;">
+                        <a href="model-center.html" class="btn-primary tech-card glow-effect" 
+                           style="background: linear-gradient(135deg, #1890ff, #096dd9); 
+                                  border: none; padding: 16px 24px; border-radius: 12px;
+                                  box-shadow: 0 4px 16px rgba(24, 144, 255, 0.3);">
+                            <img src="../assets/icons/model.svg" alt="模型" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+                            <span style="font-weight: 600; color: white;">选择模型</span>
+                        </a>
+                        <a href="data-config.html" class="btn-primary tech-card glow-effect"
+                           style="background: linear-gradient(135deg, #52c41a, #389e0d); 
+                                  border: none; padding: 16px 24px; border-radius: 12px;
+                                  box-shadow: 0 4px 16px rgba(82, 196, 26, 0.3);">
+                            <img src="../assets/icons/upload.svg" alt="上传" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+                            <span style="font-weight: 600; color: white;">上传数据</span>
+                        </a>
+                        <a href="task-dashboard.html" class="btn-primary tech-card glow-effect"
+                           style="background: linear-gradient(135deg, #722ed1, #531dab); 
+                                  border: none; padding: 16px 24px; border-radius: 12px;
+                                  box-shadow: 0 4px 16px rgba(114, 46, 209, 0.3);">
+                            <img src="../assets/icons/activity.svg" alt="监控" style="width: 20px; height: 20px; filter: brightness(0) invert(1);">
+                            <span style="font-weight: 600; color: white;">查看任务</span>
+                        </a>
+                    </div>
+                    
+                    <!-- 安全状态面板 -->
+                    <div class="security-panel tech-card" style="border-radius: 16px; padding: 24px; margin-bottom: 32px;">
+                        <h2 style="display: flex; align-items: center; gap: 12px; color: #096dd9; margin-bottom: 24px;">
+                            <img src="../assets/icons/shield-check.svg" alt="安全" style="width: 24px; height: 24px; filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                            系统安全状态
+                        </h2>
+                        
+                        <div class="security-status-grid">
+                            <div class="status-card secure tech-card" 
+                                 style="background: white; border: 1px solid rgba(82, 196, 26, 0.3);">
+                                <div class="status-icon" style="background: rgba(82, 196, 26, 0.1);">
+                                    <img src="../assets/icons/lock-check.svg" alt="TEE" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                                </div>
+                                <div class="status-content">
+                                    <h3 style="color: #096dd9;">TEE保护状态</h3>
+                                    <p style="color: #1890ff;">所有任务均受可信执行环境保护</p>
+                                    <div class="status-details">
+                                        <span class="detail-item" style="color: #595959;">
+                                            <img src="../assets/icons/check.svg" alt="通过" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                                            硬件隔离: 启用
+                                        </span>
+                                        <span class="detail-item" style="color: #595959;">
+                                            <img src="../assets/icons/check.svg" alt="通过" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                                            内存加密: 启用
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-card secure tech-card"
+                                 style="background: white; border: 1px solid rgba(24, 144, 255, 0.3);">
+                                <div class="status-icon" style="background: rgba(24, 144, 255, 0.1);">
+                                    <img src="../assets/icons/encryption.svg" alt="加密" style="filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                                </div>
+                                <div class="status-content">
+                                    <h3 style="color: #096dd9;">加密通信</h3>
+                                    <p style="color: #1890ff;">端到端TLS 1.3加密</p>
+                                    <div class="status-details">
+                                        <span class="detail-item" style="color: #595959;">
+                                            <img src="../assets/icons/check.svg" alt="通过" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                                            证书验证: 通过
+                                        </span>
+                                        <span class="detail-item" style="color: #595959;">
+                                            <img src="../assets/icons/check.svg" alt="通过" style="filter: invert(61%) sepia(95%) saturate(365%) hue-rotate(60deg) brightness(91%) contrast(89%);">
+                                            前向保密: 启用
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 最近任务 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="color: #096dd9; display: flex; align-items: center; gap: 12px;">
+                                <img src="../assets/icons/activity.svg" alt="任务" style="filter: invert(35%) sepia(91%) saturate(2476%) hue-rotate(195deg) brightness(98%) contrast(101%);">
+                                最近任务
+                            </h2>
+                            <a href="task-dashboard.html" style="color: #1890ff; text-decoration: none; font-size: 14px; font-weight: 500;">
+                                查看全部 →
+                            </a>
+                        </div>
+                        
+                        <div class="task-list" style="background: #fafafa; border: 1px solid #e8e8e8; border-radius: 12px; overflow: hidden;">
+                            <div class="task-item tech-card" 
+                                 style="background: white; border: none; border-bottom: 1px solid #f0f0f0;">
+                                <div class="task-info">
+                                    <div class="task-id" style="color: #8c8c8c;">TASK-2024-0015</div>
+                                    <div class="task-name" style="color: #262626;">金融风险评估</div>
+                                    <div class="task-model" style="color: #595959;">
+                                        <img src="../assets/icons/model-xgboost.svg" alt="模型">
+                                        风控模型
+                                    </div>
+                                </div>
+                                
+                                <div class="task-status">
+                                    <div class="status-indicator running">
+                                        <span class="status-dot"></span>
+                                        <span class="status-text" style="color: #1890ff;">运行中</span>
+                                    </div>
+                                    <div class="progress-info">
+                                        <div class="progress" style="background: #f0f0f0;">
+                                            <div class="progress-bar" style="background: #1890ff; width: 65%"></div>
+                                        </div>
+                                        <span class="progress-text" style="color: #595959;">65%</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="task-resources" style="color: #595959;">
+                                    <div class="resource-item">
+                                        <img src="../assets/icons/cpu.svg" alt="CPU">
+                                        <span>CPU: 45%</span>
+                                    </div>
+                                    <div class="resource-item">
+                                        <img src="../assets/icons/memory.svg" alt="内存">
+                                        <span>内存: 1.8GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="task-item tech-card" 
+                                 style="background: white; border: none; border-bottom: 1px solid #f0f0f0;">
+                                <div class="task-info">
+                                    <div class="task-id" style="color: #8c8c8c;">TASK-2024-0014</div>
+                                    <div class="task-name" style="color: #262626;">医疗数据分析</div>
+                                    <div class="task-model" style="color: #595959;">
+                                        <img src="../assets/icons/model-cnn.svg" alt="模型">
+                                        CNN模型
+                                    </div>
+                                    <div class="task-tag">
+                                        <span class="tag-tee" style="background: rgba(114, 46, 209, 0.1); color: #722ed1;">
+                                            <img src="../assets/icons/tee.svg" alt="TEE">
+                                            TEE保护中
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="task-status">
+                                    <div class="status-indicator tee">
+                                        <span class="status-dot" style="background: #722ed1;"></span>
+                                        <span class="status-text" style="color: #722ed1;">在TEE内运行</span>
+                                    </div>
+                                    <div class="progress-info">
+                                        <div class="progress" style="background: #f0f0f0;">
+                                            <div class="progress-bar" style="background: #722ed1; width: 30%"></div>
+                                        </div>
+                                        <span class="progress-text" style="color: #595959;">30%</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="task-resources" style="color: #595959;">
+                                    <div class="resource-item">
+                                        <img src="../assets/icons/cpu.svg" alt="CPU">
+                                        <span>CPU: 32%</span>
+                                    </div>
+                                    <div class="resource-item">
+                                        <img src="../assets/icons/memory.svg" alt="内存">
+                                        <span>内存: 2.2GB</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统概览 -->
+                    <div class="tech-card" style="border-radius: 16px; padding: 24px; margin-top: 32px;">
+                        <h2 style="color: #096dd9; margin-bottom: 20px;">系统概览</h2>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700; color: #1890ff; margin-bottom: 8px;">15</div>
+                                <div style="color: #595959; font-size: 14px;">可用模型</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700; color: #52c41a; margin-bottom: 8px;">42</div>
+                                <div style="color: #595959; font-size: 14px;">数据集</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700; color: #722ed1; margin-bottom: 8px;">99.8%</div>
+                                <div style="color: #595959; font-size: 14px;">系统可用性</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 28px; font-weight: 700; color: #13c2c2; margin-bottom: 8px;">24/7</div>
+                                <div style="color: #595959; font-size: 14px;">安全监控</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // HTML包含功能
+        document.querySelectorAll('[data-include]').forEach(function(element) {
+            const file = element.getAttribute('data-include');
+            fetch(file)
+                .then(response => response.text())
+                .then(data => {
+                    element.innerHTML = data;
+                });
+        });
+        
+        // 添加一些科技感交互
+        const cards = document.querySelectorAll('.tech-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 12px 32px rgba(24, 144, 255, 0.2)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 8px 32px rgba(0, 80, 179, 0.1)';
+            });
+        });
+    });
+    </script>
+</body>
+</html>

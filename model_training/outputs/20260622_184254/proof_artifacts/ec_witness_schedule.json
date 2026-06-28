@@ -1,0 +1,159 @@
+{
+  "run_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254",
+  "schedules": {
+    "paper_proof": {
+      "network_id": "A",
+      "topology_id": "cnn_mnist_v1",
+      "mode": "paper_proof",
+      "paper_ref": "Documents/2024-Privacy-Preserving Verifiable Neural Network Inference Service.pdf §IV-B, §V Table I (arXiv:2411.07468v2)",
+      "grid": {
+        "input_n": 32,
+        "conv_out_side": 32,
+        "conv_num_windows": 1024,
+        "pool_out_side": 8,
+        "pool_num_cells": 64,
+        "pool_flat_dim": 64
+      },
+      "elgamal_branches": 2,
+      "layers": [
+        {
+          "layer_id": "conv",
+          "kind": "convolution",
+          "pt_mul": 18,
+          "pt_add": 16,
+          "pt_mul_start": 0,
+          "pt_mul_end": 18,
+          "pt_add_start": 0,
+          "pt_add_end": 16,
+          "paper_formula": "Table I Conv: O(k^2) PtMul, O(k^2) PtAdd after Eq.(9)",
+          "notes": "B=2, k=3; independent of 1024 windows"
+        },
+        {
+          "layer_id": "pool",
+          "kind": "average_pooling",
+          "pt_mul": 0,
+          "pt_add": 1920,
+          "pt_mul_start": 18,
+          "pt_mul_end": 18,
+          "pt_add_start": 16,
+          "pt_add_end": 1936,
+          "paper_formula": "Table I Avg Pool: 0 PtMul; (k^2-1)*N_pool PtAdd for Eq.(7) sum",
+          "notes": "B=2, pool_cells=64, k_hat=4"
+        },
+        {
+          "layer_id": "fc1",
+          "kind": "fully_connected",
+          "pt_mul": 128,
+          "pt_add": 158,
+          "pt_mul_start": 18,
+          "pt_mul_end": 146,
+          "pt_add_start": 1936,
+          "pt_add_end": 2094,
+          "paper_formula": "Table I FC: O(g) PtMul, O(g+h) PtAdd after Eq.(10)",
+          "notes": "B=2, g=64, h=16"
+        },
+        {
+          "layer_id": "fc2",
+          "kind": "fully_connected",
+          "pt_mul": 32,
+          "pt_add": 50,
+          "pt_mul_start": 146,
+          "pt_mul_end": 178,
+          "pt_add_start": 2094,
+          "pt_add_end": 2144,
+          "paper_formula": "Table I FC: O(g) PtMul, O(g+h) PtAdd after Eq.(10)",
+          "notes": "B=2, g=16, h=10"
+        }
+      ],
+      "total_pt_mul": 178,
+      "total_pt_add": 2144,
+      "derivation": "vPIN paper Table I / §V (Eq. 9/7/10 RLC-compressed proof)",
+      "cross_check": {
+        "legacy_rust_files_anchor": {
+          "pt_mul": 178,
+          "pt_add": 2144
+        },
+        "paper_proof_matches_legacy_ptmul": true,
+        "paper_proof_matches_legacy_ptadd": true,
+        "ahe_conv_pool_ptmul": null
+      }
+    },
+    "ahe_homomorphic": {
+      "network_id": "A",
+      "topology_id": "cnn_mnist_v1",
+      "mode": "ahe_homomorphic",
+      "paper_ref": "Documents/2024-Privacy-Preserving Verifiable Neural Network Inference Service.pdf §IV-B, §V Table I (arXiv:2411.07468v2)",
+      "grid": {
+        "input_n": 32,
+        "conv_out_side": 32,
+        "conv_num_windows": 1024,
+        "pool_out_side": 8,
+        "pool_num_cells": 64,
+        "pool_flat_dim": 64
+      },
+      "elgamal_branches": 2,
+      "layers": [
+        {
+          "layer_id": "conv",
+          "kind": "convolution",
+          "pt_mul": 18432,
+          "pt_add": 16384,
+          "pt_mul_start": 0,
+          "pt_mul_end": 18432,
+          "pt_add_start": 0,
+          "pt_add_end": 16384,
+          "paper_formula": "Eq.(6) per-cell MAC (not proof-compressed)",
+          "notes": "1024 windows x k^2 x B=2"
+        },
+        {
+          "layer_id": "pool",
+          "kind": "average_pooling",
+          "pt_mul": 128,
+          "pt_add": 1920,
+          "pt_mul_start": 18432,
+          "pt_mul_end": 18560,
+          "pt_add_start": 16384,
+          "pt_add_end": 18304,
+          "paper_formula": "Eq.(7) sum + public scale (scale -> PtMul in AHE path)",
+          "notes": "64 cells; scale 1/k_hat^2 counted as PtMul"
+        },
+        {
+          "layer_id": "fc1",
+          "kind": "fully_connected",
+          "pt_mul": 2048,
+          "pt_add": 2048,
+          "pt_mul_start": 18560,
+          "pt_mul_end": 20608,
+          "pt_add_start": 18304,
+          "pt_add_end": 20352,
+          "paper_formula": "Eq.(8) full MAC (not Eq.(10) compressed)",
+          "notes": "g=64, h=16, B=2"
+        },
+        {
+          "layer_id": "fc2",
+          "kind": "fully_connected",
+          "pt_mul": 320,
+          "pt_add": 320,
+          "pt_mul_start": 20608,
+          "pt_mul_end": 20928,
+          "pt_add_start": 20352,
+          "pt_add_end": 20672,
+          "paper_formula": "Eq.(8) full MAC (not Eq.(10) compressed)",
+          "notes": "g=16, h=10, B=2"
+        }
+      ],
+      "total_pt_mul": 20928,
+      "total_pt_add": 20672,
+      "derivation": "AHE naive homomorphic MAC (Eq. 6/7/8); not paper proof count",
+      "cross_check": {
+        "legacy_rust_files_anchor": {
+          "pt_mul": 178,
+          "pt_add": 2144
+        },
+        "paper_proof_matches_legacy_ptmul": false,
+        "paper_proof_matches_legacy_ptadd": false,
+        "ahe_conv_pool_ptmul": 18560
+      }
+    }
+  }
+}

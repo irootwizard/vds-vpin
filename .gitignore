@@ -1,0 +1,87 @@
+# IDE
+.idea
+idea
+vscode
+.vscode/
+
+# Local documents (not part of repo)
+Documents/
+
+# Logs
+logs/
+*.log
+
+# Rust
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+.venv.broken/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Data files (large binary, auto-generated)
+*.h5
+*.hdf5
+
+# BSGS pre-computed tables (~230MB, regenerate via baby-step-giant-step.py)
+src/Pre_computed_table/*.pickle
+src/Pre_computed_table/*.bin
+vpin-client/tests/fixtures/table.bin
+
+# Dataset directories (auto-downloaded by torchvision)
+/data/
+/model_training/data/
+/src/accuracy/data/
+
+# src/ large/legacy artifacts — NOT shipped, use model_training/outputs/ instead
+src/cp-snark-full/target/
+
+# model_training: only keep runs that have npy weights (exclude empty/failed runs)
+model_training/outputs/20260622_170131/
+model_training/outputs/20260622_170504/
+model_training/outputs/20260622_170852/
+model_training/outputs/20260622_171157/
+model_training/outputs/20260622_172627/
+model_training/outputs/20260622_174201/
+model_training/outputs/lenet_verify/
+model_training/outputs/proof_smoke/
+model_training/outputs/*.log
+
+# Checkpoint .pt files are large and reproducible — only npy + metadata are needed
+model_training/outputs/**/checkpoint.pt
+model_training/outputs/**/checkpoint_float.pt
+
+# vPIN server-crypto generated artifacts (regenerated from setup.json + challenge.json)
+vpin-backend/crates/vpin-server-crypto/artifacts/*/protocol.json
+
+# Model registry is tracked in git (vpin-backend/data/models/registry.json)

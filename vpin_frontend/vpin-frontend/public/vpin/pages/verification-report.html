@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>验证报告 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <style>
+		/* 在现有样式基础上添加以下表格优化样式 */
+		.data-table {
+		    table-layout: fixed; /* 固定列宽 */
+		    width: 100%;
+		}
+		
+		.data-table th:nth-child(1) { width: 120px; } /* 报告ID */
+		.data-table th:nth-child(2) { width: 160px; } /* 验证时间 */
+		.data-table th:nth-child(3) { width: 120px; } /* 关联任务 */
+		.data-table th:nth-child(4) { width: 140px; } /* TEE类型 */
+		.data-table th:nth-child(5) { width: 100px; } /* 验证状态 */
+		.data-table th:nth-child(6) { width: 180px; } /* 完整性哈希 */
+		.data-table th:nth-child(7) { width: 120px; } /* 操作 */
+		
+		.data-table td {
+		    vertical-align: middle;
+		    padding: 12px 8px;
+		    word-break: break-word;
+		}
+		
+		.data-table td code {
+		    background: #f5f5f5;
+		    padding: 2px 6px;
+		    border-radius: 3px;
+		    font-family: 'Consolas', 'Monaco', monospace;
+		    font-size: 11px;
+		    word-break: break-all;
+		}
+		
+		/* 操作按钮样式优化 */
+		.data-table .btn-link {
+		    display: block;
+		    margin: 4px 0;
+		    padding: 4px 0;
+		    font-size: 12px;
+		}
+		
+		/* 添加悬停效果 */
+		.data-table tbody tr:hover {
+		    background: #fafafa;
+		}
+        /* 与模型中心保持相同样式 */
+        .page-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-actions button {
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+        }
+        
+        /* 隐藏隐私徽章 */
+        .privacy-badges {
+            display: none !important;
+        }
+        
+        /* 验证状态标签样式 */
+        .verification-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-verified {
+            background: rgba(82, 196, 26, 0.1);
+            color: #52c41a;
+        }
+        
+        .status-pending {
+            background: rgba(250, 173, 20, 0.1);
+            color: #faad14;
+        }
+        
+        .status-failed {
+            background: rgba(255, 77, 79, 0.1);
+            color: #ff4d4f;
+        }
+        
+        /* 报告详情样式 */
+        .report-detail-card {
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+        
+        .detail-item {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #595959;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #262626;
+            font-family: monospace;
+        }
+        
+        /* 代码块样式 */
+        .code-block {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <!-- 页面头部 -->
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>验证报告</h1>
+                            <p>TEE环境远程证明与完整性验证报告</p>
+                        </div>
+                        
+                        <div class="page-actions">
+                            <button class="btn-primary" onclick="runVerification()">
+                                <img src="../assets/icons/clock.svg" alt="验证">
+                                重新验证
+                            </button>
+                            <button class="btn-secondary">
+                                <img src="../assets/icons/download.svg" alt="导出">
+                                导出报告
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选和搜索 -->
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <span style="display: inline-block; width: 16px; height: 16px; margin-right: 8px; position: relative;">
+                                <span style="position: absolute; width: 10px; height: 10px; border: 2px solid #bfbfbf; border-radius: 50%; top: 0; left: 0;"></span>
+                                <span style="position: absolute; width: 6px; height: 2px; background: #bfbfbf; transform: rotate(45deg); bottom: 1px; right: -1px;"></span>
+                            </span>
+                            <input type="text" placeholder="搜索报告ID或任务ID..." id="reportSearch">
+                        </div>
+                        
+                        <div class="filter-tags">
+                            <span class="filter-label">筛选：</span>
+                            <div class="tag-group">
+                                <button class="tag active" onclick="filterReports('all')">全部</button>
+                                <button class="tag" onclick="filterReports('verified')">验证通过</button>
+                                <button class="tag" onclick="filterReports('pending')">待验证</button>
+                                <button class="tag" onclick="filterReports('failed')">验证失败</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 报告列表 -->
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>报告ID</th>
+                                    <th>验证时间</th>
+                                    <th>关联任务</th>
+                                    <th>TEE类型</th>
+                                    <th>验证状态</th>
+                                    <th>完整性哈希</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportList">
+                                <tr>
+                                    <td>
+                                        <strong>VR-2024-0015</strong>
+                                    </td>
+                                    <td>2024-01-23 14:30:25</td>
+                                    <td>TASK-2024-0015</td>
+                                    <td>Intel SGX Enclave</td>
+                                    <td>
+                                        <span class="verification-status status-verified">
+                                            <img src="../assets/icons/check-circle.svg" alt="通过" style="width: 12px; height: 12px; margin-right: 4px;">
+                                            验证通过
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 11px;">0x8a3f9c...d4c7d2</code>
+                                    </td>
+                                    <td>
+                                        <button class="btn-link" onclick="showReportDetail('VR-2024-0015')">查看详情</button>
+                                        <button class="btn-link" onclick="downloadReport('VR-2024-0015')">下载</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>VR-2024-0014</strong>
+                                    </td>
+                                    <td>2024-01-23 11:15:42</td>
+                                    <td>TASK-2024-0014</td>
+                                    <td>Intel SGX Enclave</td>
+                                    <td>
+                                        <span class="verification-status status-verified">
+                                            <img src="../assets/icons/check-circle.svg" alt="通过" style="width: 12px; height: 12px; margin-right: 4px;">
+                                            验证通过
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 11px;">0xb2e5d8...f9a3c1</code>
+                                    </td>
+                                    <td>
+                                        <button class="btn-link" onclick="showReportDetail('VR-2024-0014')">查看详情</button>
+                                        <button class="btn-link" onclick="downloadReport('VR-2024-0014')">下载</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>VR-2024-0013</strong>
+                                    </td>
+                                    <td>2024-01-23 09:45:18</td>
+                                    <td>TASK-2024-0013</td>
+                                    <td>AMD SEV-SNP</td>
+                                    <td>
+                                        <span class="verification-status status-verified">
+                                            <img src="../assets/icons/check-circle.svg" alt="通过" style="width: 12px; height: 12px; margin-right: 4px;">
+                                            验证通过
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 11px;">0xc4a7f1...e5b9d2</code>
+                                    </td>
+                                    <td>
+                                        <button class="btn-link" onclick="showReportDetail('VR-2024-0013')">查看详情</button>
+                                        <button class="btn-link" onclick="downloadReport('VR-2024-0013')">下载</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <strong>VR-2024-0012</strong>
+                                    </td>
+                                    <td>2024-01-22 16:20:33</td>
+                                    <td>TASK-2024-0012</td>
+                                    <td>Intel SGX Enclave</td>
+                                    <td>
+                                        <span class="verification-status status-failed">
+                                            <img src="../assets/icons/x-circle.svg" alt="失败" style="width: 12px; height: 12px; margin-right: 4px;">
+                                            验证失败
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code style="font-size: 11px;">0xd3e8c5...a7f2b9</code>
+                                    </td>
+                                    <td>
+                                        <button class="btn-link" onclick="showReportDetail('VR-2024-0012')">查看详情</button>
+                                        <button class="btn-link" onclick="retryVerification('VR-2024-0012')">重试</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 报告详情区域 -->
+                    <div class="report-detail-card" id="reportDetail" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 id="detailTitle">验证报告详情</h3>
+                            <button class="btn-icon" onclick="closeReportDetail()">
+                                <img src="../assets/icons/x.svg" alt="关闭">
+                            </button>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">报告ID：</div>
+                            <div class="detail-value" id="detailId">VR-2024-0015</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">验证状态：</div>
+                            <div class="detail-value">
+                                <span class="verification-status status-verified" id="detailStatus">
+                                    <img src="../assets/icons/check-circle.svg" alt="通过" style="width: 12px; height: 12px; margin-right: 4px;">
+                                    验证通过
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">验证时间：</div>
+                            <div class="detail-value" id="detailTime">2024-01-23 14:30:25</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">关联任务：</div>
+                            <div class="detail-value" id="detailTask">TASK-2024-0015</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">TEE类型：</div>
+                            <div class="detail-value" id="detailTeeType">Intel SGX Enclave</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">验证机构：</div>
+                            <div class="detail-value" id="detailAuthority">Intel Attestation Service</div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">完整性哈希：</div>
+                            <div class="detail-value">
+                                <code id="detailHash">0x8a3f9c28d47b2e5fa1c6d83a7e4b9f2c5d8a3e1f7b4c9a2d8f3e6c5a7b9d4c7d2</code>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">证书指纹：</div>
+                            <div class="detail-value">
+                                <code id="detailCert">SHA256: 4A:89:FD:E3:2C:7B:1A:8F:9D:6C:3E:B2:5A:F8:4D:0C:9E:A1:7B:3F:C2:6D:5E:8A:F0:4B:3C:1D:9E:6F:7A:2B</code>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">验证结果：</div>
+                            <div class="detail-value" id="detailResult">
+                                <div style="color: #52c41a; font-weight: 500;">
+                                    ✅ TEE环境完整可信，未发现篡改痕迹
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <div class="detail-label">原始报告：</div>
+                            <div class="detail-value">
+                                <div class="code-block" id="detailRaw">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../js/app.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 搜索功能
+        document.getElementById('reportSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#reportList tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    });
+    
+    function filterReports(status) {
+        const rows = document.querySelectorAll('#reportList tr');
+        const tags = document.querySelectorAll('.tag-group .tag');
+        
+        // 更新标签状态
+        tags.forEach(tag => tag.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        rows.forEach(row => {
+            if (status === 'all') {
+                row.style.display = '';
+            } else {
+                const statusCell = row.querySelector('.verification-status');
+                const rowStatus = statusCell.className.includes(status) ? status : '';
+                row.style.display = rowStatus === status ? '' : 'none';
+            }
+        });
+    }
+    
+    function showReportDetail(reportId) {
+        const detail = document.getElementById('reportDetail');
+        const mockData = {
+            'VR-2024-0015': {
+                id: 'VR-2024-0015',
+                time: '2024-01-23 14:30:25',
+                task: 'TASK-2024-0015',
+                teeType: 'Intel SGX Enclave',
+                authority: 'Intel Attestation Service',
+                hash: '0x8a3f9c28d47b2e5fa1c6d83a7e4b9f2c5d8a3e1f7b4c9a2d8f3e6c5a7b9d4c7d2',
+                cert: 'SHA256: 4A:89:FD:E3:2C:7B:1A:8F:9D:6C:3E:B2:5A:F8:4D:0C:9E:A1:7B:3F:C2:6D:5E:8A:F0:4B:3C:1D:9E:6F:7A:2B',
+                status: 'verified',
+                result: '✅ TEE环境完整可信，未发现篡改痕迹'
+            }
+        };
+        
+        const data = mockData[reportId] || mockData['VR-2024-0015'];
+        
+        document.getElementById('detailId').textContent = data.id;
+        document.getElementById('detailTime').textContent = data.time;
+        document.getElementById('detailTask').textContent = data.task;
+        document.getElementById('detailTeeType').textContent = data.teeType;
+        document.getElementById('detailAuthority').textContent = data.authority;
+        document.getElementById('detailHash').textContent = data.hash;
+        document.getElementById('detailCert').textContent = data.cert;
+        document.getElementById('detailResult').innerHTML = `<div style="color: #52c41a; font-weight: 500;">${data.result}</div>`;
+        
+        // 更新状态标签
+        const statusElem = document.getElementById('detailStatus');
+        statusElem.className = 'verification-status status-' + data.status;
+        statusElem.innerHTML = data.status === 'verified' 
+            ? '<img src="../assets/icons/check-circle.svg" alt="通过" style="width: 12px; height: 12px; margin-right: 4px;">验证通过'
+            : '<img src="../assets/icons/x-circle.svg" alt="失败" style="width: 12px; height: 12px; margin-right: 4px;">验证失败';
+        
+        detail.style.display = 'block';
+        detail.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function closeReportDetail() {
+        document.getElementById('reportDetail').style.display = 'none';
+    }
+    
+    function downloadReport(reportId) {
+        alert(`开始下载报告: ${reportId}`);
+        // 实际实现中这里会有文件下载逻辑
+    }
+    
+    function retryVerification(reportId) {
+        if (confirm(`确定要重新验证报告 ${reportId} 吗？`)) {
+            alert(`开始重新验证: ${reportId}`);
+            // 实际实现中这里会有重新验证的逻辑
+        }
+    }
+    
+    function runVerification() {
+        if (confirm('确定要执行新的远程验证吗？')) {
+            alert('开始执行远程验证...');
+            // 实际实现中这里会触发验证流程
+        }
+    }
+    </script>
+</body>
+</html>

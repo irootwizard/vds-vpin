@@ -1,0 +1,388 @@
+{
+  "model_id": "lenet-cifar10",
+  "family": "lenet_cifar",
+  "adapter_id": "cifar_rgb",
+  "input_shape": [
+    3,
+    32,
+    32
+  ],
+  "graph": {
+    "family": "lenet_cifar",
+    "adapter_id": "cifar_rgb",
+    "input_shape": [
+      3,
+      32,
+      32
+    ],
+    "nodes": [
+      {
+        "op": "encrypt",
+        "name": "encrypt",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "shape": [
+            3,
+            32,
+            32
+          ]
+        }
+      },
+      {
+        "op": "conv",
+        "name": "conv1",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "in_ch": 3,
+          "out_ch": 6,
+          "kernel": 5,
+          "out_shape": [
+            6,
+            28,
+            28
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_conv1",
+        "f_in": 16,
+        "f_out": 16,
+        "client_op": "relu",
+        "checkpoint": "after_conv1",
+        "params": {
+          "shape": [
+            6,
+            28,
+            28
+          ]
+        }
+      },
+      {
+        "op": "sum_pool",
+        "name": "pool1",
+        "f_in": 16,
+        "f_out": 28,
+        "params": {
+          "k": 2,
+          "inv_bits": 10,
+          "average": false,
+          "out_shape": [
+            6,
+            14,
+            14
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_pool1",
+        "f_in": 28,
+        "f_out": 16,
+        "client_op": "shift",
+        "checkpoint": "after_pool1",
+        "params": {
+          "shape": [
+            6,
+            14,
+            14
+          ]
+        }
+      },
+      {
+        "op": "conv",
+        "name": "conv2",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "in_ch": 6,
+          "out_ch": 16,
+          "kernel": 5,
+          "out_shape": [
+            16,
+            10,
+            10
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_conv2",
+        "f_in": 16,
+        "f_out": 16,
+        "client_op": "relu",
+        "checkpoint": "after_conv2",
+        "params": {
+          "shape": [
+            16,
+            10,
+            10
+          ]
+        }
+      },
+      {
+        "op": "sum_pool",
+        "name": "pool2",
+        "f_in": 16,
+        "f_out": 28,
+        "params": {
+          "k": 2,
+          "inv_bits": 10,
+          "average": false,
+          "out_shape": [
+            16,
+            5,
+            5
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_pool2",
+        "f_in": 28,
+        "f_out": 16,
+        "client_op": "shift",
+        "checkpoint": "after_pool2",
+        "params": {
+          "shape": [
+            16,
+            5,
+            5
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc1",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 400,
+          "out": 120
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_fc1",
+        "f_in": 32,
+        "f_out": 16,
+        "client_op": "relu_then_shift",
+        "checkpoint": "after_fc1",
+        "params": {
+          "shape": [
+            120
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc2",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 120,
+          "out": 84
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_fc2",
+        "f_in": 32,
+        "f_out": 16,
+        "client_op": "relu_then_shift",
+        "checkpoint": "after_fc2",
+        "params": {
+          "shape": [
+            84
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc3",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 84,
+          "out": 10
+        }
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "after_conv1",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "id": "after_pool1",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16
+      },
+      {
+        "id": "after_conv2",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "id": "after_pool2",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16
+      },
+      {
+        "id": "after_fc1",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16
+      },
+      {
+        "id": "after_fc2",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "id": "after_conv1",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16,
+      "is_shift": false,
+      "m_pre": 124862.0,
+      "m_post": 124862.0,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": true,
+      "m_pre_formula": 65535.9934464,
+      "m_pre_actual": 124862.0
+    },
+    {
+      "id": "after_pool1",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16,
+      "is_shift": true,
+      "m_pre": 490382336.0,
+      "m_post": 119722.25,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": false,
+      "m_pre_formula": 268435429.1564544,
+      "m_pre_actual": 490382336.0
+    },
+    {
+      "id": "after_conv2",
+      "client_op": "relu",
+      "from_bits": 16,
+      "to_bits": 16,
+      "is_shift": false,
+      "m_pre": 320908.0,
+      "m_post": 320908.0,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": true,
+      "m_pre_formula": 65535.9934464,
+      "m_pre_actual": 320908.0
+    },
+    {
+      "id": "after_pool2",
+      "client_op": "shift",
+      "from_bits": 28,
+      "to_bits": 16,
+      "is_shift": true,
+      "m_pre": 1287432192.0,
+      "m_post": 314314.5,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": false,
+      "m_pre_formula": 268435429.1564544,
+      "m_pre_actual": 1287432192.0
+    },
+    {
+      "id": "after_fc1",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16,
+      "is_shift": true,
+      "m_pre": 49493970046.0,
+      "m_post": 755218.0487976074,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": true,
+      "m_pre_formula": 4294966866.5032706,
+      "m_pre_actual": 49493970046.0
+    },
+    {
+      "id": "after_fc2",
+      "client_op": "relu_then_shift",
+      "from_bits": 32,
+      "to_bits": 16,
+      "is_shift": true,
+      "m_pre": 37983326495.0,
+      "m_post": 579579.5668792725,
+      "bsgs_ok": true,
+      "int32_ok": true,
+      "needs_client_return": true,
+      "m_pre_formula": 4294966866.5032706,
+      "m_pre_actual": 37983326495.0
+    }
+  ],
+  "truncation_phases": [
+    "after_conv1",
+    "after_conv2",
+    "after_fc1",
+    "after_fc2"
+  ],
+  "skip_return_phases": [
+    "after_pool1",
+    "after_pool2"
+  ],
+  "range_ok": true,
+  "accuracy_ok": true,
+  "feasible": true,
+  "deployable": true,
+  "accuracy": {
+    "n_samples": 2048,
+    "float": 0.60400390625,
+    "fixed": 0.56103515625,
+    "delta": 0.04296875,
+    "pred_mismatches": 381,
+    "tolerance": 0.1,
+    "ok": true
+  },
+  "calibration": {
+    "stats": {
+      "n_samples": 512,
+      "max_after_conv1": 124862.0,
+      "max_after_pool1_pre_shift": 490382336.0,
+      "max_after_conv2": 320908.0,
+      "max_after_pool2_pre_shift": 1287432192.0,
+      "max_after_fc1_pre_relu": 49493970046.0,
+      "max_after_fc2_pre_relu": 37983326495.0,
+      "max_post_pool1_shift": 0.0,
+      "max_post_pool2_shift": 0.0,
+      "max_post_fc1_shift": 0.0,
+      "max_post_fc2_shift": 0.0,
+      "percentile": 100.0
+    },
+    "cal_n": 512
+  },
+  "constants": {
+    "F": 16,
+    "eps_min": 0.001,
+    "eps_max": 0.9999999,
+    "bsgs_limit": 10239999999999,
+    "int32_limit": 2147483647,
+    "acc_gap_threshold": 0.1
+  },
+  "feasible_reasons": [],
+  "errors": []
+}

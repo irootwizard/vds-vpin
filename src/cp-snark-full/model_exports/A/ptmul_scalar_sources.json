@@ -1,0 +1,1733 @@
+{
+  "network_id": "A",
+  "num_ptmul": 178,
+  "spec_doc": "docs/cp-snark/\u6a21\u578b\u53c2\u6570\u7ed1\u5b9a\u8ba1\u7b97\u8f68\u8ff9-\u6570\u5b66\u63a8\u5bfc.md \u00a78",
+  "sources": [
+    {
+      "j": 0,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 0
+    },
+    {
+      "j": 1,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 1
+    },
+    {
+      "j": 2,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 2
+    },
+    {
+      "j": 3,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 3
+    },
+    {
+      "j": 4,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 4
+    },
+    {
+      "j": 5,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 5
+    },
+    {
+      "j": 6,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 6
+    },
+    {
+      "j": 7,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 7
+    },
+    {
+      "j": 8,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c1",
+      "w_index": 8
+    },
+    {
+      "j": 9,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 0
+    },
+    {
+      "j": 10,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 1
+    },
+    {
+      "j": 11,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 2
+    },
+    {
+      "j": 12,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 3
+    },
+    {
+      "j": 13,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 4
+    },
+    {
+      "j": 14,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 5
+    },
+    {
+      "j": 15,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 6
+    },
+    {
+      "j": 16,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 7
+    },
+    {
+      "j": 17,
+      "kind": "direct_weight",
+      "layer": "conv",
+      "branch": "c2",
+      "w_index": 8
+    },
+    {
+      "j": 18,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 0,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 19,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 1,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 20,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 2,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 21,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 3,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 22,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 4,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 23,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 5,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 24,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 6,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 25,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 7,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 26,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 8,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 27,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 9,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 28,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 10,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 29,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 11,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 30,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 12,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 31,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 13,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 32,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 14,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 33,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 15,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 34,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 16,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 35,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 17,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 36,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 18,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 37,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 19,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 38,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 20,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 39,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 21,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 40,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 22,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 41,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 23,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 42,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 24,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 43,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 25,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 44,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 26,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 45,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 27,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 46,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 28,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 47,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 29,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 48,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 30,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 49,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 31,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 50,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 32,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 51,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 33,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 52,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 34,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 53,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 35,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 54,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 36,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 55,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 37,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 56,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 38,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 57,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 39,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 58,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 40,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 59,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 41,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 60,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 42,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 61,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 43,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 62,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 44,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 63,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 45,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 64,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 46,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 65,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 47,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 66,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 48,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 67,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 49,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 68,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 50,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 69,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 51,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 70,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 52,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 71,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 53,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 72,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 54,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 73,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 55,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 74,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 56,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 75,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 57,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 76,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 58,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 77,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 59,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 78,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 60,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 79,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 61,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 80,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 62,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 81,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c1",
+      "input_index": 63,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 82,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 0,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 83,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 1,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 84,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 2,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 85,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 3,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 86,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 4,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 87,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 5,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 88,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 6,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 89,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 7,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 90,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 8,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 91,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 9,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 92,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 10,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 93,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 11,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 94,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 12,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 95,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 13,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 96,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 14,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 97,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 15,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 98,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 16,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 99,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 17,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 100,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 18,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 101,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 19,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 102,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 20,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 103,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 21,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 104,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 22,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 105,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 23,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 106,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 24,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 107,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 25,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 108,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 26,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 109,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 27,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 110,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 28,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 111,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 29,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 112,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 30,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 113,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 31,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 114,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 32,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 115,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 33,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 116,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 34,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 117,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 35,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 118,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 36,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 119,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 37,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 120,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 38,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 121,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 39,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 122,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 40,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 123,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 41,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 124,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 42,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 125,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 43,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 126,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 44,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 127,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 45,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 128,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 46,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 129,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 47,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 130,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 48,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 131,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 49,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 132,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 50,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 133,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 51,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 134,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 52,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 135,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 53,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 136,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 54,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 137,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 55,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 138,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 56,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 139,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 57,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 140,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 58,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 141,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 59,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 142,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 60,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 143,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 61,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 144,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 62,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 145,
+      "kind": "rlc_weight_column",
+      "layer": "fc1",
+      "branch": "c2",
+      "input_index": 63,
+      "output_dim": 16,
+      "base_offset": 9,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 146,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 0,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 147,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 1,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 148,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 2,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 149,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 3,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 150,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 4,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 151,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 5,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 152,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 6,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 153,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 7,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 154,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 8,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 155,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 9,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 156,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 10,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 157,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 11,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 158,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 12,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 159,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 13,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 160,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 14,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 161,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c1",
+      "input_index": 15,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 162,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 0,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 163,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 1,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 164,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 2,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 165,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 3,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 166,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 4,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 167,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 5,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 168,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 6,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 169,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 7,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 170,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 8,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 171,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 9,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 172,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 10,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 173,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 11,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 174,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 12,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 175,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 13,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 176,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 14,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    },
+    {
+      "j": 177,
+      "kind": "rlc_weight_column",
+      "layer": "fc2",
+      "branch": "c2",
+      "input_index": 15,
+      "output_dim": 10,
+      "base_offset": 1049,
+      "challenge": "gamma_mult"
+    }
+  ]
+}

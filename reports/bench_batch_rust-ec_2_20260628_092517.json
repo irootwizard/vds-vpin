@@ -1,0 +1,40 @@
+{
+  "engine": "rust-ec",
+  "backend": "ws://127.0.0.1:8000/api/v1/session/ws",
+  "model_id": "cnn-mnist-trained",
+  "start": 0,
+  "limit": 2,
+  "concurrency_levels": [
+    1
+  ],
+  "watch_names": [
+    "ahe-cli.exe",
+    "ahe-cli",
+    "ahe-server.exe",
+    "ahe-server"
+  ],
+  "host": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.7",
+    "cpu_count": 16,
+    "pid": 43848
+  },
+  "rows": [
+    {
+      "concurrency": 1,
+      "limit": 2,
+      "elapsed_s": 2.517327800000203,
+      "avg_s_per_image": 1.2586639000001014,
+      "img_per_s": 0.7944932717939391,
+      "accuracy": 1.0,
+      "correct": 2,
+      "rss_mb_start": 40.7421875,
+      "rss_mb_peak": 482.80078125,
+      "rss_mb_end": 40.96484375,
+      "watched_rss_peak_mb": 482.80078125,
+      "warmup": false,
+      "error": null
+    }
+  ],
+  "created_at": "2026-06-28T09:25:14.978726+00:00"
+}

@@ -1,0 +1,10 @@
+# RTX 50 series (Blackwell, e.g. RTX 5060 Ti) — PyTorch must include sm_120.
+# Base requirements.txt pins torch==2.4.0 (CUDA 12.x, no Blackwell). Upgrade after GPU driver install:
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#
+# Verify:
+#   python -m model_training.network_resnet.check_env
+#
+# Training (auto AMP + cudnn on CUDA):
+#   python -m model_training.network_resnet.train --device cuda

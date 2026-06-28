@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务监控 - VDS-VPIN</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/components.css">
+</head>
+<body>
+    <div class="app-container">
+        <div data-include="../components/header.html"></div>
+        
+        <div class="main-content">
+            <div data-include="../components/sidebar.html"></div>
+            
+            <div class="content-wrapper">
+                <div class="page-container">
+                    <div class="page-header">
+                        <div class="page-title">
+                            <h1>任务监控</h1>
+                            <p>实时监控隐私计算任务状态与资源使用</p>
+                        </div>
+                        
+                        <div class="page-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon running">
+                                    <img src="../assets/icons/play.svg" alt="运行中">
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">12</div>
+                                    <div class="stat-label">运行中</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon queued">
+                                    <img src="../assets/icons/clock.svg" alt="排队中">
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">5</div>
+                                    <div class="stat-label">排队中</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon success">
+                                    <img src="../assets/icons/check-circle.svg" alt="已完成">
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">128</div>
+                                    <div class="stat-label">已完成</div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="stat-icon failed">
+                                    <img src="../assets/icons/x-circle.svg" alt="失败">
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">失败</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 快速操作 -->
+                    <div class="quick-actions">
+                        <a href="data-config.html" class="btn-primary">
+                            <img src="../assets/icons/plus.svg" alt="新建">
+                            新建任务
+                        </a>
+                        <button class="btn-secondary">
+                            <img src="../assets/icons/filter.svg" alt="筛选">
+                            筛选
+                        </button>
+                        <button class="btn-secondary">
+                            <img src="../assets/icons/download.svg" alt="导出">
+                            导出报告
+                        </button>
+                    </div>
+                    
+                    <!-- 实时监控面板 -->
+                    <div class="monitoring-panel">
+                        <div class="panel-section">
+                            <h2 class="section-title">
+                                <img src="../assets/icons/activity.svg" alt="任务">
+                                任务队列
+                            </h2>
+                            
+                            <div class="task-queue">
+                                <div class="task-list">
+                                    <div class="task-item running">
+                                        <div class="task-info">
+                                            <div class="task-id">TASK-2024-0012</div>
+                                            <div class="task-name">客户信用评分预测</div>
+                                            <div class="task-model">
+                                                <img src="../assets/icons/model-xgboost.svg" alt="模型">
+                                                XGBoost模型
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-status">
+                                            <div class="status-indicator running">
+                                                <span class="status-dot"></span>
+                                                <span class="status-text">加密中</span>
+                                            </div>
+                                            <div class="progress-info">
+                                                <div class="progress">
+                                                    <div class="progress-bar" style="width: 45%"></div>
+                                                </div>
+                                                <span class="progress-text">45%</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-resources">
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/cpu.svg" alt="CPU">
+                                                <span>CPU: 68%</span>
+                                            </div>
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/memory.svg" alt="内存">
+                                                <span>内存: 2.4GB</span>
+                                            </div>
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/time.svg" alt="时间">
+                                                <span>已运行: 2m 30s</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="task-item tee-running">
+                                        <div class="task-info">
+                                            <div class="task-id">TASK-2024-0013</div>
+                                            <div class="task-name">医疗图像隐私分析</div>
+                                            <div class="task-model">
+                                                <img src="../assets/icons/model-cnn.svg" alt="模型">
+                                                CNN模型
+                                            </div>
+                                            <div class="task-tag">
+                                                <span class="tag-tee">
+                                                    <img src="../assets/icons/tee.svg" alt="TEE">
+                                                    TEE保护中
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-status">
+                                            <div class="status-indicator tee">
+                                                <span class="status-dot"></span>
+                                                <span class="status-text">在TEE内运行中</span>
+                                            </div>
+                                            <div class="progress-info">
+                                                <div class="progress">
+                                                    <div class="progress-bar" style="width: 80%"></div>
+                                                </div>
+                                                <span class="progress-text">80%</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-resources">
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/cpu.svg" alt="CPU">
+                                                <span>CPU: 45%</span>
+                                            </div>
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/memory.svg" alt="内存">
+                                                <span>内存: 3.8GB</span>
+                                            </div>
+                                            <div class="resource-item">
+                                                <img src="../assets/icons/time.svg" alt="时间">
+                                                <span>已运行: 4m 15s</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel-section">
+                            <h2 class="section-title">
+                                <img src="../assets/icons/bar-chart.svg" alt="监控">
+                                资源监控
+                            </h2>
+                            
+                            <div class="resource-monitor">
+                                <div class="resource-charts">
+                                    <div class="chart-container">
+                                        <div class="chart-header">
+                                            <h4>CPU使用率</h4>
+                                            <span class="chart-value">68%</span>
+                                        </div>
+                                        <div class="chart-body">
+                                            <div class="chart-placeholder">
+                                                CPU监控图表
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="chart-container">
+                                        <div class="chart-header">
+                                            <h4>内存使用</h4>
+                                            <span class="chart-value">4.2/8 GB</span>
+                                        </div>
+                                        <div class="chart-body">
+                                            <div class="chart-placeholder">
+                                                内存监控图表
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="chart-container">
+                                        <div class="chart-header">
+                                            <h4>网络I/O</h4>
+                                            <span class="chart-value">125 MB/s</span>
+                                        </div>
+                                        <div class="chart-body">
+                                            <div class="chart-placeholder">
+                                                网络监控图表
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 安全运行状态面板 -->
+                    <div class="security-panel">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/shield-check.svg" alt="安全">
+                            安全运行状态
+                        </h2>
+                        
+                        <div class="security-status-grid">
+                            <div class="status-card secure">
+                                <div class="status-icon">
+                                    <img src="../assets/icons/lock-check.svg" alt="TEE">
+                                </div>
+                                <div class="status-content">
+                                    <h3>TEE保护状态</h3>
+                                    <p>当前任务在可信执行环境中运行</p>
+                                    <div class="status-details">
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/check.svg" alt="通过">
+                                            硬件隔离: 启用
+                                        </span>
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/check.svg" alt="通过">
+                                            内存加密: 启用
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-card secure">
+                                <div class="status-icon">
+                                    <img src="../assets/icons/encryption.svg" alt="加密">
+                                </div>
+                                <div class="status-content">
+                                    <h3>加密通信</h3>
+                                    <p>端到端TLS 1.3加密</p>
+                                    <div class="status-details">
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/check.svg" alt="通过">
+                                            证书验证: 通过
+                                        </span>
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/check.svg" alt="通过">
+                                            前向保密: 启用
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-card warning">
+                                <div class="status-icon">
+                                    <img src="../assets/icons/privacy.svg" alt="隐私">
+                                </div>
+                                <div class="status-content">
+                                    <h3>隐私预算</h3>
+                                    <p>剩余预算: 42%</p>
+                                    <div class="status-details">
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/alert.svg" alt="警告">
+                                            本周已使用: 58%
+                                        </span>
+                                        <button class="btn-link">调整预算</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-card info">
+                                <div class="status-icon">
+                                    <img src="../assets/icons/verification.svg" alt="验证">
+                                </div>
+                                <div class="status-content">
+                                    <h3>远程证明</h3>
+                                    <p>最新验证: 2小时前</p>
+                                    <div class="status-details">
+                                        <span class="detail-item">
+                                            <img src="../assets/icons/check.svg" alt="通过">
+                                            TEE完整性: 已验证
+                                        </span>
+                                        <button class="btn-link">查看报告</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('[data-include]').forEach(function(element) {
+            const file = element.getAttribute('data-include');
+            fetch(file)
+                .then(response => response.text())
+                .then(data => {
+                    element.innerHTML = data;
+                });
+        });
+    });
+    </script>
+</body>
+</html>
