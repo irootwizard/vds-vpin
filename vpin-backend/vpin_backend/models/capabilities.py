@@ -8,8 +8,14 @@ from vpin_backend.config import get_settings
 from vpin_backend.models.weights_bundle import resolve_weights_dir
 from vpin_backend.storage.registry import get_model
 
-AHE_NETWORKS = frozenset({"A", "B"})
+AHE_NETWORKS = frozenset({"A", "B", "lenet_mnist", "lenet_cifar", "lenet_cifar10", "lenet"})
 _BUILTIN_NETWORK = {"cnn-mnist": "A", "cnn-mnist-b": "B"}
+
+_LENET_NETWORKS = frozenset({"lenet_mnist", "lenet_cifar", "lenet_cifar10", "lenet"})
+
+
+def _is_lenet(network: str) -> bool:
+    return network.lower().replace("-", "_") in _LENET_NETWORKS
 
 
 def resolve_model_network(model_id: str, entry: dict | None = None) -> str | None:
@@ -34,6 +40,10 @@ def model_has_ahe_weights(model_id: str) -> bool:
         weights_dir = resolve_weights_dir(entry, default)
     else:
         return False
+
+    # LeNet models use truncation_config.json as the deployment-ready marker.
+    if _is_lenet(network):
+        return (weights_dir / "truncation_config.json").is_file()
 
     from vpin_client.models.weights_layout import get_layout
 

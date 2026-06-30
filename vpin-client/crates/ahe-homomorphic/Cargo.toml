@@ -13,3 +13,6 @@ num-bigint.workspace = true
 rand.workspace = true
 rayon.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

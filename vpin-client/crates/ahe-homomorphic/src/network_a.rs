@@ -6,8 +6,8 @@ use rand::Rng;
 use rayon::prelude::*;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-static PT_MULT: AtomicU64 = AtomicU64::new(0);
-static PT_ADD: AtomicU64 = AtomicU64::new(0);
+pub(crate) static PT_MULT: AtomicU64 = AtomicU64::new(0);
+pub(crate) static PT_ADD: AtomicU64 = AtomicU64::new(0);
 
 pub fn reset_op_counters() {
     PT_MULT.store(0, Ordering::Relaxed);
@@ -18,8 +18,8 @@ pub fn get_op_counters() -> (u64, u64) {
     (PT_ADD.load(Ordering::Relaxed), PT_MULT.load(Ordering::Relaxed))
 }
 
-fn track_mult() { PT_MULT.fetch_add(1, Ordering::Relaxed); }
-fn track_add() { PT_ADD.fetch_add(1, Ordering::Relaxed); }
+pub(crate) fn track_mult() { PT_MULT.fetch_add(1, Ordering::Relaxed); }
+pub(crate) fn track_add() { PT_ADD.fetch_add(1, Ordering::Relaxed); }
 
 type CtGrid = Vec<Vec<E2Point>>;
 pub type Ct4 = Vec<Vec<Vec<Vec<E2Point>>>>;

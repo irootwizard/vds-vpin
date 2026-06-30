@@ -1,10 +1,16 @@
 mod network_a;
 mod network_a_ec;
+mod network_lenet;
 mod plain_forward;
 
 pub use network_a::{
     avg_pool_ciphertext, conv2_ciphertext, fc1_layer, fc2_layer, flatten_ciphertext,
     get_op_counters, reset_op_counters,
+};
+pub use network_lenet::{
+    lenet_cifar_c3, lenet_cifar_conv1, lenet_cifar_conv2, lenet_cifar_fc4, lenet_cifar_fc5,
+    lenet_flatten, lenet_mnist_c3, lenet_mnist_conv1, lenet_mnist_conv2, lenet_mnist_fc4,
+    lenet_mnist_fc5,
 };
 pub use network_a_ec::{
     avg_pool_ciphertext_ec, conv2_ciphertext_ec, fc1_layer_ec, fc2_layer_ec,

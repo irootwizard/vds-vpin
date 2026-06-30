@@ -3,8 +3,8 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use ahe_codec::{
-    apply_client_action, decrypt_tensor, encrypt_tensor, fixed_point_to_real, ClientAction,
-    BsgsTable,
+    apply_client_action, apply_relu_pool_shift, decrypt_tensor, encrypt_tensor,
+    fixed_point_to_real, ClientAction, BsgsTable,
 };
 use ahe_crypto_e2::{be32_to_coord, E2Point, KeyMaterial};
 use ahe_protocol::{chunk_to_ws_frame, decode_ahe_v1_tensor, encode_ahe_v1_chunks};
@@ -395,9 +395,14 @@ async fn handle_truncate(
     profiler.decrypt_ms += t_dec.elapsed().as_secs_f64() * 1000.0;
     let action = ClientAction::parse(action_s)
         .ok_or_else(|| SessionError::Protocol(format!("unknown action {action_s}")))?;
-    if matches!(action, ClientAction::ReluOnly) {
+
+    // Terminal actions: extract logits and done (no re-encryption).
+    if matches!(action, ClientAction::ReluOnly | ClientAction::LogitsOnly) {
         let out = apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?;
-        *logits = fixed_point_to_real(&out, 16);
+        // ReluOnly (Network A): output was historically interpreted at f=16 (preserve behaviour).
+        // LogitsOnly (LeNet): fc5 output is at f=32 (float weights × f=16 input).
+        let logit_scale = if matches!(action, ClientAction::LogitsOnly) { 32 } else { 16 };
+        *logits = fixed_point_to_real(&out, logit_scale);
         *prediction = out
             .iter()
             .enumerate()
@@ -406,7 +411,20 @@ async fn handle_truncate(
             .unwrap_or(0);
         return Ok(());
     }
-    let processed = apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?;
+
+    // LeNet conv phases: relu + client-side avg pool + shift.
+    let processed = if matches!(action, ClientAction::ReluPoolShift) {
+        let pool_kernel = frame["pool_kernel"].as_u64().unwrap_or(2) as usize;
+        let input_shape: Vec<usize> = frame["input_shape"]
+            .as_array()
+            .map(|arr| arr.iter().filter_map(|v| v.as_u64().map(|n| n as usize)).collect())
+            .unwrap_or_default();
+        let bits = shift_bits.ok_or_else(|| SessionError::Protocol("shift_bits required for relu_pool_shift".into()))?;
+        apply_relu_pool_shift(&dec, &input_shape, pool_kernel, bits)
+            .map_err(SessionError::Crypto)?
+    } else {
+        apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?
+    };
     let plain: Vec<i32> = processed.iter().map(|&v| v as i32).collect();
     let t_enc = Instant::now();
     let keys_enc = keys.clone();

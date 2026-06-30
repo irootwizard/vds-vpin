@@ -34,11 +34,23 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
+fn with_python_path(cmd: &mut Command, repo: &Path) {
+    let client = repo.join("vpin-client");
+    let client_str = client.to_str().unwrap_or("");
+    let sep = if cfg!(windows) { ";" } else { ":" };
+    let pythonpath = match std::env::var("PYTHONPATH") {
+        Ok(p) if !p.is_empty() => format!("{client_str}{sep}{p}"),
+        _ => client_str.to_string(),
+    };
+    cmd.env("PYTHONPATH", pythonpath)
+       .env("PYTHONIOENCODING", "utf-8")
+       .env("PYTHONUTF8", "1");
+}
+
 fn apply_python_env(cmd: &mut Command, repo: &Path) {
     cmd.env("VPIN_REPO_ROOT", repo);
     cmd.env("VPIN_AHE_PARALLEL", "0");
-    cmd.env("PYTHONIOENCODING", "utf-8");
-    cmd.env("PYTHONUTF8", "1");
+    with_python_path(cmd, repo);
 }
 
 fn write_infer_fail_log(exit_code: i32, stderr_all: &str, stdout: &str) {
@@ -568,8 +580,9 @@ fn ahe_preprocess(mnist_index: u32) -> Result<Value, String> {
         "import json; from vpin_client.data.official import load_official_test; from vpin_client.data.core import preprocess_result_to_dict; print(json.dumps(preprocess_result_to_dict(load_official_test({}))))",
         mnist_index
     );
-    let out = Command::new(&python)
-        .args(["-c", &script])
+    let mut cmd = Command::new(&python);
+    with_python_path(&mut cmd, &repo);
+    let out = cmd.args(["-c", &script])
         .current_dir(&repo)
         .output()
         .map_err(|e| e.to_string())?;
@@ -594,8 +607,9 @@ items = [preprocess_result_to_dict(r) for r in load_official_batch({}, {})]
 print(json.dumps({{"items": items}}))"#,
         start, count
     );
-    let out = Command::new(&python)
-        .args(["-c", &script])
+    let mut cmd = Command::new(&python);
+    with_python_path(&mut cmd, &repo);
+    let out = cmd.args(["-c", &script])
         .current_dir(&repo)
         .output()
         .map_err(|e| e.to_string())?;
@@ -614,10 +628,11 @@ async fn preprocess_upload_file(path: String) -> Result<Value, String> {
         path.replace('\'', "''")
     );
     let out = tauri::async_runtime::spawn_blocking(move || {
-        Command::new(&python)
-            .args(["-c", &script])
-            .current_dir(&repo)
-            .output()
+        let mut cmd = Command::new(&python);
+        with_python_path(&mut cmd, &repo);
+        cmd.args(["-c", &script])
+           .current_dir(&repo)
+           .output()
     })
     .await
     .map_err(|e| e.to_string())?
@@ -846,6 +861,95 @@ async fn run_ahe_batch_inference(
 }
 
 
+fn write_temp_upload(data: &[u8], filename: &str) -> Result<PathBuf, String> {
+    let ext = Path::new(filename)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("png");
+    let ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let tmp = std::env::temp_dir().join(format!("vpin_upload_{}.{}", ts, ext));
+    std::fs::write(&tmp, data).map_err(|e| e.to_string())?;
+    Ok(tmp)
+}
+
+/// Preprocess uploaded image bytes (Python lane) — avoids Tauri File.path reliability issues.
+#[tauri::command]
+async fn preprocess_upload_bytes(data: Vec<u8>, filename: String) -> Result<Value, String> {
+    let repo = repo_root();
+    let tmp_path = write_temp_upload(&data, &filename)?;
+    let path_str = tmp_path.to_str().unwrap_or("").replace('\\', "/");
+    let fn_safe = filename.replace('"', "_");
+    let script = format!(
+        r#"import json; from pathlib import Path; from vpin_client.data.upload import preprocess_upload_path; from vpin_client.data.core import preprocess_result_to_dict; r=preprocess_result_to_dict(preprocess_upload_path(Path("{}"))); r["filename"]="{}"; r["_temp_path"]="{}"; print(json.dumps(r))"#,
+        path_str, fn_safe, path_str
+    );
+    let python = venv_python(&repo);
+    let mut cmd = Command::new(&python);
+    with_python_path(&mut cmd, &repo);
+    let out = cmd.args(["-c", &script])
+        .current_dir(&repo)
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        let _ = std::fs::remove_file(&tmp_path);
+        return Err(String::from_utf8_lossy(&out.stderr).to_string());
+    }
+    parse_json_stdout(&String::from_utf8_lossy(&out.stdout))
+}
+
+/// Preprocess uploaded image bytes (Rust ahe-cli lane).
+#[tauri::command]
+async fn preprocess_upload_bytes_rust(data: Vec<u8>, filename: String) -> Result<Value, String> {
+    let repo = repo_root();
+    let client = client_root(&repo);
+    let tmp_path = write_temp_upload(&data, &filename)?;
+    let tmp_str = tmp_path.to_str().unwrap_or("").to_string();
+    let tmp_str2 = tmp_str.clone();
+    let filename2 = filename.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        let args = ["preprocess-upload", tmp_str2.as_str()];
+        run_ahe_cli_json(&repo, &client, &args)
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+    let mut v = result?;
+    if let Some(obj) = v.as_object_mut() {
+        obj.entry("_temp_path").or_insert(Value::String(tmp_str));
+        obj.entry("filename").or_insert(Value::String(filename2));
+        obj.insert("source".to_string(), Value::String("upload".to_string()));
+    }
+    Ok(v)
+}
+
+/// Load the 7 test images from model_training/test_images/ as a gallery (Python preprocessing).
+#[tauri::command]
+fn load_test_gallery() -> Result<Value, String> {
+    let repo = repo_root();
+    let dir = repo.join("model_training").join("test_images");
+    if !dir.is_dir() {
+        return Err(format!("test_images not found: {}", dir.display()));
+    }
+    let dir_str = dir.to_str().unwrap_or("").replace('\\', "/");
+    let script = format!(
+        "import json\nfrom pathlib import Path\nfrom vpin_client.data.upload import preprocess_upload_path\nfrom vpin_client.data.core import preprocess_result_to_dict\nd=Path(\"{}\")\nitems=[]\nfor p in sorted(d.glob(\"*.png\")):\n    try:\n        r=preprocess_upload_path(p)\n        item=preprocess_result_to_dict(r)\n        item[\"filename\"]=p.name\n        item[\"source\"]=\"upload\"\n        item[\"_source_path\"]=str(p).replace(\"\\\\\",\"/\")\n        items.append(item)\n    except Exception as e:\n        pass\nprint(json.dumps({{\"items\":items}}))\n",
+        dir_str
+    );
+    let python = venv_python(&repo);
+    let mut cmd = Command::new(&python);
+    with_python_path(&mut cmd, &repo);
+    let out = cmd.args(["-c", &script])
+        .current_dir(&repo)
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        return Err(String::from_utf8_lossy(&out.stderr).to_string());
+    }
+    parse_json_stdout(&String::from_utf8_lossy(&out.stdout))
+}
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
@@ -863,6 +967,9 @@ pub fn run() {
             ahe_preprocess_rust,
             ahe_preprocess_batch_rust,
             preprocess_upload_file_rust,
+            preprocess_upload_bytes,
+            preprocess_upload_bytes_rust,
+            load_test_gallery,
             run_ahe_inference,
             run_ahe_batch_inference
         ])

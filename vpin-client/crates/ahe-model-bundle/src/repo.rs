@@ -28,7 +28,8 @@ pub fn registry_weights_dir(repo: &Path, model_id: &str) -> Option<PathBuf> {
     let registry = repo.join("vpin-backend/data/models/registry.json");
     let raw = std::fs::read_to_string(registry).ok()?;
     let doc: serde_json::Value = serde_json::from_str(&raw).ok()?;
-    let entries = doc.as_array()?;
+    // Registry is {"models": [...]}
+    let entries = doc["models"].as_array()?;
     for entry in entries {
         if entry.get("id").and_then(|v| v.as_str()) == Some(model_id) {
             let rel = entry.get("weights_dir")?.as_str()?;
@@ -38,6 +39,28 @@ pub fn registry_weights_dir(repo: &Path, model_id: &str) -> Option<PathBuf> {
             } else {
                 repo.join(p)
             });
+        }
+    }
+    None
+}
+
+/// Same as `registry_weights_dir` but also returns the model's `network` field.
+pub fn registry_model_info(repo: &Path, model_id: &str) -> Option<(PathBuf, String)> {
+    let registry = repo.join("vpin-backend/data/models/registry.json");
+    let raw = std::fs::read_to_string(registry).ok()?;
+    let doc: serde_json::Value = serde_json::from_str(&raw).ok()?;
+    let entries = doc["models"].as_array()?;
+    for entry in entries {
+        if entry.get("id").and_then(|v| v.as_str()) == Some(model_id) {
+            let rel = entry.get("weights_dir")?.as_str()?;
+            let p = PathBuf::from(rel);
+            let dir = if p.is_absolute() { p } else { repo.join(p) };
+            let network = entry
+                .get("network")
+                .and_then(|v| v.as_str())
+                .unwrap_or("A")
+                .to_string();
+            return Some((dir, network));
         }
     }
     None
