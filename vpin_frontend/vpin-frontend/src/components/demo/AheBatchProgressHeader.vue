@@ -42,9 +42,8 @@ defineProps({
   running: { type: Boolean, default: false },
   engineLabel: { type: String, default: "" },
   focusJobId: { type: String, default: null },
+  phases: { type: Array, default: () => AHE_PHASES },
 });
-
-const phases = AHE_PHASES;
 </script>
 
 <style scoped>

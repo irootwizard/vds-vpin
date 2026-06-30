@@ -72,14 +72,13 @@ def _has_any_npy(directory: Path) -> bool:
 
 
 def load_homomorphic_weights(weights_dir: Path, network: str = "A"):
-    """Load weights for homomorphic inference (Network A/B or LeNet-CIFAR)."""
+    """Load weights for homomorphic inference (Network A/B or LeNet)."""
     if is_lenet_cifar(network):
-        from vpin_backend.inference.homomorphic_network_lenet import LeNetWeights, load_lenet_weights
+        from vpin_backend.inference.homomorphic_network_lenet import load_lenet_weights
 
-        ok, errs = validate_lenet_npy_bundle(weights_dir)
-        if not ok:
-            raise FileNotFoundError(f"invalid LeNet bundle in {weights_dir}: {errs}")
-        return load_lenet_weights(weights_dir)
+        lkey = network.lower().replace("-", "_")
+        variant = "mnist" if lkey == "lenet_mnist" else "cifar"
+        return load_lenet_weights(weights_dir, variant=variant)
 
     from vpin_backend.inference.homomorphic_network_a import NetworkAWeights
 
@@ -95,9 +94,13 @@ def load_homomorphic_weights(weights_dir: Path, network: str = "A"):
     )
 
 
+def _lenet_variant(network: str) -> str:
+    return "mnist" if network.lower().replace("-", "_") == "lenet_mnist" else "cifar"
+
+
 def install_bundle(source: Path, dest: Path, network: str) -> Path:
     if is_lenet_cifar(network):
-        layout = get_lenet_layout()
+        layout = get_lenet_layout(variant=_lenet_variant(network))
     else:
         layout = get_layout(network)
     dest.mkdir(parents=True, exist_ok=True)
@@ -113,11 +116,7 @@ def install_bundle(source: Path, dest: Path, network: str) -> Path:
                 dest.joinpath(fname).write_bytes(zf.read(member))
     else:
         raise ValueError(f"unsupported bundle source: {source}")
-    ok, errs = (
-        validate_lenet_npy_bundle(dest)
-        if is_lenet_cifar(network)
-        else validate_npy_bundle(dest, network)
-    )
+    ok, errs = validate_npy_bundle(dest, network)
     if not ok:
         raise ValueError("; ".join(errs))
     return dest
@@ -127,7 +126,7 @@ def weights_digest(weights_dir: Path, network: str = "A") -> str:
     import hashlib
 
     if is_lenet_cifar(network):
-        layout = get_lenet_layout()
+        layout = get_lenet_layout(variant=_lenet_variant(network))
         files = layout.required_files
     else:
         layout = get_layout(network)

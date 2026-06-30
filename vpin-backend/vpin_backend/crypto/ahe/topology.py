@@ -82,10 +82,48 @@ NETWORK_B = NetworkTopology(
 )
 
 
+LENET_TRUNCATION = (
+    TruncationPhase("after_conv1", "relu_pool_shift", 32, (1, 6, 28, 28)),
+    TruncationPhase("after_conv2", "relu_pool_shift", 32, (1, 16, 10, 10)),
+    TruncationPhase("after_c3", "relu_then_shift", 32, (1, 120)),
+    TruncationPhase("after_fc4", "relu_then_shift", 32, (1, 84)),
+    TruncationPhase("after_fc5", "logits_only", None, (1, 10)),
+)
+
+LENET_MNIST = NetworkTopology(
+    network_id="lenet_mnist",
+    conv=ConvSpec(kernel_h=5, kernel_w=5, in_channels=1, out_channels=6, stride=1, padding=0),
+    pools=(PoolSpec(kernel_h=2, kernel_w=2, stride=2),),
+    fcs=(
+        FcSpec(in_features=400, out_features=120),
+        FcSpec(in_features=120, out_features=84),
+        FcSpec(in_features=84, out_features=10),
+    ),
+    truncation_phases=LENET_TRUNCATION,
+)
+
+LENET_CIFAR = NetworkTopology(
+    network_id="lenet_cifar",
+    conv=ConvSpec(kernel_h=5, kernel_w=5, in_channels=3, out_channels=6, stride=1, padding=0),
+    pools=(PoolSpec(kernel_h=2, kernel_w=2, stride=2),),
+    fcs=(
+        FcSpec(in_features=400, out_features=120),
+        FcSpec(in_features=120, out_features=84),
+        FcSpec(in_features=84, out_features=10),
+    ),
+    truncation_phases=LENET_TRUNCATION,
+)
+
+
 def get_topology(network_id: str) -> NetworkTopology:
     key = network_id.upper()
     if key == "A":
         return NETWORK_A
     if key == "B":
         return NETWORK_B
+    lkey = network_id.lower().replace("-", "_")
+    if lkey == "lenet_mnist":
+        return LENET_MNIST
+    if lkey in ("lenet_cifar", "lenet_cifar10", "lenet"):
+        return LENET_CIFAR
     raise KeyError(f"unknown network topology: {network_id}")

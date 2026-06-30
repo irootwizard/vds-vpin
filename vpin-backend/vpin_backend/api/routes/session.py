@@ -72,7 +72,7 @@ def _pack_to_points(pack: tuple[tuple[int, ...], list[tuple[int, int]]]) -> np.n
 _BUILTIN_NETWORK = {
     "cnn-mnist": "A",
     "cnn-mnist-b": "B",
-    "lenet-mnist": "lenet",
+    "lenet-mnist": "lenet_mnist",
     "lenet-cifar10": "lenet_cifar",
 }
 
@@ -99,6 +99,10 @@ def _is_disconnect_error(exc: BaseException) -> bool:
     if isinstance(exc, WebSocketDisconnect):
         return True
     if isinstance(exc, RuntimeError) and "close message has been sent" in str(exc).lower():
+        return True
+    # websockets library may raise ConnectionClosedError or ConnectionClosedOK
+    t = type(exc).__name__
+    if "ConnectionClosed" in t:
         return True
     return False
 
@@ -383,9 +387,11 @@ async def session_ws(ws: WebSocket) -> None:
                 traceback.print_exc()
                 try:
                     await _asend(ws, "Error", {"message": str(exc)})
-                except (WebSocketDisconnect, RuntimeError):
+                except Exception:
                     break
                 break
 
     except WebSocketDisconnect:
         pass
+    except Exception:
+        traceback.print_exc()

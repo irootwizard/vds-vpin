@@ -112,6 +112,27 @@ export async function pythonPreprocessUpload(path) {
   return invoke("preprocess_upload_file", { path });
 }
 
+/** Upload image via bytes (avoids File.path issues in Tauri v2 WebView2). */
+export async function preprocessUploadBytes(data, filename) {
+  if (!isTauri()) throw new Error("Python 上传预处理需在 Tauri 桌面端运行");
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke("preprocess_upload_bytes", { data: Array.from(data), filename });
+}
+
+/** Upload image via bytes — Rust ahe-cli lane. */
+export async function rustPreprocessUploadBytes(data, filename) {
+  if (!isTauri()) throw new Error("Rust 上传预处理需在 Tauri 桌面端运行");
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke("preprocess_upload_bytes_rust", { data: Array.from(data), filename });
+}
+
+/** Load test images from model_training/test_images/ as gallery items. */
+export async function loadTestGallery() {
+  if (!isTauri()) throw new Error("需要 Tauri 桌面端");
+  const { invoke } = await import("@tauri-apps/api/core");
+  return invoke("load_test_gallery");
+}
+
 /**
  * Rust 轨预处理 — 本地 ahe-cli（mnist_official / preprocess_upload）
  */

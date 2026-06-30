@@ -3,17 +3,17 @@
  */
 
 import { computed, onUnmounted, ref, shallowRef } from "vue";
-import { AHE_PHASES } from "../constants/aheFlow.js";
+import { AHE_PHASES, getPhasesForModelId } from "../constants/aheFlow.js";
 import { subscribeAheProgress } from "./useAheInferTimeline.js";
 
 /** 超过此数量启用紧凑模式：不预填全表、节流刷新、仅保留最近项 */
 export const LARGE_BATCH_THRESHOLD = 200;
 const RECENT_ITEM_LIMIT = 100;
 
-function phaseIndexForStep(step) {
+function phaseIndexForStep(step, phases) {
   const pid = step?.detail?.phase_id || step?.phase_id;
   if (!pid) return -1;
-  return AHE_PHASES.findIndex((p) => p.id === pid);
+  return phases.findIndex((p) => p.id === pid);
 }
 
 function mnistIndexFromJobId(jobId) {
@@ -61,6 +61,7 @@ export function useAheBatchTimeline() {
   const runningPhase = ref(0);
   const flowSteps = shallowRef([]);
   const report = shallowRef(null);
+  const activePhases = ref(AHE_PHASES);
 
   /** @type {Map<string, object>} */
   const itemMap = new Map();
@@ -189,7 +190,7 @@ export function useAheBatchTimeline() {
       concurrency: rep.concurrency ?? batchMeta.value.concurrency,
       engine: rep.engine ?? rep.infer_engine ?? batchMeta.value.engine,
     };
-    runningPhase.value = AHE_PHASES.length;
+    runningPhase.value = activePhases.value.length;
     batchActive.value = false;
     syncItemsNow();
   }
@@ -238,7 +239,7 @@ export function useAheBatchTimeline() {
       if (payload.job_id !== focusJobId.value) return;
       const step = { ...payload.step, job_id: payload.job_id };
       flowSteps.value = [...flowSteps.value, step];
-      const idx = phaseIndexForStep(step);
+      const idx = phaseIndexForStep(step, activePhases.value);
       if (idx >= 0) runningPhase.value = idx + 1;
       return;
     }
@@ -273,6 +274,7 @@ export function useAheBatchTimeline() {
   }
 
   async function beginBatch(ctx) {
+    activePhases.value = getPhasesForModelId(ctx.modelId);
     batchCompact.value = Boolean(
       ctx.compact ?? (ctx.jobCount ?? 0) > LARGE_BATCH_THRESHOLD,
     );
@@ -363,6 +365,7 @@ export function useAheBatchTimeline() {
     flowSteps,
     report,
     progressPct,
+    activePhases,
     beginBatch,
     endBatch,
     resetBatch,

@@ -6,7 +6,7 @@
  */
 
 import { computed, onUnmounted, ref, shallowRef } from "vue";
-import { AHE_PHASES } from "../constants/aheFlow.js";
+import { AHE_PHASES, getPhasesForModelId } from "../constants/aheFlow.js";
 
 let globalUnlisten = null;
 let subscriberCount = 0;
@@ -57,12 +57,6 @@ function nowStr() {
   return new Date().toLocaleTimeString();
 }
 
-function phaseIndexForStep(step) {
-  const pid = step?.detail?.phase_id || step?.phase_id;
-  if (!pid) return -1;
-  return AHE_PHASES.findIndex((p) => p.id === pid);
-}
-
 function emptyLaneState() {
   return { steps: [], runningPhase: 0, inferActive: false, inferStartedAt: 0 };
 }
@@ -79,6 +73,13 @@ export function useAheInferTimeline(activeLaneRef) {
 
   const runningPhase = ref(0);
   const inferActive = ref(false);
+  const activePhases = ref(AHE_PHASES);
+
+  function phaseIndexForStep(step) {
+    const pid = step?.detail?.phase_id || step?.phase_id;
+    if (!pid) return -1;
+    return activePhases.value.findIndex((p) => p.id === pid);
+  }
 
   const flowSteps = computed(() => laneStore[activeLaneRef.value]?.steps.value ?? []);
 
@@ -197,11 +198,13 @@ export function useAheInferTimeline(activeLaneRef) {
       return;
     }
     if (phase === "session_done") {
-      bumpPhase(lane, { detail: { phase_id: "after_fc2" } });
+      const lastPhase = activePhases.value[activePhases.value.length - 1];
+      bumpPhase(lane, { detail: { phase_id: lastPhase?.id ?? "after_fc5" } });
     }
   }
 
   async function beginInfer(ctx) {
+    activePhases.value = getPhasesForModelId(ctx.modelId);
     const lane = ctx.lane;
     activeInferLane = lane;
     currentInferCtx = ctx;
@@ -236,7 +239,7 @@ export function useAheInferTimeline(activeLaneRef) {
       rafId = null;
     }
     flushPending();
-    runningPhase.value = AHE_PHASES.length;
+    runningPhase.value = activePhases.value.length;
   }
 
   function resetTimeline(lane, keepPreprocess = true) {
@@ -268,6 +271,7 @@ export function useAheInferTimeline(activeLaneRef) {
     flowSteps,
     runningPhase,
     inferActive,
+    activePhases,
     beginInfer,
     endInfer,
     resetTimeline,

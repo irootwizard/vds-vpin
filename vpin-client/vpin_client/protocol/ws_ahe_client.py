@@ -434,6 +434,11 @@ async def run_ahe_session(
         enc = await loop.run_in_executor(
             None, lambda: encrypt_tensor(fixed_int32, keys, layout="4d")
         )
+        # Check if server sent an Error while we were encrypting.
+        while not inbox.empty():
+            early = inbox.get_nowait()
+            if early.get("type") == "Error":
+                raise RuntimeError(f"server error: {early.get('message', 'unknown')}")
         _trace(
             make_trace_step(
                 "p3_encrypt_initial",

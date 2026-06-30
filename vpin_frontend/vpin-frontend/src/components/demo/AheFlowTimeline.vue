@@ -36,18 +36,20 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import { AHE_PHASES } from "../../constants/aheFlow.js";
 
-defineProps({
+const props = defineProps({
   steps: { type: Array, default: () => [] },
   running: { type: Boolean, default: false },
   runningPhase: { type: Number, default: 0 },
   engineLabel: { type: String, default: "" },
+  phases: { type: Array, default: () => AHE_PHASES },
 });
 
 const emit = defineEmits(["select"]);
 
-const expectedPhases = AHE_PHASES;
+const expectedPhases = computed(() => props.phases);
 
 function itemType(item) {
   if (item.category === "完成") return "success";

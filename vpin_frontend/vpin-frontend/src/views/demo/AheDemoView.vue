@@ -106,6 +106,7 @@
           <n-space>
             <n-button :loading="preprocessBusy" @click="preprocessCurrent">预处理当前序号</n-button>
             <n-button :loading="galleryLoading" quaternary @click="loadGallery">刷新预览</n-button>
+            <n-button :loading="testGalleryLoading" quaternary @click="loadTestImageGallery">加载测试图集</n-button>
           </n-space>
           <n-upload
             :show-file-list="false"
@@ -163,7 +164,7 @@
 
         <div v-if="result && inferMode === 'single'">
           <p>
-            预测: {{ result.prediction }}
+            预测: {{ predictionLabel }}
             <span v-if="result.label != null"> / 标签: {{ result.label }}</span>
             <n-tag v-if="result.infer_engine" size="tiny" style="margin-left: 6px">
               {{ result.infer_engine }}
@@ -185,7 +186,7 @@
             {{ stack === 'python' ? 'Python 栈' : `Rust · ${rustBackend === 'ec' ? 'EC' : 'Ark'}` }}
           </n-tag>
           <n-text depth="3" style="font-size: 12px">
-            {{ inferMode === 'batch' ? '顶栏 Network A 阶段随 focus job 推进' : '点击各阶段查看张量形状、密文形式与截断参数' }}
+            {{ inferMode === 'batch' ? '顶栏阶段随 focus job 推进' : '点击各阶段查看张量形状、密文形式与截断参数' }}
           </n-text>
         </n-space>
       </template>
@@ -198,6 +199,7 @@
           :running="batchActive"
           :engine-label="enginePreset.label"
           :focus-job-id="focusJobId"
+          :phases="batchActivePhases"
         />
         <n-text
           v-if="batchCompact && batchActive"
@@ -218,6 +220,7 @@
           :running="batchActive"
           :running-phase="batchRunningPhase"
           :engine-label="enginePreset.label"
+          :phases="batchActivePhases"
           style="margin-top: 12px"
           @select="openStepDetail"
         />
@@ -229,6 +232,7 @@
         :running="inferBusy"
         :running-phase="runningPhase"
         :engine-label="enginePreset.label"
+        :phases="activePhases"
         @select="openStepDetail"
       />
     </n-card>
@@ -297,6 +301,10 @@ import {
   rustPreprocessOfficial,
   rustPreprocessBatch,
   rustPreprocessUpload,
+
+  preprocessUploadBytes,
+  rustPreprocessUploadBytes,
+  loadTestGallery,
 
   saveInferEngine,
 
@@ -371,6 +379,8 @@ const {
 
   runningPhase,
 
+  activePhases,
+
   beginInfer,
 
   endInfer,
@@ -395,6 +405,7 @@ const {
   flowSteps: batchFlowSteps,
   report: batchReport,
   progressPct: batchProgressPct,
+  activePhases: batchActivePhases,
   beginBatch,
   endBatch,
   resetBatch,
@@ -441,6 +452,17 @@ const uploadLoading = computed(() =>
 
 const modelId = ref("");
 
+const CIFAR10_LABELS = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"];
+
+const predictionLabel = computed(() => {
+  if (result.value == null || result.value.prediction == null) return null;
+  const p = result.value.prediction;
+  if (modelId.value && modelId.value.toLowerCase().includes("cifar")) {
+    return `${p} (${CIFAR10_LABELS[p] ?? p})`;
+  }
+  return String(p);
+});
+
 const modelOptions = ref([]);
 
 const modelsLoading = ref(false);
@@ -452,6 +474,8 @@ const rustGalleryLoading = ref(false);
 const pythonUploadLoading = ref(false);
 
 const rustUploadLoading = ref(false);
+
+const testGalleryLoading = ref(false);
 
 const pythonBusy = ref(false);
 
@@ -546,6 +570,40 @@ function nowStr() {
 
   return new Date().toLocaleTimeString();
 
+}
+
+function readFileAsArray(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(new Uint8Array(e.target.result));
+    reader.onerror = () => reject(new Error("文件读取失败"));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function loadTestImageGallery() {
+  if (!isDesktop) return;
+  testGalleryLoading.value = true;
+  error.value = null;
+  try {
+    const result = await loadTestGallery();
+    const items = (result.items || []).map((item) => ({ ...item, source: "upload" }));
+    if (!items.length) {
+      error.value = "测试图集为空（model_training/test_images/ 下无 PNG）";
+      return;
+    }
+    const lane = activeLane.value;
+    setGallery(lane, items);
+    applySelection(lane, items[0]);
+    if (items[0]?._source_path) lanes[lane].lastUploadPath = items[0]._source_path;
+    state.preprocessResult = items[0];
+    mergePreprocessTrace(items[0], lane);
+    addLog("测试图集", `已加载 ${items.length} 张 (model_training/test_images/)`);
+  } catch (e) {
+    error.value = String(e);
+  } finally {
+    testGalleryLoading.value = false;
+  }
 }
 
 
@@ -735,6 +793,11 @@ function selectSampleWithTrace(lane, item) {
 
   state.selectedIndex = item.mnist_index ?? index.value;
 
+  if (item.source === "upload") {
+    const path = item._source_path || item._temp_path || item.local_path || null;
+    if (path) lanes[lane].lastUploadPath = path;
+  }
+
   if (lane === activeLane.value) {
 
     mergePreprocessTrace(item, lane);
@@ -835,15 +898,16 @@ async function onUploadChangeLane(lane, { file }) {
   error.value = null;
 
   try {
-    const path = raw.path;
-    if (!path) throw new Error("Tauri 需要本地文件路径");
-    lanes[lane].lastUploadPath = path;
+    const bytes = await readFileAsArray(raw);
     const prep =
       lane === "python"
-        ? await pythonPreprocessUpload(path)
-        : await rustPreprocessUpload(path);
+        ? await preprocessUploadBytes(bytes, raw.name)
+        : await rustPreprocessUploadBytes(bytes, raw.name);
 
-    const item = { ...prep, source: "upload", local_path: path };
+    const tempPath = prep._temp_path || prep._source_path || null;
+    if (tempPath) lanes[lane].lastUploadPath = tempPath;
+
+    const item = { ...prep, source: "upload" };
 
     upsertGalleryItem(lane, item);
     applySelection(lane, item);

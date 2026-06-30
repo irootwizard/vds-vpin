@@ -22,11 +22,27 @@
       "accuracy": 56.19,
       "network": "lenet_cifar",
       "topology": "lenet_cifar_v1",
-      "weights_dir": "model_training/outputs/20260623_185153",
+      "weights_dir": "model_training/outputs/lenet_20260629_053826",
       "deployable": true,
       "range_ok": true,
       "accuracy_ok": true,
       "updated": "2026-06-23T19:00:19.773666+00:00"
+    },
+    {
+      "id": "lenet-mnist",
+      "name": "LeNet-5 MNIST (trained)",
+      "framework": "PyTorch",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 0.044,
+      "input_shape": "1x32x32",
+      "accuracy": 99.16,
+      "network": "lenet_mnist",
+      "topology": "lenet_mnist_v1",
+      "weights_dir": "model_training/outputs/lenet_mnist_20260629_070515",
+      "deployable": true,
+      "range_ok": true,
+      "accuracy_ok": true,
+      "updated": "2026-06-30T00:00:00Z"
     },
     {
       "id": "cnn-mnist-trained",
@@ -35,12 +51,11 @@
       "task": "\u56fe\u50cf\u5206\u7c7b",
       "params_count_m": 1.21,
       "input_shape": "1x28x28",
-      "accuracy": 92.91,
-      "accuracy_fixed": 89.46,
+      "accuracy": 10.47,
       "network": "A",
       "topology": "cnn_mnist_v1",
-      "weights_dir": "model_training/outputs/20260622_184254",
-      "updated": "2026-06-28T14:24:35.533471+00:00"
+      "weights_dir": "model_training/outputs/20260622_174721",
+      "updated": "2026-06-22T18:00:57.727319+00:00"
     }
   ]
 }

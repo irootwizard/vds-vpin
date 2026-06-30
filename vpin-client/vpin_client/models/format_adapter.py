@@ -86,7 +86,9 @@ def _probe_zip(path: Path) -> FormatProbe:
 
 def validate_npy_bundle(directory: Path, network: str) -> tuple[bool, list[str]]:
     if is_lenet_cifar(network):
-        return validate_lenet_npy_bundle(directory)
+        lkey = network.lower().replace("-", "_")
+        variant = "mnist" if lkey == "lenet_mnist" else "cifar"
+        return validate_lenet_npy_bundle(directory, variant=variant)
     layout = get_layout(network)
     errors: list[str] = []
     for fname in layout.required_files:
@@ -105,8 +107,8 @@ def validate_npy_bundle(directory: Path, network: str) -> tuple[bool, list[str]]
     return len(errors) == 0, errors
 
 
-def validate_lenet_npy_bundle(directory: Path) -> tuple[bool, list[str]]:
-    layout = get_lenet_layout()
+def validate_lenet_npy_bundle(directory: Path, variant: str = "cifar") -> tuple[bool, list[str]]:
+    layout = get_lenet_layout(variant=variant)
     errors: list[str] = []
     for fname in layout.required_files:
         p = directory / fname
@@ -116,11 +118,6 @@ def validate_lenet_npy_bundle(directory: Path) -> tuple[bool, list[str]]:
         arr = np.load(p)
         if arr.size == 0:
             errors.append(f"empty {fname}")
-    w1 = directory / layout.weight_fc1
-    if w1.is_file():
-        w = np.load(w1)
-        if w.shape != (400, 120):
-            errors.append(f"{layout.weight_fc1} shape {w.shape} != (400, 120)")
     return len(errors) == 0, errors
 
 
