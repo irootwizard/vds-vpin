@@ -1,0 +1,122 @@
+{
+  "model": "lenet_cifar",
+  "checkpoint": "model_training\\outputs\\lenet_20260629_053826\\checkpoint.pt",
+  "fixed_point_bits": 16,
+  "bsgs_limit": 8796093022208,
+  "int32_limit": 2147483647,
+  "truncation_plan": [
+    {
+      "phase_id": "after_conv1",
+      "client_action": "relu_pool_shift",
+      "shift_bits": 32,
+      "pool_kernel": 2,
+      "input_shape": [
+        1,
+        6,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        6,
+        14,
+        14
+      ]
+    },
+    {
+      "phase_id": "after_conv2",
+      "client_action": "relu_pool_shift",
+      "shift_bits": 32,
+      "pool_kernel": 2,
+      "input_shape": [
+        1,
+        16,
+        10,
+        10
+      ],
+      "output_shape": [
+        1,
+        16,
+        5,
+        5
+      ]
+    },
+    {
+      "phase_id": "after_c3",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        120
+      ],
+      "output_shape": [
+        1,
+        120
+      ]
+    },
+    {
+      "phase_id": "after_fc4",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        84
+      ],
+      "output_shape": [
+        1,
+        84
+      ]
+    },
+    {
+      "phase_id": "after_fc5",
+      "client_action": "logits_only",
+      "shift_bits": null,
+      "input_shape": [
+        1,
+        10
+      ],
+      "output_shape": null
+    }
+  ],
+  "weight_shapes": {
+    "conv1_weight": [
+      6,
+      3,
+      5,
+      5
+    ],
+    "conv1_bias": [
+      6
+    ],
+    "conv2_weight": [
+      16,
+      6,
+      5,
+      5
+    ],
+    "conv2_bias": [
+      16
+    ],
+    "c3_weight": [
+      400,
+      120
+    ],
+    "c3_bias": [
+      120
+    ],
+    "fc4_weight": [
+      120,
+      84
+    ],
+    "fc4_bias": [
+      84
+    ],
+    "fc5_weight": [
+      84,
+      10
+    ],
+    "fc5_bias": [
+      10
+    ]
+  }
+}
