@@ -1,0 +1,516 @@
+{
+  "model": "resnet18_cifar",
+  "checkpoint": "model_training\\outputs\\resnet18_20260629_054142\\checkpoint.pt",
+  "fixed_point_bits": 16,
+  "weight_bits": 16,
+  "bsgs_limit": 8796093022208,
+  "int32_limit": 2147483647,
+  "truncation_plan": [
+    {
+      "phase_id": "after_stem",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l1b0c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l1b0c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "shortcut": "identity"
+    },
+    {
+      "phase_id": "after_l1b1c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l1b1c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "output_shape": [
+        1,
+        64,
+        32,
+        32
+      ],
+      "shortcut": "identity"
+    },
+    {
+      "phase_id": "after_l2b0c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "output_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l2b0c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "output_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "shortcut": "downsample"
+    },
+    {
+      "phase_id": "after_l2b1c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "output_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l2b1c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "output_shape": [
+        1,
+        128,
+        16,
+        16
+      ],
+      "shortcut": "identity"
+    },
+    {
+      "phase_id": "after_l3b0c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "output_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l3b0c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "output_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "shortcut": "downsample"
+    },
+    {
+      "phase_id": "after_l3b1c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "output_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l3b1c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "output_shape": [
+        1,
+        256,
+        8,
+        8
+      ],
+      "shortcut": "identity"
+    },
+    {
+      "phase_id": "after_l4b0c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "output_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l4b0c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "output_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "shortcut": "downsample"
+    },
+    {
+      "phase_id": "after_l4b1c1",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "output_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "shortcut": null
+    },
+    {
+      "phase_id": "after_l4b1c2",
+      "client_action": "relu_then_shift",
+      "shift_bits": 32,
+      "input_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "output_shape": [
+        1,
+        512,
+        4,
+        4
+      ],
+      "shortcut": "identity"
+    },
+    {
+      "phase_id": "after_pool_linear",
+      "client_action": "logits_only",
+      "shift_bits": null,
+      "input_shape": [
+        1,
+        10
+      ],
+      "output_shape": null,
+      "shortcut": null
+    }
+  ],
+  "weight_shapes": {
+    "stem_weight_64_3_3_3": [
+      64,
+      3,
+      3,
+      3
+    ],
+    "stem_bias_64": [
+      64
+    ],
+    "l1b0_conv1_weight_64_64_3_3": [
+      64,
+      64,
+      3,
+      3
+    ],
+    "l1b0_conv1_bias_64": [
+      64
+    ],
+    "l1b0_conv2_weight_64_64_3_3": [
+      64,
+      64,
+      3,
+      3
+    ],
+    "l1b0_conv2_bias_64": [
+      64
+    ],
+    "l1b1_conv1_weight_64_64_3_3": [
+      64,
+      64,
+      3,
+      3
+    ],
+    "l1b1_conv1_bias_64": [
+      64
+    ],
+    "l1b1_conv2_weight_64_64_3_3": [
+      64,
+      64,
+      3,
+      3
+    ],
+    "l1b1_conv2_bias_64": [
+      64
+    ],
+    "l2b0_conv1_weight_128_64_3_3": [
+      128,
+      64,
+      3,
+      3
+    ],
+    "l2b0_conv1_bias_128": [
+      128
+    ],
+    "l2b0_conv2_weight_128_128_3_3": [
+      128,
+      128,
+      3,
+      3
+    ],
+    "l2b0_conv2_bias_128": [
+      128
+    ],
+    "l2b0_ds_weight_128_64_1_1": [
+      128,
+      64,
+      1,
+      1
+    ],
+    "l2b0_ds_bias_128": [
+      128
+    ],
+    "l2b1_conv1_weight_128_128_3_3": [
+      128,
+      128,
+      3,
+      3
+    ],
+    "l2b1_conv1_bias_128": [
+      128
+    ],
+    "l2b1_conv2_weight_128_128_3_3": [
+      128,
+      128,
+      3,
+      3
+    ],
+    "l2b1_conv2_bias_128": [
+      128
+    ],
+    "l3b0_conv1_weight_256_128_3_3": [
+      256,
+      128,
+      3,
+      3
+    ],
+    "l3b0_conv1_bias_256": [
+      256
+    ],
+    "l3b0_conv2_weight_256_256_3_3": [
+      256,
+      256,
+      3,
+      3
+    ],
+    "l3b0_conv2_bias_256": [
+      256
+    ],
+    "l3b0_ds_weight_256_128_1_1": [
+      256,
+      128,
+      1,
+      1
+    ],
+    "l3b0_ds_bias_256": [
+      256
+    ],
+    "l3b1_conv1_weight_256_256_3_3": [
+      256,
+      256,
+      3,
+      3
+    ],
+    "l3b1_conv1_bias_256": [
+      256
+    ],
+    "l3b1_conv2_weight_256_256_3_3": [
+      256,
+      256,
+      3,
+      3
+    ],
+    "l3b1_conv2_bias_256": [
+      256
+    ],
+    "l4b0_conv1_weight_512_256_3_3": [
+      512,
+      256,
+      3,
+      3
+    ],
+    "l4b0_conv1_bias_512": [
+      512
+    ],
+    "l4b0_conv2_weight_512_512_3_3": [
+      512,
+      512,
+      3,
+      3
+    ],
+    "l4b0_conv2_bias_512": [
+      512
+    ],
+    "l4b0_ds_weight_512_256_1_1": [
+      512,
+      256,
+      1,
+      1
+    ],
+    "l4b0_ds_bias_512": [
+      512
+    ],
+    "l4b1_conv1_weight_512_512_3_3": [
+      512,
+      512,
+      3,
+      3
+    ],
+    "l4b1_conv1_bias_512": [
+      512
+    ],
+    "l4b1_conv2_weight_512_512_3_3": [
+      512,
+      512,
+      3,
+      3
+    ],
+    "l4b1_conv2_bias_512": [
+      512
+    ],
+    "linear_weight_512_10": [
+      512,
+      10
+    ],
+    "linear_bias_10": [
+      10
+    ]
+  }
+}
