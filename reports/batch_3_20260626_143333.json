@@ -1,0 +1,99 @@
+{
+  "limit": 3,
+  "correct": 1,
+  "accuracy": 0.3333333333333333,
+  "elapsed_s": 43.562246999994386,
+  "concurrency": 2,
+  "results": [
+    {
+      "prediction": 0,
+      "logits": [
+        227677.21875,
+        187436.453125,
+        138744.40625,
+        127641.3046875,
+        143611.703125,
+        126954.3515625,
+        197431.8125,
+        174426.359375,
+        101722.3984375,
+        173033.875
+      ],
+      "label": 2,
+      "mnist_index": 0,
+      "upload_id": null,
+      "input_digest_hex": "df8e22038a056f8b466c5344fa95985f298d6b0b49663a137ab84370dd3cc8a1",
+      "model_id": "cnn-mnist",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 9.543899999698624,
+        "crypto_infer_ms": 24756.145400002424,
+        "e2e_post_preprocess_ms": 24756.145400002424,
+        "total_ms": 24765.689300002123
+      },
+      "correct": true
+    },
+    {
+      "prediction": 0,
+      "logits": [
+        226326.5,
+        186190.90625,
+        137362.765625,
+        126671.9140625,
+        142729.15625,
+        126583.6328125,
+        195554.96875,
+        172938.578125,
+        100736.046875,
+        171418.171875
+      ],
+      "label": 0,
+      "mnist_index": 1,
+      "upload_id": null,
+      "input_digest_hex": "fb3905c0b381b41b4e4efe62efcbf86b70b5e8e18d86c43e36cada3b1db76cf3",
+      "model_id": "cnn-mnist",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 10.807900005602278,
+        "crypto_infer_ms": 30888.393699999142,
+        "e2e_post_preprocess_ms": 30888.393699999142,
+        "total_ms": 30899.201600004744
+      },
+      "correct": false
+    },
+    {
+      "prediction": 0,
+      "logits": [
+        233322.25,
+        191460.359375,
+        141921.625,
+        130713.6484375,
+        145784.625,
+        130896.421875,
+        201588.03125,
+        178515.046875,
+        103894.9296875,
+        176045.1875
+      ],
+      "label": 9,
+      "mnist_index": 2,
+      "upload_id": null,
+      "input_digest_hex": "f0d444bfee40e134f426f9a380a4f021a0b5c010e1a0745a7fdd865cab055516",
+      "model_id": "cnn-mnist",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 140.81910000095377,
+        "crypto_infer_ms": 18457.941100001335,
+        "e2e_post_preprocess_ms": 18457.941100001335,
+        "total_ms": 18598.76020000229
+      },
+      "correct": false
+    }
+  ]
+}

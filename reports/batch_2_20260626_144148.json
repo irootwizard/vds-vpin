@@ -1,0 +1,1803 @@
+{
+  "limit": 2,
+  "correct": 1,
+  "accuracy": 0.5,
+  "elapsed_s": 33.51773069999763,
+  "concurrency": 1,
+  "results": [
+    {
+      "prediction": 0,
+      "logits": [
+        244808.734375,
+        201603.515625,
+        148352.609375,
+        136582.78125,
+        154424.234375,
+        137034.34375,
+        211383.046875,
+        186428.546875,
+        108550.9609375,
+        185071.546875
+      ],
+      "label": 4,
+      "mnist_index": 0,
+      "upload_id": null,
+      "input_digest_hex": "74ccf1ce0ead04e666120feb841bf0a8993332a819a7ac2b605b580f1462fd93",
+      "model_id": "cnn-mnist",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 8.812100000795908,
+        "crypto_infer_ms": 18588.180300001113,
+        "e2e_post_preprocess_ms": 18588.180300001113,
+        "total_ms": 18596.99240000191
+      },
+      "trace": [
+        {
+          "id": "p0_start",
+          "category": "P0",
+          "title": "SessionStart",
+          "summary": "\u5efa\u7acb WebSocket \u4f1a\u8bdd",
+          "detail": {
+            "backend": "ws://127.0.0.1:8000/api/v1/session/ws",
+            "ahe_params_id": "e2-default"
+          }
+        },
+        {
+          "id": "p1_model_select",
+          "category": "P1",
+          "title": "ModelSelect",
+          "summary": "model_id=cnn-mnist",
+          "detail": {
+            "model_id": "cnn-mnist"
+          }
+        },
+        {
+          "id": "p2_input_digest",
+          "category": "P2",
+          "title": "InputDigest",
+          "summary": "digest=74ccf1ce0ead04e6... shape=[1, 1, 32, 32]",
+          "detail": {
+            "input_digest_hex": "74ccf1ce0ead04e666120feb841bf0a8993332a819a7ac2b605b580f1462fd93",
+            "shape": [
+              1,
+              1,
+              32,
+              32
+            ],
+            "fixed_point_bits": 16,
+            "mnist_index": 0,
+            "plain_input": {
+              "name": "fixed_int32",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int32",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 65536.0,
+              "mean": 26516.9326171875,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "p3_public_key",
+          "category": "P3",
+          "title": "PublicKey",
+          "summary": "\u5ba2\u6237\u7aef\u516c\u94a5 h = sk\u00b7G",
+          "detail": {
+            "h_x": "176732984368649002097949702271272282246837696336087117099351565150684270732",
+            "h_y": "5744969811098836242536052717129506724895661072944963920367839475781463360447",
+            "note": "\u79c1\u94a5\u4ec5\u9a7b\u7559\u5ba2\u6237\u7aef\uff0c\u4e0d\u7ecf\u7f51\u7edc\u4f20\u8f93"
+          }
+        },
+        {
+          "id": "p3_encrypt_initial",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "\u8f93\u5165 \u00b7 ElGamal \u52a0\u5bc6",
+          "summary": "shape=[1, 1, 32, 32]",
+          "detail": {
+            "phase_id": "initial",
+            "direction": "client\u2192server",
+            "layer": "\u8f93\u5165",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3457100906017591916828006789719852076210222935735792278158032354653740494419, 2240395897141484083390920777386161443216851996133109451712998642387488024965)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(215437296468657610994617084980225868969788462058068127689477567264561284897, 6262804548533702167333555650781461483901979550265620629904685415730153398378)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "p0_accept",
+          "category": "P0",
+          "title": "SessionAccept",
+          "summary": "session_id=f3218a73...",
+          "detail": {
+            "type": "SessionAccept",
+            "session_id": "f3218a73-4f03-42d1-821e-db8053424d7a",
+            "server_version": "vpin-backend/0.1.0-ahe",
+            "model_catalog_epoch": "0"
+          }
+        },
+        {
+          "id": "p1_model_ack",
+          "category": "P1",
+          "title": "ModelSelectAck",
+          "summary": "network=A digest=406f88b0bb2d...",
+          "detail": {
+            "model_id": "cnn-mnist",
+            "network_id": "A",
+            "weights_digest_hex": "406f88b0bb2da4f7fc47df93867b9ac903219267d79b9842ba7ddc19224e21b7",
+            "truncation_plan": [
+              {
+                "phase_id": "after_conv",
+                "layer": "relu",
+                "bits": 16
+              },
+              {
+                "phase_id": "after_pool",
+                "layer": "shift",
+                "bits": 26
+              },
+              {
+                "phase_id": "after_fc1",
+                "layer": "relu_then_shift",
+                "bits": 32
+              },
+              {
+                "phase_id": "after_fc2",
+                "layer": "relu_only",
+                "bits": 16
+              }
+            ]
+          }
+        },
+        {
+          "id": "p2_digest_ack",
+          "category": "P2",
+          "title": "InputDigestAck",
+          "summary": "\u670d\u52a1\u7aef\u786e\u8ba4\u8f93\u5165\u6458\u8981",
+          "detail": {
+            "type": "InputDigestAck",
+            "ok": true
+          }
+        },
+        {
+          "id": "truncate_req_after_conv",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 Conv",
+          "summary": "relu",
+          "detail": {
+            "phase_id": "after_conv",
+            "client_action": "relu",
+            "shift_bits": null,
+            "shape": [
+              1,
+              1,
+              32,
+              32
+            ],
+            "layer": "Conv",
+            "data_form": "\u5bc6\u6587\u7279\u5f81\u56fe \u2192 int32 \u6fc0\u6d3b\u56fe"
+          }
+        },
+        {
+          "id": "server_ct_after_conv",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "Conv \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_conv shape=[1, 1, 32, 32]",
+          "detail": {
+            "phase_id": "after_conv",
+            "direction": "server\u2192client",
+            "layer": "Conv",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(5239168436825313820347541549571969219600747920148144860739226027774415467393, 6439276846121268283167966537667581911597109140403855693298627145545527916819)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3132243636018263629230746539803915788969959740351829256393884387661630887815, 4924606213570150212039250282667526497344800667715190470743022251688382276183)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 4,
+              "c2": 4
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu",
+          "detail": {
+            "phase_id": "after_conv",
+            "client_action": "relu",
+            "shift_bits": null,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int64",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 478791.0,
+              "mean": 212135.4609375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU"
+          }
+        },
+        {
+          "id": "client_action_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 relu",
+          "summary": "shape=[1, 1, 32, 32]",
+          "detail": {
+            "action": "relu",
+            "shift_bits": null,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int64",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 478791.0,
+              "mean": 212135.4609375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_conv \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_conv",
+            "direction": "client\u2192server",
+            "layer": "Conv",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(892136115419496886851177560761634245106121887416538111399246348435637829353, 3450019267461761582881126450985648568079108501456389025777178557478779887310)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3434117943037384532584776404864906040688125557512694541349634870318520610436, 4040649135851604237663806067014102404538488620401167833520515971680371376824)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_pool",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 MaxPool",
+          "summary": "shift shift=26",
+          "detail": {
+            "phase_id": "after_pool",
+            "client_action": "shift",
+            "shift_bits": 26,
+            "shape": [
+              1,
+              64
+            ],
+            "layer": "MaxPool",
+            "data_form": "\u5bc6\u6587 \u2192 \u622a\u65ad\u540e int32 \u5411\u91cf"
+          }
+        },
+        {
+          "id": "server_ct_after_pool",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "MaxPool \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_pool shape=[1, 64]",
+          "detail": {
+            "phase_id": "after_pool",
+            "direction": "server\u2192client",
+            "layer": "MaxPool",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3326164220032216101993336368327166161756962477152791411969649590004362314051, 5739250320177558480569286420062220118741155820763283715837689399286966221768)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1925683810254099436149026119444685465755468321143760060185468034177206664645, 2068755723172128402285550523200291929680697421249341392145689948573518077044)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=shift shift=26",
+          "detail": {
+            "phase_id": "after_pool",
+            "client_action": "shift",
+            "shift_bits": 26,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "size": 64,
+              "sample": [
+                59147008.0,
+                94164800.0,
+                132834048.0,
+                128771392.0,
+                164841856.0,
+                152407168.0,
+                167868288.0,
+                73654144.0
+              ],
+              "min": 39524544.0,
+              "max": 366313408.0,
+              "mean": 217226712.0,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 \u53f3\u79fb\u622a\u65ad (shift)"
+          }
+        },
+        {
+          "id": "client_action_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 shift",
+          "summary": "shape=[1, 64]",
+          "detail": {
+            "action": "shift",
+            "shift_bits": 26,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int32",
+              "size": 64,
+              "sample": [
+                57760.0,
+                91957.0,
+                129720.0,
+                125753.0,
+                160978.0,
+                148835.0,
+                163933.0,
+                71927.0
+              ],
+              "min": 38598.0,
+              "max": 357727.0,
+              "mean": 212134.953125,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_pool \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_pool",
+            "direction": "client\u2192server",
+            "layer": "MaxPool",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1152342424349352914395953906350430511731847523199088487883440086763614585060, 1754353068662447536366193344966314926671805708657868576892991759348525003062)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1171581213685659444002286395806835273939349423851830777444857482023613122266, 5308263018455623350195521775209450338545492730302644420542432386020610786982)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_fc1",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 FC1",
+          "summary": "relu_then_shift shift=32",
+          "detail": {
+            "phase_id": "after_fc1",
+            "client_action": "relu_then_shift",
+            "shift_bits": 32,
+            "shape": [
+              1,
+              16
+            ],
+            "layer": "FC1",
+            "data_form": "\u5bc6\u6587 \u2192 int32 \u9690\u85cf\u5c42"
+          }
+        },
+        {
+          "id": "server_ct_after_fc1",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "FC1 \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_fc1 shape=[1, 16]",
+          "detail": {
+            "phase_id": "after_fc1",
+            "direction": "server\u2192client",
+            "layer": "FC1",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(358811728008930464126007034010897367614742722485388040478110767242671234732, 793368397912837189105928955635521532282942100714100881762740827771136368024)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1772996279184180749313556240400492463697793071566080148137812526852816864271, 4111636984786576492321512796158753204177387608066722219423452613602993442242)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu_then_shift shift=32",
+          "detail": {
+            "phase_id": "after_fc1",
+            "client_action": "relu_then_shift",
+            "shift_bits": 32,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "int64",
+              "size": 16,
+              "sample": [
+                17441886754.0,
+                14092900436.0,
+                20835471174.0,
+                12734992818.0,
+                14262471235.0,
+                15394900162.0,
+                16401477868.0,
+                10072994092.0
+              ],
+              "min": 10072994092.0,
+              "max": 20835471174.0,
+              "mean": 14896155938.125,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU \u2192 \u53f3\u79fb\u622a\u65ad"
+          }
+        },
+        {
+          "id": "client_action_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 relu_then_shift",
+          "summary": "shape=[1, 16]",
+          "detail": {
+            "action": "relu_then_shift",
+            "shift_bits": 32,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "int32",
+              "size": 16,
+              "sample": [
+                266142.0,
+                215040.0,
+                317924.0,
+                194320.0,
+                217628.0,
+                234907.0,
+                250266.0,
+                153701.0
+              ],
+              "min": 153701.0,
+              "max": 317924.0,
+              "mean": 227296.9375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_fc1 \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_fc1",
+            "direction": "client\u2192server",
+            "layer": "FC1",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4301095437131687017272768370604973504057813843868724731544904205047276955489, 5522804287555021449043869390789153353129073995355242788401287356659229474559)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1954585052566364625293398697773519534945857328337446958021619455965370680440, 4009430123960779804860948373647976066076071677979719586969669053708148451375)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_fc2",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 FC2 / Logits",
+          "summary": "relu_only",
+          "detail": {
+            "phase_id": "after_fc2",
+            "client_action": "relu_only",
+            "shift_bits": null,
+            "shape": [
+              1,
+              10
+            ],
+            "layer": "FC2 / Logits",
+            "data_form": "\u5bc6\u6587 \u2192 int32 logits (10)"
+          }
+        },
+        {
+          "id": "server_ct_after_fc2",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "FC2 / Logits \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_fc2 shape=[1, 10]",
+          "detail": {
+            "phase_id": "after_fc2",
+            "direction": "server\u2192client",
+            "layer": "FC2 / Logits",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "object",
+              "size": 10,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(5478071808183428943869085968567252707126265573772535461425864385881673671571, 4379957873375082676416858475129183216410898799612683181399762968505685446212)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "object",
+              "size": 10,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4536489534048193786565570523386621661407813622890193793738108328266411382093, 2933271253640324730127974618407632688015536107308295779374731656128924360273)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_fc2",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC2 / Logits \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu_only",
+          "detail": {
+            "phase_id": "after_fc2",
+            "client_action": "relu_only",
+            "shift_bits": null,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "int64",
+              "size": 10,
+              "sample": [
+                16043785074.0,
+                13212287917.0,
+                9722436329.0,
+                8951089582.0,
+                10120346919.0,
+                8980683192.0,
+                13853199178.0,
+                12217781205.0
+              ],
+              "min": 7113995654.0,
+              "max": 16043785074.0,
+              "mean": 11234445415.8,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU \u2192 argmax"
+          }
+        },
+        {
+          "id": "client_logits_after_fc2",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Logits \u00b7 \u6700\u7ec8\u8f93\u51fa",
+          "summary": "prediction=0",
+          "detail": {
+            "logits_float": [
+              244808.734375,
+              201603.515625,
+              148352.609375,
+              136582.78125,
+              154424.234375,
+              137034.34375,
+              211383.046875,
+              186428.546875,
+              108550.9609375,
+              185071.546875
+            ],
+            "logits_fixed": {
+              "name": "logits",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "int64",
+              "size": 10,
+              "sample": [
+                16043785074.0,
+                13212287917.0,
+                9722436329.0,
+                8951089582.0,
+                10120346919.0,
+                8980683192.0,
+                13853199178.0,
+                12217781205.0
+              ],
+              "min": 7113995654.0,
+              "max": 16043785074.0,
+              "mean": 11234445415.8,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "argmax": 0
+          }
+        },
+        {
+          "id": "inference_complete",
+          "category": "\u5b8c\u6210",
+          "title": "InferenceComplete",
+          "summary": "pt_add=18330 pt_mult=18560",
+          "detail": {
+            "type": "InferenceComplete",
+            "num_pt_add": 18330,
+            "num_pt_mult": 18560,
+            "witness_root": null
+          }
+        },
+        {
+          "id": "session_end",
+          "category": "\u5b8c\u6210",
+          "title": "SessionEnd",
+          "summary": "ok",
+          "detail": {
+            "type": "SessionEnd",
+            "session_id": "f3218a73-4f03-42d1-821e-db8053424d7a",
+            "ok": true,
+            "message": null
+          }
+        }
+      ],
+      "correct": true
+    },
+    {
+      "prediction": 0,
+      "logits": [
+        223289.046875,
+        183193.265625,
+        135456.265625,
+        124533.8984375,
+        140127.671875,
+        124922.28125,
+        192586.0625,
+        170588.375,
+        98955.3984375,
+        168424.34375
+      ],
+      "label": 2,
+      "mnist_index": 1,
+      "upload_id": null,
+      "input_digest_hex": "3fde60b16b4083bee4a29f56d577d41eea0d40148b96e39c3b4e20e8c62b9e8a",
+      "model_id": "cnn-mnist",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 9.580300000379793,
+        "crypto_infer_ms": 14880.074100001366,
+        "e2e_post_preprocess_ms": 14880.074100001366,
+        "total_ms": 14889.654400001746
+      },
+      "trace": [
+        {
+          "id": "p0_start",
+          "category": "P0",
+          "title": "SessionStart",
+          "summary": "\u5efa\u7acb WebSocket \u4f1a\u8bdd",
+          "detail": {
+            "backend": "ws://127.0.0.1:8000/api/v1/session/ws",
+            "ahe_params_id": "e2-default"
+          }
+        },
+        {
+          "id": "p1_model_select",
+          "category": "P1",
+          "title": "ModelSelect",
+          "summary": "model_id=cnn-mnist",
+          "detail": {
+            "model_id": "cnn-mnist"
+          }
+        },
+        {
+          "id": "p2_input_digest",
+          "category": "P2",
+          "title": "InputDigest",
+          "summary": "digest=3fde60b16b4083be... shape=[1, 1, 32, 32]",
+          "detail": {
+            "input_digest_hex": "3fde60b16b4083bee4a29f56d577d41eea0d40148b96e39c3b4e20e8c62b9e8a",
+            "shape": [
+              1,
+              1,
+              32,
+              32
+            ],
+            "fixed_point_bits": 16,
+            "mnist_index": 1,
+            "plain_input": {
+              "name": "fixed_int32",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int32",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 65536.0,
+              "mean": 24107.0546875,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "p3_public_key",
+          "category": "P3",
+          "title": "PublicKey",
+          "summary": "\u5ba2\u6237\u7aef\u516c\u94a5 h = sk\u00b7G",
+          "detail": {
+            "h_x": "4319840718795621242623994423715835401291217034732921376569392649324962227935",
+            "h_y": "231373707577424946123568365307438514191648391166244208133380092627370537543",
+            "note": "\u79c1\u94a5\u4ec5\u9a7b\u7559\u5ba2\u6237\u7aef\uff0c\u4e0d\u7ecf\u7f51\u7edc\u4f20\u8f93"
+          }
+        },
+        {
+          "id": "p3_encrypt_initial",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "\u8f93\u5165 \u00b7 ElGamal \u52a0\u5bc6",
+          "summary": "shape=[1, 1, 32, 32]",
+          "detail": {
+            "phase_id": "initial",
+            "direction": "client\u2192server",
+            "layer": "\u8f93\u5165",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(1569161818797167226968022423988400372364707848584334578213301022208741060003, 2603942249901600256157252274212662564278560890097396275671380204680118299096)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4177732208421752932990371267861163765156677473922914171184432376890246520725, 2435565496273323383720806612049082539525153855621929386091616794075418957689)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "p0_accept",
+          "category": "P0",
+          "title": "SessionAccept",
+          "summary": "session_id=ffdfbd4b...",
+          "detail": {
+            "type": "SessionAccept",
+            "session_id": "ffdfbd4b-eba0-436b-a8d3-7020ca427cab",
+            "server_version": "vpin-backend/0.1.0-ahe",
+            "model_catalog_epoch": "0"
+          }
+        },
+        {
+          "id": "p1_model_ack",
+          "category": "P1",
+          "title": "ModelSelectAck",
+          "summary": "network=A digest=406f88b0bb2d...",
+          "detail": {
+            "model_id": "cnn-mnist",
+            "network_id": "A",
+            "weights_digest_hex": "406f88b0bb2da4f7fc47df93867b9ac903219267d79b9842ba7ddc19224e21b7",
+            "truncation_plan": [
+              {
+                "phase_id": "after_conv",
+                "layer": "relu",
+                "bits": 16
+              },
+              {
+                "phase_id": "after_pool",
+                "layer": "shift",
+                "bits": 26
+              },
+              {
+                "phase_id": "after_fc1",
+                "layer": "relu_then_shift",
+                "bits": 32
+              },
+              {
+                "phase_id": "after_fc2",
+                "layer": "relu_only",
+                "bits": 16
+              }
+            ]
+          }
+        },
+        {
+          "id": "p2_digest_ack",
+          "category": "P2",
+          "title": "InputDigestAck",
+          "summary": "\u670d\u52a1\u7aef\u786e\u8ba4\u8f93\u5165\u6458\u8981",
+          "detail": {
+            "type": "InputDigestAck",
+            "ok": true
+          }
+        },
+        {
+          "id": "truncate_req_after_conv",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 Conv",
+          "summary": "relu",
+          "detail": {
+            "phase_id": "after_conv",
+            "client_action": "relu",
+            "shift_bits": null,
+            "shape": [
+              1,
+              1,
+              32,
+              32
+            ],
+            "layer": "Conv",
+            "data_form": "\u5bc6\u6587\u7279\u5f81\u56fe \u2192 int32 \u6fc0\u6d3b\u56fe"
+          }
+        },
+        {
+          "id": "server_ct_after_conv",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "Conv \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_conv shape=[1, 1, 32, 32]",
+          "detail": {
+            "phase_id": "after_conv",
+            "direction": "server\u2192client",
+            "layer": "Conv",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(6978939322611983322576589207956201386124764633205536338591183306085196947811, 2308487560980978719287122791407678319264075221094314009601509619600734081450)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(2343907425451662706053605458740219441452868239924960305465312284634165209422, 1957217855901395757808352873008976675530288216529257684032015697044656755431)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 4,
+              "c2": 4
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu",
+          "detail": {
+            "phase_id": "after_conv",
+            "client_action": "relu",
+            "shift_bits": null,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int64",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 426106.0,
+              "mean": 192856.4375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU"
+          }
+        },
+        {
+          "id": "client_action_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 relu",
+          "summary": "shape=[1, 1, 32, 32]",
+          "detail": {
+            "action": "relu",
+            "shift_bits": null,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "int64",
+              "size": 1024,
+              "sample": [
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "min": 0.0,
+              "max": 426106.0,
+              "mean": 192856.4375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_conv",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Conv \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_conv \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_conv",
+            "direction": "client\u2192server",
+            "layer": "Conv",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4020466731899982690180412249327539325363898815465540750141729306101080519205, 1401098680958368379554622808814952141356881604126230000172239439356359436242)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                1,
+                32,
+                32
+              ],
+              "dtype": "object",
+              "size": 1024,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(7103382773583346179801564790310995398642773344377036266129966211661857555064, 6755967854468969918909167264683693981825441747958776510949341755265542117263)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_pool",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 MaxPool",
+          "summary": "shift shift=26",
+          "detail": {
+            "phase_id": "after_pool",
+            "client_action": "shift",
+            "shift_bits": 26,
+            "shape": [
+              1,
+              64
+            ],
+            "layer": "MaxPool",
+            "data_form": "\u5bc6\u6587 \u2192 \u622a\u65ad\u540e int32 \u5411\u91cf"
+          }
+        },
+        {
+          "id": "server_ct_after_pool",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "MaxPool \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_pool shape=[1, 64]",
+          "detail": {
+            "phase_id": "after_pool",
+            "direction": "server\u2192client",
+            "layer": "MaxPool",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4880957281687335067934409889620833257531157984169704412609221378963741694549, 249628877938237851714763817437656520136585890203046368584794445096348390741)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3393291788894859045882119553982370263631624365694859298738929228622436785819, 968694672136978301448820257219336928327799977739307055133336000671195051540)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=shift shift=26",
+          "detail": {
+            "phase_id": "after_pool",
+            "client_action": "shift",
+            "shift_bits": 26,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int64",
+              "size": 64,
+              "sample": [
+                73522560.0,
+                105398784.0,
+                117734848.0,
+                112323456.0,
+                128574016.0,
+                109362752.0,
+                115678784.0,
+                64410368.0
+              ],
+              "min": 64410368.0,
+              "max": 302182656.0,
+              "mean": 197484992.0,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 \u53f3\u79fb\u622a\u65ad (shift)"
+          }
+        },
+        {
+          "id": "client_action_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 shift",
+          "summary": "shape=[1, 64]",
+          "detail": {
+            "action": "shift",
+            "shift_bits": 26,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "int32",
+              "size": 64,
+              "sample": [
+                71799.0,
+                102928.0,
+                114975.0,
+                109690.0,
+                125560.0,
+                106799.0,
+                112967.0,
+                62900.0
+              ],
+              "min": 62900.0,
+              "max": 295100.0,
+              "mean": 192855.953125,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_pool",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "MaxPool \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_pool \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_pool",
+            "direction": "client\u2192server",
+            "layer": "MaxPool",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(7207677273337546370286328553547774635268308268882171753136447506444915780811, 1676014580208533476401802973132628010472253609354726030512287187920805153664)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                64
+              ],
+              "dtype": "object",
+              "size": 64,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4162925508619645285350252961246990212955387387883925968260018435663876766311, 2479823227983922258821791782239441723413686604915630838001503095277903786229)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_fc1",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 FC1",
+          "summary": "relu_then_shift shift=32",
+          "detail": {
+            "phase_id": "after_fc1",
+            "client_action": "relu_then_shift",
+            "shift_bits": 32,
+            "shape": [
+              1,
+              16
+            ],
+            "layer": "FC1",
+            "data_form": "\u5bc6\u6587 \u2192 int32 \u9690\u85cf\u5c42"
+          }
+        },
+        {
+          "id": "server_ct_after_fc1",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "FC1 \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_fc1 shape=[1, 16]",
+          "detail": {
+            "phase_id": "after_fc1",
+            "direction": "server\u2192client",
+            "layer": "FC1",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(492415888093102762936175967001507734946951668134772128886034199252877724294, 5404843604516709709863309798444519371840410883394844519805427098194617038506)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(5247445123093553638295183029936318706726684222280206183032425887682544466397, 2995269671582377907319743147864068101015476662085233884908089383782356953199)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu_then_shift shift=32",
+          "detail": {
+            "phase_id": "after_fc1",
+            "client_action": "relu_then_shift",
+            "shift_bits": 32,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "int64",
+              "size": 16,
+              "sample": [
+                15377037116.0,
+                12832220174.0,
+                19128706206.0,
+                11454941368.0,
+                12912457140.0,
+                14313469129.0,
+                14684013862.0,
+                9163698225.0
+              ],
+              "min": 9163698225.0,
+              "max": 19128706206.0,
+              "mean": 13567057357.625,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU \u2192 \u53f3\u79fb\u622a\u65ad"
+          }
+        },
+        {
+          "id": "client_action_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 relu_then_shift",
+          "summary": "shape=[1, 16]",
+          "detail": {
+            "action": "relu_then_shift",
+            "shift_bits": 32,
+            "output": {
+              "name": "processed",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "int32",
+              "size": 16,
+              "sample": [
+                234634.0,
+                195804.0,
+                291880.0,
+                174788.0,
+                197028.0,
+                218406.0,
+                224060.0,
+                139826.0
+              ],
+              "min": 139826.0,
+              "max": 291880.0,
+              "mean": 207016.375,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            }
+          }
+        },
+        {
+          "id": "client_reenc_after_fc1",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC1 \u00b7 \u91cd\u52a0\u5bc6\u56de\u4f20",
+          "summary": "phase=after_fc1 \u2192 \u670d\u52a1\u7aef\u4e0b\u4e00\u5c42",
+          "detail": {
+            "phase_id": "after_fc1",
+            "direction": "client\u2192server",
+            "layer": "FC1",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(3884882560990190951898542787502524102194703654970337279481439346351525746096, 2068427025066915068027839082852704749427189404517053262904370186106644721334)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                16
+              ],
+              "dtype": "object",
+              "size": 16,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(4728698516533758744788083839734179745854384234353437834526129633905050307518, 4233958625478747585229902987578786208514158794474605650005490608151679412245)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 0,
+              "c2": 0
+            }
+          }
+        },
+        {
+          "id": "truncate_req_after_fc2",
+          "category": "P3",
+          "title": "TruncateRequest \u00b7 FC2 / Logits",
+          "summary": "relu_only",
+          "detail": {
+            "phase_id": "after_fc2",
+            "client_action": "relu_only",
+            "shift_bits": null,
+            "shape": [
+              1,
+              10
+            ],
+            "layer": "FC2 / Logits",
+            "data_form": "\u5bc6\u6587 \u2192 int32 logits (10)"
+          }
+        },
+        {
+          "id": "server_ct_after_fc2",
+          "category": "\u670d\u52a1\u7aef",
+          "title": "FC2 / Logits \u00b7 \u670d\u52a1\u7aef\u5bc6\u6587\u8f93\u51fa",
+          "summary": "phase=after_fc2 shape=[1, 10]",
+          "detail": {
+            "phase_id": "after_fc2",
+            "direction": "server\u2192client",
+            "layer": "FC2 / Logits",
+            "data_form": "ElGamal \u5bc6\u6587\u5bf9 (c1, c2)\uff0c\u6bcf\u5143\u7d20\u4e3a\u692d\u5706\u66f2\u7ebf\u70b9",
+            "c1": {
+              "name": "c1",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "object",
+              "size": 10,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(254617272869894395006070360678158191202069293146338738118347403675287472100, 5595721189329950724656970536836368984870557334401319966787839355845310912038)"
+              ]
+            },
+            "c2": {
+              "name": "c2",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "object",
+              "size": 10,
+              "element_type": "elliptic_curve_point",
+              "sample": [
+                "(5105353246649419773408986261332424683585035026136032589027347953874707202261, 1986707278628914958501826508167289010854007764224239694081171210511510722811)"
+              ]
+            },
+            "wire_chunks": {
+              "c1": 1,
+              "c2": 1
+            }
+          }
+        },
+        {
+          "id": "client_decrypt_after_fc2",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "FC2 / Logits \u00b7 \u5ba2\u6237\u7aef\u89e3\u5bc6",
+          "summary": "action=relu_only",
+          "detail": {
+            "phase_id": "after_fc2",
+            "client_action": "relu_only",
+            "shift_bits": null,
+            "decrypted": {
+              "name": "decrypted",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "int64",
+              "size": 10,
+              "sample": [
+                14633470568.0,
+                12005753355.0,
+                8877261988.0,
+                8161453726.0,
+                9183406912.0,
+                8186906680.0,
+                12621320304.0,
+                11179679396.0
+              ],
+              "min": 6485140934.0,
+              "max": 14633470568.0,
+              "mean": 10237225164.6,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "operation": "\u89e3\u5bc6 \u2192 ReLU \u2192 argmax"
+          }
+        },
+        {
+          "id": "client_logits_after_fc2",
+          "category": "\u5ba2\u6237\u7aef",
+          "title": "Logits \u00b7 \u6700\u7ec8\u8f93\u51fa",
+          "summary": "prediction=0",
+          "detail": {
+            "logits_float": [
+              223289.046875,
+              183193.265625,
+              135456.265625,
+              124533.8984375,
+              140127.671875,
+              124922.28125,
+              192586.0625,
+              170588.375,
+              98955.3984375,
+              168424.34375
+            ],
+            "logits_fixed": {
+              "name": "logits",
+              "shape": [
+                1,
+                10
+              ],
+              "dtype": "int64",
+              "size": 10,
+              "sample": [
+                14633470568.0,
+                12005753355.0,
+                8877261988.0,
+                8161453726.0,
+                9183406912.0,
+                8186906680.0,
+                12621320304.0,
+                11179679396.0
+              ],
+              "min": 6485140934.0,
+              "max": 14633470568.0,
+              "mean": 10237225164.6,
+              "fixed_point_bits": 16,
+              "encoding": "fixed-point Q16"
+            },
+            "argmax": 0
+          }
+        },
+        {
+          "id": "inference_complete",
+          "category": "\u5b8c\u6210",
+          "title": "InferenceComplete",
+          "summary": "pt_add=18330 pt_mult=18560",
+          "detail": {
+            "type": "InferenceComplete",
+            "num_pt_add": 18330,
+            "num_pt_mult": 18560,
+            "witness_root": null
+          }
+        },
+        {
+          "id": "session_end",
+          "category": "\u5b8c\u6210",
+          "title": "SessionEnd",
+          "summary": "ok",
+          "detail": {
+            "type": "SessionEnd",
+            "session_id": "ffdfbd4b-eba0-436b-a8d3-7020ca427cab",
+            "ok": true,
+            "message": null
+          }
+        }
+      ],
+      "correct": false
+    }
+  ]
+}

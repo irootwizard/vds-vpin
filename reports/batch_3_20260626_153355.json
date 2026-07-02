@@ -1,0 +1,99 @@
+{
+  "limit": 3,
+  "correct": 3,
+  "accuracy": 1.0,
+  "elapsed_s": 18.29227230000106,
+  "concurrency": 4,
+  "results": [
+    {
+      "prediction": 7,
+      "logits": [
+        0.0,
+        0.0,
+        91628.3359375,
+        346143.46875,
+        0.0,
+        0.0,
+        0.0,
+        534713.75,
+        0.0,
+        217560.359375
+      ],
+      "label": 7,
+      "mnist_index": 0,
+      "upload_id": null,
+      "input_digest_hex": "2afc2f4d669696465806f2d6d5d0bac44e1f4fef4cf2e289cee61ec93eaa43d9",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 6.124500003352296,
+        "crypto_infer_ms": 14811.3921999975,
+        "e2e_post_preprocess_ms": 14811.3921999975,
+        "total_ms": 14817.516700000851
+      },
+      "correct": true
+    },
+    {
+      "prediction": 2,
+      "logits": [
+        133502.859375,
+        188708.140625,
+        650433.125,
+        112651.5390625,
+        0.0,
+        185658.4375,
+        0.0,
+        0.0,
+        65311.4296875,
+        0.0
+      ],
+      "label": 2,
+      "mnist_index": 1,
+      "upload_id": null,
+      "input_digest_hex": "f9c980da07d462a8035ae8859a835136e1581ada123e6a2be7c9c20bea32c928",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 5.839799996465445,
+        "crypto_infer_ms": 12373.442000003706,
+        "e2e_post_preprocess_ms": 12373.442000003706,
+        "total_ms": 12379.281800000172
+      },
+      "correct": true
+    },
+    {
+      "prediction": 1,
+      "logits": [
+        0.0,
+        263114.21875,
+        46809.56640625,
+        69658.96875,
+        0.0,
+        0.0,
+        50475.859375,
+        0.0,
+        119576.4375,
+        0.0
+      ],
+      "label": 1,
+      "mnist_index": 2,
+      "upload_id": null,
+      "input_digest_hex": "651b4214e4fd19a583f8035579bc5c7f82b1b49a07cac4b909106aca4b474aec",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 6.555500003742054,
+        "crypto_infer_ms": 8183.459399995627,
+        "e2e_post_preprocess_ms": 8183.459399995627,
+        "total_ms": 8190.014899999369
+      },
+      "correct": true
+    }
+  ]
+}

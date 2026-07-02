@@ -1,0 +1,129 @@
+{
+  "limit": 4,
+  "correct": 1,
+  "accuracy": 0.25,
+  "elapsed_s": 97.29156279999734,
+  "concurrency": 4,
+  "results": [
+    {
+      "prediction": 1,
+      "logits": [
+        0.0,
+        1541196.375,
+        1308157.625,
+        122337.1015625,
+        0.0,
+        1117612.375,
+        0.0,
+        986397.5,
+        0.0,
+        0.0
+      ],
+      "label": 4,
+      "mnist_index": 0,
+      "upload_id": null,
+      "input_digest_hex": "a900439890e44dccd5dd58f9b20d9a58cefda3fb601cad4e8ef8fad716ddb2da",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 10.773399997560773,
+        "crypto_infer_ms": 84548.87939999753,
+        "e2e_post_preprocess_ms": 84548.87939999753,
+        "total_ms": 84559.65279999509
+      },
+      "correct": false
+    },
+    {
+      "prediction": 2,
+      "logits": [
+        0.0,
+        1447212.875,
+        1492567.375,
+        270585.84375,
+        0.0,
+        1202217.75,
+        0.0,
+        1402810.25,
+        0.0,
+        0.0
+      ],
+      "label": 5,
+      "mnist_index": 1,
+      "upload_id": null,
+      "input_digest_hex": "d916d1cd55d214138c12dff2ae8287bc6320b2c07ceaaaf62faf68062be3237f",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 10.726199994678609,
+        "crypto_infer_ms": 77926.27599999832,
+        "e2e_post_preprocess_ms": 77926.27599999832,
+        "total_ms": 77937.002199993
+      },
+      "correct": false
+    },
+    {
+      "prediction": 7,
+      "logits": [
+        0.0,
+        1461971.25,
+        1215631.5,
+        249431.421875,
+        0.0,
+        1035626.1875,
+        0.0,
+        1650513.875,
+        0.0,
+        0.0
+      ],
+      "label": 4,
+      "mnist_index": 2,
+      "upload_id": null,
+      "input_digest_hex": "a202dc46e3d480cb46d8c895a0ef3b17318e8d636009706b85ff0979baac59fa",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 10.463300000992604,
+        "crypto_infer_ms": 95723.48149999743,
+        "e2e_post_preprocess_ms": 95723.48149999743,
+        "total_ms": 95733.94479999843
+      },
+      "correct": true
+    },
+    {
+      "prediction": 1,
+      "logits": [
+        0.0,
+        1290508.75,
+        1255002.5,
+        108691.375,
+        0.0,
+        1006503.5625,
+        0.0,
+        1242997.0,
+        0.0,
+        0.0
+      ],
+      "label": 6,
+      "mnist_index": 3,
+      "upload_id": null,
+      "input_digest_hex": "ccd0180e8e39cd1a8c990cc632644bf66f9a13a348646d0031d4c6d732adc8a4",
+      "model_id": "cnn-mnist-trained",
+      "num_pt_add": 18330,
+      "num_pt_mult": 18560,
+      "source": "official",
+      "timing": {
+        "preprocess_ms": 10.503299999982119,
+        "crypto_infer_ms": 95204.93050000368,
+        "e2e_post_preprocess_ms": 95204.93050000368,
+        "total_ms": 95215.43380000367
+      },
+      "correct": false
+    }
+  ]
+}
