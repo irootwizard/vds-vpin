@@ -7,10 +7,19 @@ edition.workspace = true
 name = "ahe-cli"
 path = "src/main.rs"
 
+[[bin]]
+name = "bsgs-build"
+path = "src/bin/bsgs_build.rs"
+
+[[bin]]
+name = "ahe-resnet-worker"
+path = "src/bin/ahe_resnet_worker.rs"
+
 [dependencies]
 ahe-client.workspace = true
 ahe-homomorphic.workspace = true
 ahe-model-bundle.workspace = true
+ahe-engine.workspace = true
 ahe-codec.workspace = true
 ahe-codec-ec.workspace = true
 ahe-crypto-e2.workspace = true

@@ -111,6 +111,35 @@ pub const LENET_MNIST: NetworkTopology = NetworkTopology {
 };
 
 // ---------------------------------------------------------------------------
+// ResNet-18 CIFAR-10 topology  (3×32×32 input, 17×relu_then_shift + logits_only)
+// ---------------------------------------------------------------------------
+pub const RESNET18_CIFAR: NetworkTopology = NetworkTopology {
+    network_id: "resnet18_cifar",
+    pool_kernel: 0,
+    pool_stride: 0,
+    truncation_phases: &[
+        TruncationPhase { phase_id: "after_stem",        client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 64, 32, 32],  pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l1b0c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 64, 32, 32],  pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l1b0c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 64, 32, 32],  pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l1b1c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 64, 32, 32],  pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l1b1c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 64, 32, 32],  pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l2b0c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 128, 16, 16], pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l2b0c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 128, 16, 16], pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l2b1c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 128, 16, 16], pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l2b1c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 128, 16, 16], pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l3b0c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 256, 8, 8],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l3b0c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 256, 8, 8],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l3b1c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 256, 8, 8],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l3b1c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 256, 8, 8],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l4b0c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 512, 4, 4],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l4b0c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 512, 4, 4],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l4b1c1",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 512, 4, 4],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_l4b1c2",      client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 512, 4, 4],   pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_pool_linear", client_action: "logits_only",     shift_bits: None,     shape: &[1, 10],           pool_kernel: None, input_shape: None },
+    ],
+};
+
+// ---------------------------------------------------------------------------
 // LeNet CIFAR-10 topology  (3×32×32 input, same phase structure as MNIST)
 // ---------------------------------------------------------------------------
 pub const LENET_CIFAR: NetworkTopology = NetworkTopology {

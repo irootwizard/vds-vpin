@@ -25,6 +25,8 @@ def main() -> None:
         host=settings.api_host,
         port=settings.api_port,
         reload=False,
+        ws_ping_interval=10,
+        ws_ping_timeout=120,
     )
 
 

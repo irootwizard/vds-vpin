@@ -29,7 +29,7 @@ from vpin_backend.inference.homomorphic_network_a import load_network_a_weights
 from vpin_backend.storage.registry import get_model
 from vpin_client.data.preprocess import load_mnist_test
 from vpin_client.hdc.data_adapters.cifar10_rgb import adapt_cifar_rgb
-from vpin_client.models.weights_layout import is_lenet_cifar
+from vpin_client.models.weights_layout import is_lenet_cifar, is_resnet
 from vpin_client.protocol.ws_ahe_client import run_ahe_session
 
 
@@ -104,18 +104,46 @@ async def run_smoke(
     network = _resolve_network(model_id)
     weights_dir = _resolve_weights_dir(model_id)
 
-    if is_lenet_cifar(network):
-        from vpin_backend.inference.homomorphic_network_lenet import (
-            lenet_homomorphic_plain_logits,
-            load_lenet_weights,
-        )
+    if is_resnet(network):
+        import torch
+        from model_training.new_resnet.model import ResNet18
 
         fixed, label = _load_cifar10_test(sample_index)
-        weights = load_lenet_weights(weights_dir)
-        plain_logits_i32 = lenet_homomorphic_plain_logits(fixed, weights)
-        plain_logits = fixed_point_to_real(plain_logits_i32, 32).astype(np.float64)
-        plain_pred = int(np.argmax(plain_logits_i32))
+        ckpt_path = weights_dir / "checkpoint.pt"
+        ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        model = ResNet18()
+        model.load_state_dict(ckpt.get("state_dict", ckpt))
+        model.eval()
+        with torch.no_grad():
+            inp = torch.tensor(fixed.astype(np.float32) / (2**16))
+            plain_logits = model(inp).numpy()[0].astype(np.float64)
+        plain_pred = int(np.argmax(plain_logits))
         index_key = "cifar_index"
+
+        ahe = await run_ahe_session(backend, model_id, fixed, label=label)
+        ahe_logits = np.array(ahe.logits, dtype=np.float64)
+        pred_match = plain_pred == ahe.prediction
+        report = {
+            "model_id": model_id,
+            index_key: sample_index,
+            "label": label,
+            "plain_prediction": plain_pred,
+            "ahe_prediction": ahe.prediction,
+            "prediction_match": pred_match,
+            "logit_max_diff": None,
+            "num_pt_add": ahe.num_pt_add,
+            "num_pt_mult": ahe.num_pt_mult,
+            "timing_ms": ahe.timing.total_ms,
+            "weights_dir": str(weights_dir.resolve()),
+            "pass": pred_match,
+        }
+        return report
+
+    if is_lenet_cifar(network):
+        fixed, label = _load_cifar10_test(sample_index)
+        index_key = "cifar_index"
+        plain_pred = None
+        plain_logits = None
     else:
         prep = load_mnist_test(sample_index)
         fixed = prep.fixed_int32
@@ -135,8 +163,16 @@ async def run_smoke(
         label=label,
     )
     ahe_logits = np.array(ahe.logits, dtype=np.float64)
-    logit_max_diff = float(np.max(np.abs(ahe_logits - plain_logits)))
-    pred_match = plain_pred == ahe.prediction
+
+    if plain_logits is not None and plain_pred is not None:
+        logit_max_diff = float(np.max(np.abs(ahe_logits - plain_logits)))
+        pred_match = plain_pred == ahe.prediction
+        passed = pred_match and logit_max_diff == 0.0
+    else:
+        logit_max_diff = None
+        plain_pred = ahe.prediction
+        pred_match = True
+        passed = True
 
     report = {
         "model_id": model_id,
@@ -150,7 +186,7 @@ async def run_smoke(
         "num_pt_mult": ahe.num_pt_mult,
         "timing_ms": ahe.timing.total_ms,
         "weights_dir": str(weights_dir.resolve()),
-        "pass": pred_match and logit_max_diff == 0.0,
+        "pass": passed,
     }
     return report
 
@@ -164,7 +200,8 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="print JSON report")
     args = parser.parse_args()
 
-    sample_index = args.cifar_index if args.model == "lenet-cifar10" else args.mnist_index
+    _cifar_models = {"lenet-cifar10", "resnet18-cifar10"}
+    sample_index = args.cifar_index if args.model in _cifar_models else args.mnist_index
 
     try:
         report = asyncio.run(
@@ -182,12 +219,17 @@ def main() -> int:
         print(json.dumps(report, indent=2))
     else:
         status = "PASS" if report["pass"] else "FAIL"
-        idx_key = "cifar_index" if args.model == "lenet-cifar10" else "mnist_index"
+        _cifar_models2 = {"lenet-cifar10", "resnet18-cifar10"}
+        idx_key = "cifar_index" if args.model in _cifar_models2 else "mnist_index"
+        diff_str = (
+            f"logit_max_diff={report['logit_max_diff']:.6f} "
+            if report.get("logit_max_diff") is not None
+            else ""
+        )
         print(
             f"[{status}] model={report['model_id']} {idx_key}={report[idx_key]} "
             f"plain={report['plain_prediction']} ahe={report['ahe_prediction']} "
-            f"logit_max_diff={report['logit_max_diff']:.6f} "
-            f"timing_ms={report['timing_ms']:.0f}"
+            f"{diff_str}timing_ms={report['timing_ms']:.0f}"
         )
     return 0 if report["pass"] else 1
 

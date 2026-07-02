@@ -20,7 +20,8 @@ from vpin_backend.crypto.ahe.curve import curve_e2_info
 from vpin_backend.crypto.ahe.topology import get_topology
 from vpin_backend.inference.ahe_engine import AheEngine, EngineStepResult
 from vpin_backend.inference.ahe_engine_lenet import AheLenetEngine
-from vpin_client.models.weights_layout import is_lenet_cifar
+from vpin_backend.inference.ahe_engine_resnet import AheResnetEngine
+from vpin_client.models.weights_layout import is_lenet_cifar, is_resnet
 from vpin_backend.models.weights_bundle import load_homomorphic_weights, resolve_weights_dir, weights_digest
 from vpin_backend.protocol.ciphertext_wire import ChunkAssembler, encode_tensor_chunks
 from vpin_backend.protocol.messages import (
@@ -61,12 +62,15 @@ def _get_server_pool() -> ProcessPoolExecutor:
     return _SERVER_POOL
 
 
-def _pack_to_points(pack: tuple[tuple[int, ...], list[tuple[int, int]]]) -> np.ndarray:
+def _pack_to_points(pack: tuple[tuple[int, ...], list[tuple[int, int] | None]]) -> np.ndarray:
     shape, flat = pack
-    curve, _, _, _, _ = curve_e2_info()
+    curve, _, _, _, identity = curve_e2_info()
     arr = np.empty(len(flat), dtype=object)
-    for i, (x, y) in enumerate(flat):
-        arr[i] = Point(curve, int(x), int(y))
+    for i, xy in enumerate(flat):
+        if xy is None:
+            arr[i] = identity
+        else:
+            arr[i] = Point(curve, int(xy[0]), int(xy[1]))
     return arr.reshape(shape)
 
 _BUILTIN_NETWORK = {
@@ -74,6 +78,7 @@ _BUILTIN_NETWORK = {
     "cnn-mnist-b": "B",
     "lenet-mnist": "lenet_mnist",
     "lenet-cifar10": "lenet_cifar",
+    "resnet18-cifar10": "resnet18_cifar",
 }
 
 
@@ -128,11 +133,19 @@ def _public_key_point(msg: PublicKey) -> Point:
     raise ValueError("PublicKey requires h_x/h_y")
 
 
-async def _send_ciphertext(ws: WebSocket, phase_id: str, c1: Any, c2: Any) -> None:
-    for frame in encode_tensor_chunks(phase_id, "c1", c1):
-        await _asend(ws, "CiphertextPayload", {k: v for k, v in frame.items() if k != "type"})
-    for frame in encode_tensor_chunks(phase_id, "c2", c2):
-        await _asend(ws, "CiphertextPayload", {k: v for k, v in frame.items() if k != "type"})
+async def _send_ciphertext(
+    ws: WebSocket, phase_id: str, c1: Any, c2: Any, encoding: str = "pickle"
+) -> None:
+    import sys
+    sys.stderr.write(f"[_send_ciphertext] phase_id={phase_id} c1_shape={c1.shape} c2_shape={c2.shape}\n")
+    sys.stderr.flush()
+    _strip = frozenset(("type", "encoding"))
+    for frame in encode_tensor_chunks(phase_id, "c1", c1, encoding):
+        await _asend(ws, "CiphertextPayload", {k: v for k, v in frame.items() if k not in _strip})
+    for frame in encode_tensor_chunks(phase_id, "c2", c2, encoding):
+        await _asend(ws, "CiphertextPayload", {k: v for k, v in frame.items() if k not in _strip})
+    sys.stderr.write(f"[_send_ciphertext] done phase_id={phase_id}\n")
+    sys.stderr.flush()
 
 
 def _pair_ready(assemblers: dict[tuple[str, str], ChunkAssembler], phase_id: str) -> bool:
@@ -143,8 +156,15 @@ def _pair_ready(assemblers: dict[tuple[str, str], ChunkAssembler], phase_id: str
     return True
 
 
-def _decode_pair(assemblers: dict[tuple[str, str], ChunkAssembler], phase_id: str) -> tuple[Any, Any]:
-    return assemblers[(phase_id, "c1")].decode(), assemblers[(phase_id, "c2")].decode()
+def _decode_pair(
+    assemblers: dict[tuple[str, str], ChunkAssembler],
+    phase_id: str,
+    shape: tuple[int, ...] | None = None,
+) -> tuple[Any, Any]:
+    return (
+        assemblers[(phase_id, "c1")].decode(shape),
+        assemblers[(phase_id, "c2")].decode(shape),
+    )
 
 
 async def _advance_engine(
@@ -154,38 +174,62 @@ async def _advance_engine(
     phase_id: str,
     session_id: str,
     offload: dict[str, Any] | None = None,
+    phase_shapes: dict[str, tuple[int, ...]] | None = None,
+    client_encoding: str = "pickle",
 ) -> bool:
-    c1, c2 = _decode_pair(assemblers, phase_id)
+    decode_shape = phase_shapes.get(phase_id) if phase_shapes else None
+    c1, c2 = _decode_pair(assemblers, phase_id, decode_shape)
 
     if offload is not None:
-        from vpin_backend.inference.ahe_engine import EnginePhase
-        from vpin_backend.inference.ahe_worker import points_to_xy, worker_step
+        resnet_session = offload.get("resnet_session")
+        if resnet_session is not None:
+            # ── ResNet Rust subprocess offload ──
+            # Run everything in a thread: serialisation (points_to_xy) +
+            # Rust-worker pipe I/O + deserialisation (_pack_to_points).
+            from vpin_backend.inference.ahe_worker import points_to_xy
 
-        loop = asyncio.get_event_loop()
-        res = await loop.run_in_executor(
-            _get_server_pool(),
-            worker_step,
-            offload["weights_dir"],
-            offload["network_id"],
-            offload["pubkey_xy"],
-            engine.phase.value,  # type: ignore[attr-defined]
-            phase_id,
-            points_to_xy(c1),
-            points_to_xy(c2),
-        )
-        engine.phase = EnginePhase(res["new_phase"])  # type: ignore[attr-defined]
-        offload["add"] += res["add"]
-        offload["mult"] += res["mult"]
-        out_c1 = _pack_to_points(res["out_c1"])
-        out_c2 = _pack_to_points(res["out_c2"])
-        trunc_phase, trunc_action, trunc_shift, trunc_shape = res["truncate"]
-        inference_complete = res["inference_complete"]
-        num_add, num_mult = offload["add"], offload["mult"]
+            def _resnet_step():
+                import traceback as _tb
+                try:
+                    res = resnet_session.step(
+                        phase_id,
+                        points_to_xy(c1),
+                        points_to_xy(c2),
+                    )
+                    out_c1 = _pack_to_points(
+                        (tuple(res["shape"]), res["out_c1_xy"])
+                    )
+                    out_c2 = _pack_to_points(
+                        (tuple(res["shape"]), res["out_c2_xy"])
+                    )
+                    return res, out_c1, out_c2
+                except Exception:
+                    _tb.print_exc()
+                    import sys
+                    sys.stderr.write(f"[_resnet_step CRASH] phase_id={phase_id}\n")
+                    sys.stderr.write(f"  c1 shape={c1.shape} dtype={c1.dtype}\n")
+                    sys.stderr.write(f"  c2 shape={c2.shape} dtype={c2.dtype}\n")
+                    sys.stderr.flush()
+                    raise
+
+            res, out_c1, out_c2 = await asyncio.to_thread(_resnet_step)
+            import sys
+            sys.stderr.write(f"[_advance_engine] resnet_step ok shape={res['shape']} truncate={res.get('truncate',{}).get('phase_id','?')}\n")
+            sys.stderr.flush()
+            t = res["truncate"]
+            trunc_phase = t["phase_id"]
+            trunc_action = t["client_action"]
+            trunc_shift = t.get("shift_bits")
+            trunc_shape = t["shape"]
+            inference_complete = res.get("inference_complete", False)
+            offload["add"] = res.get("add", 0)
+            offload["mult"] = res.get("mult", 0)
+            num_add, num_mult = offload["add"], offload["mult"]
     else:
         if phase_id == "initial":
-            result = engine.bind_initial_ciphertext(c1, c2)
+            result = await asyncio.to_thread(engine.bind_initial_ciphertext, c1, c2)
         else:
-            result = engine.accept_client_ciphertext(phase_id, c1, c2)
+            result = await asyncio.to_thread(engine.accept_client_ciphertext, phase_id, c1, c2)
         out_c1, out_c2 = result.output_c1, result.output_c2
         trunc_phase = result.truncate.phase_id
         trunc_action = result.truncate.client_action
@@ -194,17 +238,39 @@ async def _advance_engine(
         inference_complete = result.inference_complete
         num_add, num_mult = result.num_pt_add, result.num_pt_mult
 
-    await _send_ciphertext(ws, trunc_phase, out_c1, out_c2)
+    # For relu_pool_shift, the client returns post-pool shape (spatial dims / pool_kernel).
+    _POOL_KERNEL = 2  # LeNet 2×2 avg-pool; all current relu_pool_shift phases use this
+    if trunc_action == "relu_pool_shift" and len(trunc_shape) == 4:
+        b, c, h, w = trunc_shape
+        client_recv_shape: tuple[int, ...] = (b, c, h // _POOL_KERNEL, w // _POOL_KERNEL)
+    else:
+        client_recv_shape = tuple(trunc_shape)
+
+    await _send_ciphertext(ws, trunc_phase, out_c1, out_c2, client_encoding)
+    if phase_shapes is not None:
+        phase_shapes[trunc_phase] = client_recv_shape
+
+    import sys
+    sys.stderr.write(f"[_advance_engine] sending TruncateRequest phase={trunc_phase} action={trunc_action} shape={trunc_shape}\n")
+    sys.stderr.flush()
+
+    trunc_req_kwargs: dict[str, Any] = dict(
+        phase_id=trunc_phase,
+        client_action=trunc_action,
+        shift_bits=trunc_shift,
+        shape=trunc_shape,
+    )
+    if trunc_action == "relu_pool_shift":
+        trunc_req_kwargs["input_shape"] = list(trunc_shape)
+        trunc_req_kwargs["pool_kernel"] = _POOL_KERNEL
     await _asend(
         ws,
         "TruncateRequest",
-        TruncateRequest(
-            phase_id=trunc_phase,
-            client_action=trunc_action,
-            shift_bits=trunc_shift,
-            shape=trunc_shape,
-        ).model_dump(),
+        TruncateRequest(**trunc_req_kwargs).model_dump(exclude_none=True),
     )
+    import sys
+    sys.stderr.write(f"[_advance_engine] TruncateRequest sent\n")
+    sys.stderr.flush()
     if inference_complete:
         complete = InferenceComplete(
             num_pt_add=num_add,
@@ -228,6 +294,9 @@ async def session_ws(ws: WebSocket) -> None:
     assemblers: dict[tuple[str, str], ChunkAssembler] = {}
     processed_phases: set[str] = set()
     offload_ctx: dict[str, Any] | None = None
+    input_shape: tuple[int, ...] | None = None
+    phase_shapes: dict[str, tuple[int, ...]] = {}
+    client_encoding: str = "pickle"
 
     try:
         while True:
@@ -295,6 +364,8 @@ async def session_ws(ws: WebSocket) -> None:
 
                 elif msg_type == "InputDigest":
                     msg = InputDigest(**{k: v for k, v in frame.items() if k != "type"})
+                    input_shape = tuple(msg.shape)
+                    phase_shapes["initial"] = input_shape
                     from vpin_backend.pipeline.gates import DatasetModelMismatchError
                     from vpin_backend.pipeline.orchestrator import InferenceOrchestrator
 
@@ -321,9 +392,37 @@ async def session_ws(ws: WebSocket) -> None:
                     msg = PublicKey(**{k: v for k, v in frame.items() if k != "type"})
                     from vpin_backend.pipeline.gates import load_deploy_plan, orchestration_from_plan
 
-                    hw = load_homomorphic_weights(weights_dir, network_id)
                     pk = _public_key_point(msg)
-                    if is_lenet_cifar(network_id):
+                    if is_resnet(network_id):
+                        # Route ResNet compute through Rust subprocess worker.
+                        if _server_pool_enabled():
+                            from vpin_backend.inference.ahe_worker import ResNetWorkerSession
+                            pk_xy = (int(pk.x()), int(pk.y()))
+                            rw = await asyncio.to_thread(
+                                ResNetWorkerSession.ensure, str(weights_dir), pk_xy
+                            )
+                            offload_ctx = {
+                                "resnet_session": rw,
+                                "weights_dir": str(weights_dir),
+                                "network_id": network_id,
+                                "pubkey_xy": pk_xy,
+                                "add": 0,
+                                "mult": 0,
+                            }
+                            # Compute happens in the Rust subprocess; the Python
+                            # engine is never invoked.  Use a lightweight dummy so
+                            # the "engine is None" check passes.
+                            engine = True  # type: ignore[assignment]
+                        else:
+                            hw = load_homomorphic_weights(weights_dir, network_id)
+                            engine = AheResnetEngine.for_network(
+                                public_key=pk,
+                                weights=hw,
+                                network_id=network_id,
+                            )
+                            offload_ctx = None
+                    elif is_lenet_cifar(network_id):
+                        hw = load_homomorphic_weights(weights_dir, network_id)
                         deploy_plan = load_deploy_plan(weights_dir) or {}
                         orch = orchestration_from_plan(deploy_plan)
                         engine = AheLenetEngine.for_network(
@@ -333,6 +432,7 @@ async def session_ws(ws: WebSocket) -> None:
                             skip_return_phases=orch.get("skip_return_phases"),
                         )
                     else:
+                        hw = load_homomorphic_weights(weights_dir, network_id)
                         engine = AheEngine.for_network(
                             public_key=pk,
                             weights=hw,
@@ -340,15 +440,13 @@ async def session_ws(ws: WebSocket) -> None:
                         )
                     assemblers.clear()
                     processed_phases.clear()
-                    # P2: enable process-pool offload for Network A/B (not LeNet).
-                    if not is_lenet_cifar(network_id) and _server_pool_enabled():
-                        offload_ctx = {
-                            "weights_dir": str(weights_dir),
-                            "network_id": network_id,
-                            "pubkey_xy": (int(pk.x()), int(pk.y())),
-                            "add": 0,
-                            "mult": 0,
-                        }
+                    phase_shapes = {"initial": input_shape} if input_shape else {}
+                    client_encoding = "pickle"
+                    # P2: enable process-pool offload for ResNet only.
+                    if is_resnet(network_id):
+                        pass  # handled in PublicKey branch
+                    elif is_lenet_cifar(network_id):
+                        offload_ctx = None
                     else:
                         offload_ctx = None
 
@@ -363,6 +461,19 @@ async def session_ws(ws: WebSocket) -> None:
                             msg.phase_id, msg.tensor_part, msg.total_chunks
                         )
                     assemblers[key].add(msg.chunk_index, msg.data_b64)
+                    import sys
+                    if msg.chunk_index % 50 == 0 or msg.chunk_index == msg.total_chunks - 1:
+                        sys.stderr.write(f"[server chunk] {msg.phase_id}/{msg.tensor_part} chunk {msg.chunk_index}/{msg.total_chunks}\n")
+                        sys.stderr.flush()
+
+                    # Detect wire encoding from first c1 chunk of first phase.
+                    if (
+                        msg.chunk_index == 0
+                        and msg.tensor_part == "c1"
+                        and client_encoding == "pickle"
+                        and assemblers[key].is_ahe_v1()
+                    ):
+                        client_encoding = "ahe-v1"
 
                     if msg.phase_id in processed_phases:
                         continue
@@ -371,7 +482,8 @@ async def session_ws(ws: WebSocket) -> None:
 
                     processed_phases.add(msg.phase_id)
                     done = await _advance_engine(
-                        ws, engine, assemblers, msg.phase_id, session_id, offload_ctx
+                        ws, engine, assemblers, msg.phase_id, session_id,
+                        offload_ctx, phase_shapes, client_encoding,
                     )
                     if done:
                         break
@@ -382,6 +494,9 @@ async def session_ws(ws: WebSocket) -> None:
             except WebSocketDisconnect:
                 break
             except Exception as exc:
+                import sys
+                sys.stderr.write(f"[session_ws CRASH] {type(exc).__name__}: {exc}\n")
+                sys.stderr.flush()
                 if _is_disconnect_error(exc):
                     break
                 traceback.print_exc()
@@ -395,3 +510,7 @@ async def session_ws(ws: WebSocket) -> None:
         pass
     except Exception:
         traceback.print_exc()
+    finally:
+        if offload_ctx and offload_ctx.get("resnet_session"):
+            offload_ctx["resnet_session"].release()
+            offload_ctx = None

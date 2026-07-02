@@ -1,6 +1,7 @@
 mod network_a;
 mod network_a_ec;
 mod network_lenet;
+mod network_resnet;
 mod plain_forward;
 
 pub use network_a::{
@@ -18,4 +19,8 @@ pub use network_a_ec::{
 };
 pub use plain_forward::{
     conv2d_int32, numpy_homomorphic_plain, pool_sum_fixed, PlainForwardLayers, TruncationPlan,
+};
+pub use network_resnet::{
+    encrypt_bias_f32 as encrypt_resnet_bias_f32, resnet_add_ds_shortcut, resnet_add_identity_shortcut,
+    resnet_avgpool_fc, resnet_conv_ciphertext,
 };

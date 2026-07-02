@@ -99,3 +99,9 @@ def is_lenet_cifar(network_id: str) -> bool:
     """Return True for any LeNet variant (MNIST or CIFAR)."""
     key = network_id.lower().replace("-", "_")
     return key in ("lenet_cifar", "lenet_cifar10", "lenet", "lenet_mnist")
+
+
+def is_resnet(network_id: str) -> bool:
+    """Return True for any ResNet18 variant."""
+    key = network_id.lower().replace("-", "_")
+    return key in ("resnet18_cifar", "resnet18", "resnet18_cifar10")

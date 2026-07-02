@@ -32,6 +32,9 @@ enum Commands {
         model: String,
         #[arg(long, default_value = "0")]
         mnist_index: i32,
+        /// CIFAR-10 test-set index (0-9999); uses cifar_rgb adapter, shape [1,3,32,32]
+        #[arg(long)]
+        cifar_index: Option<i32>,
         /// Preprocessed sample JSON (overrides official MNIST load)
         #[arg(long)]
         sample_json: Option<PathBuf>,
@@ -102,12 +105,17 @@ async fn main() -> anyhow::Result<()> {
         Commands::Infer {
             model,
             mnist_index,
+            cifar_index,
             sample_json,
             image,
             crypto_backend,
             progress_ndjson,
         } => {
-            let sample = load_sample(&cfg, mnist_index, sample_json.as_deref(), image.as_deref())?;
+            let sample = if let Some(ci) = cifar_index {
+                load_cifar_via_python(&cfg.repo_root, ci)?
+            } else {
+                load_sample_for_model(&cfg, mnist_index, sample_json.as_deref(), image.as_deref(), &model)?
+            };
             let on_progress = progress_cb(progress_ndjson);
             let result = match crypto_backend {
                 CryptoBackend::Ark => {
@@ -242,6 +250,29 @@ fn load_sample(
     }
 }
 
+fn load_sample_for_model(
+    cfg: &PlatformConfig,
+    mnist_index: i32,
+    sample_json: Option<&Path>,
+    image: Option<&Path>,
+    model: &str,
+) -> anyhow::Result<Sample> {
+    if let Some(path) = sample_json {
+        return load_sample_from_json(path);
+    }
+    if let Some(img) = image {
+        if model.starts_with("resnet") || model.contains("cifar") {
+            return load_image_rgb_via_python(&cfg.repo_root, img);
+        }
+        return load_upload_rust(img);
+    }
+    match load_official_preprocessed(&cfg.repo_root, mnist_index) {
+        Ok(p) => Ok(sample_from_preprocessed(p)),
+        Err(MnistLoadError::RawNotFound(_)) => load_mnist_via_python(&cfg.repo_root, mnist_index),
+        Err(e) => Err(e.into()),
+    }
+}
+
 fn load_sample_from_json(path: &Path) -> anyhow::Result<Sample> {
     let entry: serde_json::Value = serde_json::from_slice(&std::fs::read(path)?)?;
     parse_sample_entry(&entry)
@@ -305,6 +336,84 @@ print(json.dumps({{
     );
     let out = Command::new(&python)
         .args(["-c", &script, &index.to_string()])
+        .current_dir(repo)
+        .output()?;
+    if !out.status.success() {
+        anyhow::bail!("{}", String::from_utf8_lossy(&out.stderr).trim());
+    }
+    parse_sample_entry(&serde_json::from_slice::<serde_json::Value>(&out.stdout)?)
+}
+
+fn load_cifar_via_python(repo: &Path, index: i32) -> anyhow::Result<Sample> {
+    if !(0..10000).contains(&index) {
+        anyhow::bail!("cifar index must be 0..9999, got {index}");
+    }
+    let python = venv_python(repo);
+    let script = r#"import json, sys, pickle
+import numpy as np
+from pathlib import Path
+from vpin_client.hdc.data_adapters.cifar10_rgb import adapt_cifar_rgb
+idx = int(sys.argv[1])
+try:
+    from torchvision import datasets
+    ds = datasets.CIFAR10(root=str(Path.home() / '.cache/torchvision'), train=False, download=False)
+    img, label = ds[idx]
+    arr = np.array(img)
+except Exception:
+    candidates = [
+        Path('.cache/torchvision/cifar-10-batches-py/test_batch'),
+        Path('data/cifar-10-batches-py/test_batch'),
+    ]
+    for p in candidates:
+        if p.exists():
+            with open(p, 'rb') as f:
+                d = pickle.load(f, encoding='bytes')
+            arr = d[b'data'][idx].reshape(3, 32, 32).transpose(1, 2, 0)
+            label = int(d[b'labels'][idx])
+            break
+    else:
+        raise FileNotFoundError('CIFAR-10 test_batch not found; run: python -m torchvision.datasets.cifar')
+r = adapt_cifar_rgb(arr, label=label, index=idx)
+print(json.dumps({
+    'mnist_index': idx, 'label': int(label),
+    'shape': [1, 3, 32, 32],
+    'fixed_int32': r.fixed_int32.reshape(-1).tolist(),
+}))"#;
+    let out = Command::new(&python)
+        .args(["-c", script, &index.to_string()])
+        .current_dir(repo)
+        .output()?;
+    if !out.status.success() {
+        anyhow::bail!("{}", String::from_utf8_lossy(&out.stderr).trim());
+    }
+    parse_sample_entry(&serde_json::from_slice::<serde_json::Value>(&out.stdout)?)
+}
+
+/// Load a local image file as RGB 32×32 for ResNet/CIFAR models.
+fn load_image_rgb_via_python(repo: &Path, image: &Path) -> anyhow::Result<Sample> {
+    let python = venv_python(repo);
+    let img_path = image.to_string_lossy().replace('\\', "/");
+    let script = format!(
+        r#"import json
+from pathlib import Path
+import numpy as np
+from PIL import Image
+from vpin_client.hdc.data_adapters.cifar10_rgb import adapt_cifar_rgb
+p = Path(r'{}')
+img = Image.open(p).convert('RGB')
+img = img.resize((32, 32), Image.Resampling.LANCZOS)
+arr = np.array(img)
+arr = np.transpose(arr, (2, 0, 1))
+r = adapt_cifar_rgb(arr, label=-1, index=-1, source='upload')
+print(json.dumps({{
+    'mnist_index': -1, 'label': -1,
+    'shape': [1, 3, 32, 32],
+    'fixed_int32': r.fixed_int32.reshape(-1).tolist(),
+}}))"#,
+        img_path
+    );
+    let out = Command::new(&python)
+        .args(["-c", &script])
         .current_dir(repo)
         .output()?;
     if !out.status.success() {

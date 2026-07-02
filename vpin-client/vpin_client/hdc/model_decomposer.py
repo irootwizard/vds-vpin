@@ -31,11 +31,15 @@ FAMILY_DATASETS: dict[str, frozenset[str]] = {
     "network_a": frozenset({"mnist"}),
     "network_b": frozenset({"mnist"}),
     "lenet_cifar": frozenset({"cifar10"}),
+    "lenet_mnist": frozenset({"mnist"}),
+    "resnet18_cifar": frozenset({"cifar10"}),
 }
 
 FAMILY_ADAPTERS: dict[str, str] = {
     "network_a": "mnist",
     "lenet_cifar": "cifar_rgb",
+    "lenet_mnist": "mnist",
+    "resnet18_cifar": "cifar_rgb",
 }
 
 

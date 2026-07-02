@@ -37,7 +37,7 @@ impl PlatformConfig {
             server_port: std::env::var("AHE_SERVER_PORT")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(8001),
+                .unwrap_or(8000),
         }
     }
 

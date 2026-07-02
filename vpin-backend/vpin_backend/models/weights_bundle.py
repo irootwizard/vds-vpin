@@ -15,7 +15,7 @@ if str(_CLIENT) not in sys.path:
 
 from vpin_client.models.format_adapter import validate_lenet_npy_bundle, validate_npy_bundle
 from vpin_client.models.lenet_weights_layout import get_lenet_layout
-from vpin_client.models.weights_layout import get_layout, is_lenet_cifar
+from vpin_client.models.weights_layout import get_layout, is_lenet_cifar, is_resnet
 
 
 def _repo_root() -> Path:
@@ -72,7 +72,11 @@ def _has_any_npy(directory: Path) -> bool:
 
 
 def load_homomorphic_weights(weights_dir: Path, network: str = "A"):
-    """Load weights for homomorphic inference (Network A/B or LeNet)."""
+    """Load weights for homomorphic inference (Network A/B, LeNet, or ResNet18)."""
+    if is_resnet(network):
+        from vpin_backend.inference.homomorphic_network_resnet import load_resnet_weights
+        return load_resnet_weights(weights_dir)
+
     if is_lenet_cifar(network):
         from vpin_backend.inference.homomorphic_network_lenet import load_lenet_weights
 
@@ -99,7 +103,10 @@ def _lenet_variant(network: str) -> str:
 
 
 def install_bundle(source: Path, dest: Path, network: str) -> Path:
-    if is_lenet_cifar(network):
+    if is_resnet(network):
+        from vpin_client.models.resnet_weights_layout import get_resnet_layout
+        layout = get_resnet_layout()
+    elif is_lenet_cifar(network):
         layout = get_lenet_layout(variant=_lenet_variant(network))
     else:
         layout = get_layout(network)
@@ -125,7 +132,10 @@ def install_bundle(source: Path, dest: Path, network: str) -> Path:
 def weights_digest(weights_dir: Path, network: str = "A") -> str:
     import hashlib
 
-    if is_lenet_cifar(network):
+    if is_resnet(network):
+        from vpin_client.models.resnet_weights_layout import get_resnet_layout
+        files = get_resnet_layout().required_files
+    elif is_lenet_cifar(network):
         layout = get_lenet_layout(variant=_lenet_variant(network))
         files = layout.required_files
     else:

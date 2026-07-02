@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
+use ahe_codec::apply_relu_pool_shift;
 use ahe_codec_ec::{
     apply_client_action, ark_to_ec, decrypt_tensor, ec_to_ark, encrypt_tensor,
     fixed_point_to_real, ClientAction, BsgsTable, EcE2Point, EcKeyMaterial,
@@ -381,7 +382,15 @@ async fn handle_truncate(
     let keys_dec = keys.clone();
     let bsgs_dec = Arc::clone(&bsgs);
     let dec = tokio::task::spawn_blocking(move || {
-        decrypt_tensor(&keys_dec, &c1, &c2, &bsgs_dec).map_err(|e| e.to_string())
+        let n = c1.len();
+        let result = decrypt_tensor(&keys_dec, &c1, &c2, &bsgs_dec);
+        eprintln!("[session_ec] decrypted {n} values, err={}", result.is_err());
+        if let Ok(ref vals) = result {
+            let max_abs = vals.iter().map(|v| v.abs()).max().unwrap_or(0);
+            let preview: Vec<i64> = vals.iter().take(5).copied().collect();
+            eprintln!("[session_ec] range: first5={preview:?} max_abs={max_abs}");
+        }
+        result.map_err(|e| e.to_string())
     })
     .await
     .map_err(|e| SessionError::Crypto(e.to_string()))?
@@ -403,9 +412,10 @@ async fn handle_truncate(
     );
     let action = ClientAction::parse(action_s)
         .ok_or_else(|| SessionError::Protocol(format!("unknown action {action_s}")))?;
-    if matches!(action, ClientAction::ReluOnly) {
+    if matches!(action, ClientAction::ReluOnly | ClientAction::LogitsOnly) {
         let out = apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?;
-        *logits = fixed_point_to_real(&out, 16);
+        let logit_scale = if matches!(action, ClientAction::LogitsOnly) { 32 } else { 16 };
+        *logits = fixed_point_to_real(&out, logit_scale);
         *prediction = out
             .iter()
             .enumerate()
@@ -414,8 +424,32 @@ async fn handle_truncate(
             .unwrap_or(0);
         return Ok(());
     }
-    let processed = apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?;
+    let processed = if matches!(action, ClientAction::ReluPoolShift) {
+        let pool_kernel = frame["pool_kernel"].as_u64().unwrap_or(2) as usize;
+        let input_shape: Vec<usize> = frame["input_shape"]
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_u64().map(|n| n as usize))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let bits = shift_bits.ok_or_else(|| {
+            SessionError::Protocol("shift_bits required for relu_pool_shift".into())
+        })?;
+        apply_relu_pool_shift(&dec, &input_shape, pool_kernel, bits)
+            .map_err(SessionError::Crypto)?
+    } else {
+        let result = apply_client_action(&dec, action, shift_bits).map_err(SessionError::Crypto)?;
+        eprintln!("[session_ec] apply_client_action ok, len={}, first5={:?}, max_abs={}",
+            result.len(),
+            &result[..result.len().min(5)],
+            result.iter().map(|v| v.abs()).max().unwrap_or(0));
+        result
+    };
     let plain: Vec<i32> = processed.iter().map(|&v| v as i32).collect();
+    eprintln!("[session_ec] plain i32: len={}, first5={:?}, max_abs={}",
+        plain.len(), &plain[..plain.len().min(5)], plain.iter().map(|v| v.abs()).max().unwrap_or(0));
     let t_enc = Instant::now();
     let keys_enc = keys.clone();
     let (enc_c1, enc_c2) = tokio::task::spawn_blocking(move || {
@@ -424,15 +458,18 @@ async fn handle_truncate(
     })
     .await
     .map_err(|e| SessionError::Crypto(e.to_string()))?;
+    eprintln!("[session_ec] encrypt_tensor ok, n={}", enc_c1.len());
     profiler.encrypt_ms += t_enc.elapsed().as_secs_f64() * 1000.0;
 
     let t_ws = Instant::now();
     for (part, pts) in [("c1", &enc_c1), ("c2", &enc_c2)] {
         let wire_pts = ec_points_to_wire(pts);
+        eprintln!("[session_ec] encoding {}: {} points", part, wire_pts.len());
         let chunks = encode_ahe_v1_chunks(phase_id, part, &wire_pts, 256)
             .map_err(|e| SessionError::Protocol(e.to_string()))?;
-        for ch in chunks {
-            let mut frame = chunk_to_ws_frame(&ch);
+        eprintln!("[session_ec] {} chunks={} sending...", part, chunks.len());
+        for (ci, ch) in chunks.iter().enumerate() {
+            let mut frame = chunk_to_ws_frame(ch);
             if let Some(obj) = frame.as_object_mut() {
                 obj.insert("type".into(), json!("CiphertextPayload"));
                 obj.insert("tensor_part".into(), json!(part));
@@ -443,7 +480,11 @@ async fn handle_truncate(
                 .send(Message::Text(frame.to_string()))
                 .await
                 .map_err(|e| SessionError::Ws(e.to_string()))?;
+            if ci % 50 == 0 || ci == chunks.len() - 1 {
+                eprintln!("[session_ec] {part} chunk {ci}/{} sent", chunks.len());
+            }
         }
+        eprintln!("[session_ec] {} all {} chunks sent", part, chunks.len());
     }
     profiler.ws_ms += t_ws.elapsed().as_secs_f64() * 1000.0;
     Ok(())

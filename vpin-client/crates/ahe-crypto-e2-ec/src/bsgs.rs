@@ -131,15 +131,21 @@ impl BsgsTable {
         for i in 0..BSGS_M {
             let keys = lookup_keys_projective_batch(&[gamma, gamma2]);
             if let Some(j) = self.map.get(&keys[0]).copied() {
-                return Ok(i as i64 * BSGS_M as i64 + j as i64);
+                let plain = i as i64 * BSGS_M as i64 + j as i64;
+                return Ok(plain);
             }
             if let Some(j) = self.map.get(&keys[1]).copied() {
-                return Ok(-(i as i64 * BSGS_M as i64 + j as i64));
+                let plain = i as i64 * BSGS_M as i64 + j as i64;
+                return Ok(-plain);
             }
             gamma = add_projective_mixed(&gamma, &step);
             gamma2 = add_projective_mixed(&gamma2, &step);
         }
-        Err(BsgsError::Invalid("discrete log not found".into()))
+        let m_millions = BSGS_M / 1_000_000;
+        let m_remainder = (BSGS_M % 1_000_000) / 100_000;
+        Err(BsgsError::Invalid(format!(
+            "discrete log not found after {BSGS_M} giant steps (searched +/-{m_millions}.{m_remainder}e6)"
+        )))
     }
 }
 

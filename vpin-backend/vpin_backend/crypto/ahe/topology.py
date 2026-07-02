@@ -115,6 +115,36 @@ LENET_CIFAR = NetworkTopology(
 )
 
 
+RESNET18_TRUNCATION = (
+    TruncationPhase("after_stem",         "relu_then_shift", 32, (1, 64, 32, 32)),
+    TruncationPhase("after_l1b0c1",       "relu_then_shift", 32, (1, 64, 32, 32)),
+    TruncationPhase("after_l1b0c2",       "relu_then_shift", 32, (1, 64, 32, 32)),
+    TruncationPhase("after_l1b1c1",       "relu_then_shift", 32, (1, 64, 32, 32)),
+    TruncationPhase("after_l1b1c2",       "relu_then_shift", 32, (1, 64, 32, 32)),
+    TruncationPhase("after_l2b0c1",       "relu_then_shift", 32, (1, 128, 16, 16)),
+    TruncationPhase("after_l2b0c2",       "relu_then_shift", 32, (1, 128, 16, 16)),
+    TruncationPhase("after_l2b1c1",       "relu_then_shift", 32, (1, 128, 16, 16)),
+    TruncationPhase("after_l2b1c2",       "relu_then_shift", 32, (1, 128, 16, 16)),
+    TruncationPhase("after_l3b0c1",       "relu_then_shift", 32, (1, 256, 8, 8)),
+    TruncationPhase("after_l3b0c2",       "relu_then_shift", 32, (1, 256, 8, 8)),
+    TruncationPhase("after_l3b1c1",       "relu_then_shift", 32, (1, 256, 8, 8)),
+    TruncationPhase("after_l3b1c2",       "relu_then_shift", 32, (1, 256, 8, 8)),
+    TruncationPhase("after_l4b0c1",       "relu_then_shift", 32, (1, 512, 4, 4)),
+    TruncationPhase("after_l4b0c2",       "relu_then_shift", 32, (1, 512, 4, 4)),
+    TruncationPhase("after_l4b1c1",       "relu_then_shift", 32, (1, 512, 4, 4)),
+    TruncationPhase("after_l4b1c2",       "relu_then_shift", 32, (1, 512, 4, 4)),
+    TruncationPhase("after_pool_linear",  "logits_only",     None, (1, 10)),
+)
+
+NETWORK_RESNET18 = NetworkTopology(
+    network_id="resnet18_cifar",
+    conv=ConvSpec(kernel_h=3, kernel_w=3, in_channels=3, out_channels=64, stride=1, padding=1),
+    pools=(PoolSpec(kernel_h=4, kernel_w=4, stride=4),),
+    fcs=(FcSpec(in_features=512, out_features=10),),
+    truncation_phases=RESNET18_TRUNCATION,
+)
+
+
 def get_topology(network_id: str) -> NetworkTopology:
     key = network_id.upper()
     if key == "A":
@@ -126,4 +156,6 @@ def get_topology(network_id: str) -> NetworkTopology:
         return LENET_MNIST
     if lkey in ("lenet_cifar", "lenet_cifar10", "lenet"):
         return LENET_CIFAR
+    if lkey in ("resnet18_cifar", "resnet18", "resnet18_cifar10"):
+        return NETWORK_RESNET18
     raise KeyError(f"unknown network topology: {network_id}")

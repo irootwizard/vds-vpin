@@ -10,5 +10,6 @@ num-bigint.workspace = true
 ahe-crypto-e2.workspace = true
 ahe-homomorphic.workspace = true
 ahe-model-bundle.workspace = true
+ndarray.workspace = true
 rand.workspace = true
 thiserror.workspace = true

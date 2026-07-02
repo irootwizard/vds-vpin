@@ -56,6 +56,21 @@
       "topology": "cnn_mnist_v1",
       "weights_dir": "model_training/outputs/20260622_174721",
       "updated": "2026-06-22T18:00:57.727319+00:00"
+    },
+    {
+      "id": "resnet18-cifar10",
+      "name": "ResNet18 CIFAR-10 (trained)",
+      "framework": "PyTorch",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 11.17,
+      "input_shape": "3x32x32",
+      "network": "resnet18_cifar",
+      "topology": "resnet18_cifar_v1",
+      "weights_dir": "model_training/outputs/resnet18_20260629_054142",
+      "deployable": true,
+      "range_ok": true,
+      "accuracy_ok": true,
+      "updated": "2026-07-01T00:00:00Z"
     }
   ]
 }

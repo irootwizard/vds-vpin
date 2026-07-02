@@ -21,6 +21,7 @@ _BUILTIN_FAMILY = {
     "cnn-mnist-b": "network_b",
     "lenet-mnist": "lenet_mnist",
     "lenet-cifar10": "lenet_cifar",
+    "resnet18-cifar10": "resnet18_cifar",
 }
 
 # input shape hint → dataset id

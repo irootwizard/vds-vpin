@@ -11,7 +11,8 @@ from pathlib import Path
 import numpy as np
 
 from vpin_client.models.lenet_weights_layout import get_lenet_layout
-from vpin_client.models.weights_layout import NetworkWeightLayout, get_layout, is_lenet_cifar
+from vpin_client.models.resnet_weights_layout import get_resnet_layout
+from vpin_client.models.weights_layout import NetworkWeightLayout, get_layout, is_lenet_cifar, is_resnet
 
 
 class ModelFormat(str, Enum):
@@ -84,7 +85,24 @@ def _probe_zip(path: Path) -> FormatProbe:
     return FormatProbe(ModelFormat.UNKNOWN, detail="zip missing npy files for A–E")
 
 
+def validate_resnet_npy_bundle(directory: Path) -> tuple[bool, list[str]]:
+    directory = Path(directory)
+    layout = get_resnet_layout()
+    errors: list[str] = []
+    for fname in layout.required_files:
+        p = directory / fname
+        if not p.is_file():
+            errors.append(f"missing {fname}")
+            continue
+        arr = np.load(p)
+        if arr.size == 0:
+            errors.append(f"empty {fname}")
+    return len(errors) == 0, errors
+
+
 def validate_npy_bundle(directory: Path, network: str) -> tuple[bool, list[str]]:
+    if is_resnet(network):
+        return validate_resnet_npy_bundle(directory)
     if is_lenet_cifar(network):
         lkey = network.lower().replace("-", "_")
         variant = "mnist" if lkey == "lenet_mnist" else "cifar"

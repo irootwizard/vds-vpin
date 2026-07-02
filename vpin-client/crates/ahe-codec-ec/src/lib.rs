@@ -41,11 +41,38 @@ pub fn decrypt_tensor(
     table: &BsgsTable,
 ) -> Result<Vec<i64>, BsgsError> {
     assert_eq!(c1_cells.len(), c2_cells.len());
-    let mut out = Vec::with_capacity(c1_cells.len());
-    for (a, b) in c1_cells.iter().zip(c2_cells.iter()) {
-        out.push(keys.decrypt_pair(a, b, table)?);
+    let n = c1_cells.len();
+    let mut out = Vec::with_capacity(n);
+    let mut first_err: Option<String> = None;
+    let mut ok_count = 0u64;
+    let mut err_count = 0u64;
+    for (i, (a, b)) in c1_cells.iter().zip(c2_cells.iter()).enumerate() {
+        match keys.decrypt_pair(a, b, table) {
+            Ok(v) => {
+                if i < 5 || i % 10000 == 0 {
+                    eprintln!("[decrypt_tensor] i={i}/{n} v={v}");
+                }
+                out.push(v);
+                ok_count += 1;
+            }
+            Err(e) => {
+                err_count += 1;
+                if first_err.is_none() {
+                    first_err = Some(format!("i={i}/{n}: {e}"));
+                    let msg = first_err.as_ref().unwrap();
+                    eprintln!("[decrypt_tensor] FIRST ERROR at {msg}");
+                }
+                // push 0 as placeholder so we don't lose alignment
+                out.push(0);
+            }
+        }
     }
-    Ok(out)
+    eprintln!("[decrypt_tensor] done: ok={ok_count} err={err_count} total={n}");
+    if let Some(msg) = first_err {
+        Err(BsgsError::Invalid(msg))
+    } else {
+        Ok(out)
+    }
 }
 
 pub fn encrypt_tensor<R: Rng>(

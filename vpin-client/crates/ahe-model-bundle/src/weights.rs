@@ -134,3 +134,113 @@ pub fn load_lenet_cifar_weights(dir: &std::path::Path) -> Result<LeNetCifarWeigh
         fc5_bias:     load1("fc5_bias_10.npy")?,
     })
 }
+
+// ---------------------------------------------------------------------------
+// ResNet18 weights
+// ---------------------------------------------------------------------------
+
+#[derive(Clone, Debug)]
+pub struct ResNetWeights {
+    pub stem_w: ndarray::Array4<f64>,
+    pub stem_b: ndarray::Array1<f64>,
+    pub l1b0_conv1_w: ndarray::Array4<f64>,
+    pub l1b0_conv1_b: ndarray::Array1<f64>,
+    pub l1b0_conv2_w: ndarray::Array4<f64>,
+    pub l1b0_conv2_b: ndarray::Array1<f64>,
+    pub l1b1_conv1_w: ndarray::Array4<f64>,
+    pub l1b1_conv1_b: ndarray::Array1<f64>,
+    pub l1b1_conv2_w: ndarray::Array4<f64>,
+    pub l1b1_conv2_b: ndarray::Array1<f64>,
+    pub l2b0_conv1_w: ndarray::Array4<f64>,
+    pub l2b0_conv1_b: ndarray::Array1<f64>,
+    pub l2b0_conv2_w: ndarray::Array4<f64>,
+    pub l2b0_conv2_b: ndarray::Array1<f64>,
+    pub l2b0_ds_w: ndarray::Array4<f64>,
+    pub l2b0_ds_b: ndarray::Array1<f64>,
+    pub l2b1_conv1_w: ndarray::Array4<f64>,
+    pub l2b1_conv1_b: ndarray::Array1<f64>,
+    pub l2b1_conv2_w: ndarray::Array4<f64>,
+    pub l2b1_conv2_b: ndarray::Array1<f64>,
+    pub l3b0_conv1_w: ndarray::Array4<f64>,
+    pub l3b0_conv1_b: ndarray::Array1<f64>,
+    pub l3b0_conv2_w: ndarray::Array4<f64>,
+    pub l3b0_conv2_b: ndarray::Array1<f64>,
+    pub l3b0_ds_w: ndarray::Array4<f64>,
+    pub l3b0_ds_b: ndarray::Array1<f64>,
+    pub l3b1_conv1_w: ndarray::Array4<f64>,
+    pub l3b1_conv1_b: ndarray::Array1<f64>,
+    pub l3b1_conv2_w: ndarray::Array4<f64>,
+    pub l3b1_conv2_b: ndarray::Array1<f64>,
+    pub l4b0_conv1_w: ndarray::Array4<f64>,
+    pub l4b0_conv1_b: ndarray::Array1<f64>,
+    pub l4b0_conv2_w: ndarray::Array4<f64>,
+    pub l4b0_conv2_b: ndarray::Array1<f64>,
+    pub l4b0_ds_w: ndarray::Array4<f64>,
+    pub l4b0_ds_b: ndarray::Array1<f64>,
+    pub l4b1_conv1_w: ndarray::Array4<f64>,
+    pub l4b1_conv1_b: ndarray::Array1<f64>,
+    pub l4b1_conv2_w: ndarray::Array4<f64>,
+    pub l4b1_conv2_b: ndarray::Array1<f64>,
+    pub linear_w: ndarray::Array2<f64>,
+    pub linear_b: ndarray::Array1<f64>,
+}
+
+pub fn load_resnet_weights(dir: &Path) -> Result<ResNetWeights, WeightsError> {
+    use ndarray_npy::ReadNpyExt;
+    let load4 = |name: &str| -> Result<ndarray::Array4<f64>, WeightsError> {
+        let mut r = std::fs::File::open(dir.join(name))?;
+        Ok(ndarray::Array4::read_npy(&mut r)?)
+    };
+    let load2 = |name: &str| -> Result<ndarray::Array2<f64>, WeightsError> {
+        let mut r = std::fs::File::open(dir.join(name))?;
+        Ok(ndarray::Array2::read_npy(&mut r)?)
+    };
+    let load1 = |name: &str| -> Result<ndarray::Array1<f64>, WeightsError> {
+        let mut r = std::fs::File::open(dir.join(name))?;
+        Ok(ndarray::Array1::read_npy(&mut r)?)
+    };
+    Ok(ResNetWeights {
+        stem_w: load4("stem_weight_64_3_3_3.npy")?,
+        stem_b: load1("stem_bias_64.npy")?,
+        l1b0_conv1_w: load4("l1b0_conv1_weight_64_64_3_3.npy")?,
+        l1b0_conv1_b: load1("l1b0_conv1_bias_64.npy")?,
+        l1b0_conv2_w: load4("l1b0_conv2_weight_64_64_3_3.npy")?,
+        l1b0_conv2_b: load1("l1b0_conv2_bias_64.npy")?,
+        l1b1_conv1_w: load4("l1b1_conv1_weight_64_64_3_3.npy")?,
+        l1b1_conv1_b: load1("l1b1_conv1_bias_64.npy")?,
+        l1b1_conv2_w: load4("l1b1_conv2_weight_64_64_3_3.npy")?,
+        l1b1_conv2_b: load1("l1b1_conv2_bias_64.npy")?,
+        l2b0_conv1_w: load4("l2b0_conv1_weight_128_64_3_3.npy")?,
+        l2b0_conv1_b: load1("l2b0_conv1_bias_128.npy")?,
+        l2b0_conv2_w: load4("l2b0_conv2_weight_128_128_3_3.npy")?,
+        l2b0_conv2_b: load1("l2b0_conv2_bias_128.npy")?,
+        l2b0_ds_w: load4("l2b0_ds_weight_128_64_1_1.npy")?,
+        l2b0_ds_b: load1("l2b0_ds_bias_128.npy")?,
+        l2b1_conv1_w: load4("l2b1_conv1_weight_128_128_3_3.npy")?,
+        l2b1_conv1_b: load1("l2b1_conv1_bias_128.npy")?,
+        l2b1_conv2_w: load4("l2b1_conv2_weight_128_128_3_3.npy")?,
+        l2b1_conv2_b: load1("l2b1_conv2_bias_128.npy")?,
+        l3b0_conv1_w: load4("l3b0_conv1_weight_256_128_3_3.npy")?,
+        l3b0_conv1_b: load1("l3b0_conv1_bias_256.npy")?,
+        l3b0_conv2_w: load4("l3b0_conv2_weight_256_256_3_3.npy")?,
+        l3b0_conv2_b: load1("l3b0_conv2_bias_256.npy")?,
+        l3b0_ds_w: load4("l3b0_ds_weight_256_128_1_1.npy")?,
+        l3b0_ds_b: load1("l3b0_ds_bias_256.npy")?,
+        l3b1_conv1_w: load4("l3b1_conv1_weight_256_256_3_3.npy")?,
+        l3b1_conv1_b: load1("l3b1_conv1_bias_256.npy")?,
+        l3b1_conv2_w: load4("l3b1_conv2_weight_256_256_3_3.npy")?,
+        l3b1_conv2_b: load1("l3b1_conv2_bias_256.npy")?,
+        l4b0_conv1_w: load4("l4b0_conv1_weight_512_256_3_3.npy")?,
+        l4b0_conv1_b: load1("l4b0_conv1_bias_512.npy")?,
+        l4b0_conv2_w: load4("l4b0_conv2_weight_512_512_3_3.npy")?,
+        l4b0_conv2_b: load1("l4b0_conv2_bias_512.npy")?,
+        l4b0_ds_w: load4("l4b0_ds_weight_512_256_1_1.npy")?,
+        l4b0_ds_b: load1("l4b0_ds_bias_512.npy")?,
+        l4b1_conv1_w: load4("l4b1_conv1_weight_512_512_3_3.npy")?,
+        l4b1_conv1_b: load1("l4b1_conv1_bias_512.npy")?,
+        l4b1_conv2_w: load4("l4b1_conv2_weight_512_512_3_3.npy")?,
+        l4b1_conv2_b: load1("l4b1_conv2_bias_512.npy")?,
+        linear_w: load2("linear_weight_512_10.npy")?,
+        linear_b: load1("linear_bias_10.npy")?,
+    })
+}

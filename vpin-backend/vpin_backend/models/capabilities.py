@@ -8,14 +8,19 @@ from vpin_backend.config import get_settings
 from vpin_backend.models.weights_bundle import resolve_weights_dir
 from vpin_backend.storage.registry import get_model
 
-AHE_NETWORKS = frozenset({"A", "B", "lenet_mnist", "lenet_cifar", "lenet_cifar10", "lenet"})
+AHE_NETWORKS = frozenset({"A", "B", "lenet_mnist", "lenet_cifar", "lenet_cifar10", "lenet", "resnet18_cifar"})
 _BUILTIN_NETWORK = {"cnn-mnist": "A", "cnn-mnist-b": "B"}
 
 _LENET_NETWORKS = frozenset({"lenet_mnist", "lenet_cifar", "lenet_cifar10", "lenet"})
+_RESNET_NETWORKS = frozenset({"resnet18_cifar", "resnet18", "resnet18_cifar10"})
 
 
 def _is_lenet(network: str) -> bool:
     return network.lower().replace("-", "_") in _LENET_NETWORKS
+
+
+def _is_resnet(network: str) -> bool:
+    return network.lower().replace("-", "_") in _RESNET_NETWORKS
 
 
 def resolve_model_network(model_id: str, entry: dict | None = None) -> str | None:
@@ -44,6 +49,13 @@ def model_has_ahe_weights(model_id: str) -> bool:
     # LeNet models use truncation_config.json as the deployment-ready marker.
     if _is_lenet(network):
         return (weights_dir / "truncation_config.json").is_file()
+
+    # ResNet models: check all 42 .npy weight files exist.
+    if _is_resnet(network):
+        from vpin_client.models.resnet_weights_layout import get_resnet_layout
+
+        layout = get_resnet_layout()
+        return all((weights_dir / name).is_file() for name in layout.required_files)
 
     from vpin_client.models.weights_layout import get_layout
 

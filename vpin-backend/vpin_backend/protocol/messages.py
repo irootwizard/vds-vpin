@@ -102,6 +102,9 @@ class TruncateRequest(BaseModel):
     shape: list[int]
     client_action: str = "relu"
     shift_bits: int | None = None
+    # relu_pool_shift only: pre-pool 4-D shape and pool kernel size
+    input_shape: list[int] | None = None
+    pool_kernel: int | None = None
 
 
 class ModelSelectAck(BaseModel):
