@@ -1,0 +1,12 @@
+# VADS (Verifiable Data Streaming) 项目依赖
+#
+# charm-crypto 0.50 不在 PyPI（仅 0.43）。请使用：
+#   - Docker: ovds-server/Dockerfile（自动源码编译）
+#   - WSL:   source activate_venv.sh（crypto-libs-venv）
+
+# 数据可视化（benchmark 脚本）
+matplotlib>=3.5.0
+numpy>=1.21.0
+
+# Merkle 树工具（仅 RSA-accumulator 独立单测；VADS 协议测试不需要）
+# merkletools>=1.0.3

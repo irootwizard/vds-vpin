@@ -1,0 +1,23 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+
+# RSA-accumulator Node/Solidity tooling (not needed for VADS protocol tests)
+RSA-accumulator/node_modules/
+RSA-accumulator/generated/
+
+# Benchmark artifacts
+database/
+results_*.json
+generated/
+*.pkl
+
+# Docs and local-only scripts
+document/
+*.md
+!RSA-accumulator/README.md
+activate_venv.sh
