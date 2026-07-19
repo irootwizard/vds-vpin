@@ -85,3 +85,4 @@ model_training/outputs/**/checkpoint_float.pt
 vpin-backend/crates/vpin-server-crypto/artifacts/*/protocol.json
 
 # Model registry is tracked in git (vpin-backend/data/models/registry.json)
+vpin-backend/ovds_data/

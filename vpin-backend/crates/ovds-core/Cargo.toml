@@ -1,0 +1,17 @@
+[package]
+name = "ovds-core"
+version = "0.1.0"
+edition = "2021"
+description = "OVDS core crypto — BLS + RSA Accumulator"
+
+[dependencies]
+blst = { version = "0.3", features = ["serde"] }
+num-bigint = { version = "0.4", features = ["rand", "serde"] }
+num-traits = "0.2"
+sha2 = "0.10"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+
+[dev-dependencies]
+serde_json = "1.0"

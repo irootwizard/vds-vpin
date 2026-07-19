@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
     "apps/ahe-server",
+    "apps/ovds-server",
+    "crates/ovds-core",
 ]
 
 [workspace.package]
