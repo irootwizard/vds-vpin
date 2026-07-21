@@ -12,6 +12,7 @@
 use num_bigint::BigUint;
 use num_traits::{One, Zero};
 use rand::Rng;
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 use crate::bls::{self, BlsSignature, hg};
@@ -140,8 +141,12 @@ pub fn append(sk: &mut SecretKey, s: &BigUint, state: &mut ServerState) -> Resul
 pub fn query(state: &ServerState, i: u64) -> Result<QueryResponse, OvdsError> {
     let record = state.db.get(&i).ok_or(OvdsError::NotFound(i))?;
     let pi = NonMembershipProof {
-        x: state.acc_r.clone(),
+        v: state.acc_r.clone(),
         y: state.vk.h.modpow(&state.z_star, &state.n),
+        t1: BigUint::one(),
+        t2: BigUint::one(),
+        x_prime: BigUint::one(),
+        r: BigUint::zero(),
     };
     Ok(QueryResponse {
         index: i,
@@ -160,8 +165,12 @@ pub fn query_star(state: &ServerState, indices: &[u64]) -> Result<QueryStarRespo
         items.push((i, record.sigma.clone(), record.tag.clone()));
     }
     let pi_j = NonMembershipProof {
-        x: state.acc_r.clone(),
+        v: state.acc_r.clone(),
         y: state.vk.h.modpow(&state.z_star, &state.n),
+        t1: BigUint::one(),
+        t2: BigUint::one(),
+        x_prime: BigUint::one(),
+        r: BigUint::zero(),
     };
     Ok(QueryStarResponse { values, proof: QueryStarProof { items, pi_j } })
 }
@@ -271,8 +280,7 @@ pub fn audit(state: &ServerState, indices: &[u64]) -> Result<AuditProof, OvdsErr
 
     // Non-membership proof for all tags (proving none are in R)
     let q_tags: Vec<BigUint> = tags.iter().map(|t| hash::hprime(t)).collect();
-    let q_product: BigUint = q_tags.iter().fold(BigUint::one(), |a, b| a * b);
-    let pi_1 = rsa_acc::prove_non_membership(&state.acc_r, &state.z_star, &q_product, &state.n, &state.vk.h);
+    let pi_1 = rsa_acc::prove_non_membership(&state.acc_r, &state.z_star, &q_tags, &state.n, &state.vk.h);
 
     Ok(AuditProof { nu, sigma_i, pi_1 })
 }
@@ -303,6 +311,56 @@ pub fn judge(vk: &VerificationKey, indices: &[u64], values: &[BigUint], proof: &
     let pk = BlsPublicKey(vk.a.0.clone());
     let valid = bls::verify(&pk, &agg_msg, &proof.sigma_i)?;
     Ok(valid)
+}
+
+// =========================================================================
+// Parallel batch append — rayon-parallel client signing
+// =========================================================================
+
+/// Batch append with parallel client signing via rayon.
+/// Phase 1: sign all values in parallel (pure computation, no shared state mutation).
+/// Phase 2: sequential server verification (fast, each verification is O(1)).
+pub fn append_batch(
+    sk: &mut SecretKey,
+    values: &[BigUint],
+    state: &mut ServerState,
+) -> Result<Vec<(u64, Record)>, OvdsError> {
+    let base_cnt = sk.cnt;
+    sk.cnt += values.len() as u64;
+
+    // Phase 1: parallel signing (each item gets pre-allocated index)
+    let results: Vec<(u64, Record)> = values
+        .par_iter()
+        .enumerate()
+        .map(|(k, val)| {
+            let i = base_cnt + k as u64;
+            let mut rng = rand::thread_rng();
+            let mut tag_bytes = vec![0u8; SECURITY_PARAM / 8];
+            rng.fill(&mut tag_bytes[..]);
+            let tag = BigUint::from_bytes_be(&tag_bytes);
+            let mut msg = i.to_be_bytes().to_vec();
+            msg.extend_from_slice(&tag.to_bytes_be());
+            msg.extend_from_slice(&val.to_bytes_be());
+            let sigma = bls::sign(&sk.alpha, &msg).expect("BLS sign");
+            (i, Record { s: val.clone(), sigma, tag })
+        })
+        .collect();
+
+    // Phase 2: sequential verification and storage
+    for (i, record) in &results {
+        append_server(&sk.vk, state, *i, record)?;
+    }
+
+    Ok(results)
+}
+
+/// Batch update: update multiple records in one call.
+pub fn update_batch(
+    sk: &SecretKey,
+    updates: &[(u64, BigUint)],
+    state: &mut ServerState,
+) -> Result<Vec<Record>, OvdsError> {
+    updates.iter().map(|(i, s_prime)| update(sk, *i, s_prime, state)).collect()
 }
 
 // =========================================================================

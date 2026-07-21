@@ -10,6 +10,7 @@ num-bigint = { version = "0.4", features = ["rand", "serde"] }
 num-traits = "0.2"
 sha2 = "0.10"
 rand = "0.8"
+rayon = "1.8"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0"
 

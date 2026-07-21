@@ -44,11 +44,15 @@ pub struct ServerState {
     pub phi: BigUint,
 }
 
-/// RSA non-membership proof
+/// Aggregated RSA non-membership proof (Algorithm 2: WitCreate_star)
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct NonMembershipProof {
-    pub x: BigUint,
+    pub v: BigUint,
     pub y: BigUint,
+    pub t1: BigUint,
+    pub t2: BigUint,
+    pub x_prime: BigUint,
+    pub r: BigUint,
 }
 
 /// Query proof

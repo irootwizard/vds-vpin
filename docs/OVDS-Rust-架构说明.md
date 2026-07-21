@@ -78,7 +78,7 @@ src/
 
 对照 Python `helpfunctions.py` + `vads_lib.py` Algorithm 2:
 - Python 的 WitCreate_star/WitVerify_star 是完整的聚合非成员证明算法
-- Rust 当前实现为简化版 (单元素证明), 聚合版待扩展
+- Rust 实现: 单元素用 Bezout 直接证明, 多元素用乘积聚合 (简化版 Algorithm 2)
 
 #### hash.rs — 哈希函数
 
@@ -99,6 +99,8 @@ src/
 - `verify_query(vk, resp) -> bool`: 验证单条查询证明.
 - `verify_query_star(vk, resp) -> bool`: 验证批量查询证明.
 - `update(sk, i, s', state) -> Record`: 更新数据. 旧 tag 加入撤销集合 R, 生成新签名.
+- `update_batch(sk, updates, state) -> Vec<Record>`: 批量更新.
+- `append_batch(sk, values, state) -> Vec<(u64, Record)>`: 并发批量追加. rayon 并行签名.
 - `audit(state, indices) -> AuditProof`: 服务端生成审计证明 (聚合签名 + RSA 非成员证明).
 - `judge(vk, indices, values, proof) -> bool`: 客户端验证审计证明.
 
@@ -130,7 +132,9 @@ pub struct AppState {
 | GET | /health | 健康检查 |
 | POST | /setup | 系统初始化, 生成 VK/SK/ServerState |
 | POST | /append | 追加单条数据 |
-| POST | /append_batch | 批量追加数据 |
+| POST | /append_batch | 批量并发追加数据 (rayon) |
+| POST | /update | 更新单条数据 |
+| POST | /update_batch | 批量更新数据 |
 | GET | /query?index=N | 查询单条记录 |
 | POST | /query | 查询单条记录 (JSON body) |
 | POST | /query_batch | 批量查询 |

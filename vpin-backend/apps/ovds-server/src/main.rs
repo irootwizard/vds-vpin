@@ -35,6 +35,8 @@ async fn main() {
         .route("/setup", post(routes::setup))
         .route("/append", post(routes::append))
         .route("/append_batch", post(routes::append_batch))
+        .route("/update", post(routes::update_single))
+        .route("/update_batch", post(routes::update_batch))
         .route("/query_batch", post(routes::query_batch))
         .route("/query", post(routes::query_single))
         .route("/query", get(move |Query(params): Query<HashMap<String, String>>| {

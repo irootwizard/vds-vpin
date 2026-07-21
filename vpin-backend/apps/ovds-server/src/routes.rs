@@ -18,6 +18,9 @@ use crate::SharedState;
 #[derive(Deserialize)] pub struct AppendBatchRequest { pub values: Vec<String> }
 #[derive(Deserialize)] pub struct QueryRequest { pub index: u64 }
 #[derive(Deserialize)] pub struct QueryBatchRequest { pub indices: Vec<u64> }
+#[derive(Deserialize)] pub struct UpdateRequest { pub index: u64, pub new_value: String }
+#[derive(Deserialize)] pub struct UpdateBatchRequest { pub updates: Vec<UpdateItem> }
+#[derive(Deserialize)] pub struct UpdateItem { pub index: u64, pub new_value: String }
 #[derive(Deserialize)] pub struct VerifyRequest { pub vk: VerificationKey, pub resp: ovds_core::QueryResponse }
 #[derive(Serialize)] pub struct ErrorResponse { pub error: String }
 
@@ -202,6 +205,44 @@ pub async fn verify_batch(Json(req): Json<serde_json::Value>) -> Result<Json<ser
     let resp: ovds_core::QueryStarResponse = serde_json::from_value(req.get("resp").cloned().unwrap_or_default()).map_err(|e| ErrorResponse{error:e.to_string()})?;
     match protocol::verify_query_star(&vk, &resp) {
         Ok(valid) => Ok(Json(serde_json::json!({"valid": valid}))),
+        Err(e) => Err(Json(ErrorResponse { error: e.to_string() })),
+    }
+}
+
+/// POST /update
+pub async fn update_single(State(state): State<SharedState>, Json(req): Json<UpdateRequest>) -> Result<Json<serde_json::Value>, Json<ErrorResponse>> {
+    let new_val = BigUint::parse_bytes(req.new_value.as_bytes(), 10).unwrap_or_default();
+    let sk = state.sk.read().await;
+    let mut ss = state.server_state.write().await;
+    match (&*sk, &mut *ss) {
+        (Some(sk), Some(ss)) => match protocol::update(sk, req.index, &new_val, ss) {
+            Ok(rec) => Ok(Json(serde_json::json!({
+                "index": req.index, "value": rec.s.to_str_radix(10),
+                "sigma_hex": hex::encode(&rec.sigma.0), "tag_hex": hex::encode(&rec.tag.to_bytes_be())
+            }))),
+            Err(e) => Err(Json(ErrorResponse { error: e.to_string() })),
+        },
+        _ => Err(Json(ErrorResponse { error: "not setup".into() })),
+    }
+}
+
+/// POST /update_batch
+pub async fn update_batch(State(state): State<SharedState>, Json(req): Json<UpdateBatchRequest>) -> Result<Json<Vec<serde_json::Value>>, Json<ErrorResponse>> {
+    let sk = state.sk.read().await;
+    let mut ss = state.server_state.write().await;
+    let (sk, ss) = match (&*sk, &mut *ss) {
+        (Some(sk), Some(ss)) => (sk, ss),
+        _ => return Err(Json(ErrorResponse { error: "not setup".into() })),
+    };
+    let updates: Vec<(u64, BigUint)> = req.updates.iter().map(|u| {
+        (u.index, BigUint::parse_bytes(u.new_value.as_bytes(), 10).unwrap_or_default())
+    }).collect();
+    match protocol::update_batch(sk, &updates, ss) {
+        Ok(records) => Ok(Json(records.iter().map(|r| serde_json::json!({
+            "value": r.s.to_str_radix(10),
+            "sigma_hex": hex::encode(&r.sigma.0),
+            "tag_hex": hex::encode(&r.tag.to_bytes_be()),
+        })).collect())),
         Err(e) => Err(Json(ErrorResponse { error: e.to_string() })),
     }
 }

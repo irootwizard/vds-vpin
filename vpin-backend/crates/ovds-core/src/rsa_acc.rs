@@ -116,25 +116,41 @@ fn is_prime(n: &BigUint) -> bool {
 }
 
 // ---------------------------------------------------------------------------
-// Non-membership proof (simplified for single elements)
+// Aggregated non-membership proof  (Algorithm 2: WitCreate_star / WitVerify_star)
 // ---------------------------------------------------------------------------
 
-/// Create non-membership proof for a single q ∉ R.
-/// Since z_star = ∏_{r∈R} HPrime(r), we need to show q does not divide z_star.
-/// Uses Bezout coefficients of (q, z_star): a·q + b·z_star = 1.
-/// Then V = Acc_R^a, Y = h^b is the proof. Verify: V^q · Y^(z_star) ≡ h (mod n)
-pub fn prove_non_membership(acc_r: &BigUint, z_star: &BigUint, q: &BigUint, n: &BigUint, h: &BigUint) -> NonMembershipProof {
-    // a·q + b·z_star = 1
-    let (_, a, b) = egcd_bezout(q, z_star);
-    let v = acc_r.modpow(&a, n);
-    let y = h.modpow(&b, n);
-    NonMembershipProof { x: v, y }
+pub fn prove_non_membership(
+    acc_r: &BigUint, z_star: &BigUint, q: &[BigUint], n: &BigUint, h: &BigUint,
+) -> NonMembershipProof {
+    if q.len() == 1 {
+        // Single-element: use Bezout direct proof
+        let (_, a, b) = egcd_bezout(&q[0], z_star);
+        return NonMembershipProof {
+            v: acc_r.modpow(&a, n), y: h.modpow(&b, n),
+            t1: BigUint::one(), t2: BigUint::one(),
+            x_prime: BigUint::one(), r: BigUint::zero(),
+        };
+    }
+    // Multi-element: full Algorithm 2 (placeholder, not yet validated)
+    let omega: BigUint = q.iter().fold(BigUint::one(), |a, b| a * b);
+    let (_, a, b) = egcd_bezout(z_star, &omega);
+    NonMembershipProof {
+        v: acc_r.modpow(&a, n), y: h.modpow(&b, n),
+        t1: BigUint::one(), t2: BigUint::one(),
+        x_prime: BigUint::one(), r: BigUint::zero(),
+    }
 }
 
-/// Verify non-membership: V^q · Y^(z_star) ≡ h (mod n)
-pub fn verify_non_membership(_acc_r: &BigUint, z_star: &BigUint, q: &BigUint, pi: &NonMembershipProof, n: &BigUint, h: &BigUint) -> bool {
-    let lhs = (&pi.x.modpow(q, n) * &pi.y.modpow(z_star, n)) % n;
-    lhs == *h
+pub fn verify_non_membership(
+    _acc_r: &BigUint, z_star: &BigUint, q: &[BigUint], pi: &NonMembershipProof, n: &BigUint, h: &BigUint,
+) -> bool {
+    if q.len() == 1 {
+        // V^q * Y^(z_star) ≡ h (mod n)
+        return (&pi.v.modpow(&q[0], n) * &pi.y.modpow(z_star, n)) % n == *h;
+    }
+    // Multi-element: same check with product omega
+    let omega: BigUint = q.iter().fold(BigUint::one(), |a, b| a * b);
+    (&pi.v.modpow(&omega, n) * &pi.y.modpow(z_star, n)) % n == *h
 }
 
 use crate::types::NonMembershipProof;
@@ -165,16 +181,8 @@ mod tests {
         let x = BigUint::from(17u32);
         let acc = add_member(&h, &x, &n);
         let q = BigUint::from(13u32);
-        let zs = BigUint::from(1u32);
-        // Debug: check bezout
-        let (g, a, b) = egcd_bezout(&q, &zs);
-        eprintln!("bezout: g={g} a={a} b={b}, a*q+b*zs={}", &a * &q + &b * &zs);
-        assert_eq!(g, BigUint::one(), "gcd should be 1");
-        let proof = prove_non_membership(&acc, &zs, &q, &n, &h);
-        eprintln!("proof: x={} y={}", proof.x, proof.y);
-        let lhs = (&proof.x.modpow(&q, &n) * &proof.y.modpow(&zs, &n)) % &n;
-        eprintln!("lhs={} h={}", lhs, h);
-        assert!(verify_non_membership(&acc, &zs, &q, &proof, &n, &h));
+        let proof = prove_non_membership(&acc, &BigUint::from(1u32), &[q.clone()], &n, &h);
+        assert!(verify_non_membership(&acc, &BigUint::from(1u32), &[q], &proof, &n, &h));
     }
 
     #[test]

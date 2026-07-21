@@ -31,6 +31,20 @@ pub fn h2(data: &[u8]) -> BigUint {
     BigUint::from_bytes_be(&hash[..16])
 }
 
+/// H2 for concatenated args (for Algorithm 2).
+pub fn h2_concat(args: &[&BigUint]) -> BigUint {
+    let mut data = Vec::new();
+    for a in args { data.extend_from_slice(&a.to_bytes_be()); }
+    h2(&data)
+}
+
+/// HPrimes for multiple args: hash to 128-bit prime from concatenated inputs.
+pub fn hprime_multi(args: &[&BigUint]) -> BigUint {
+    let mut data = Vec::new();
+    for a in args { data.extend_from_slice(&a.to_bytes_be()); }
+    hprime(&BigUint::from_bytes_be(&data))
+}
+
 /// Hash arbitrary data to a prime of bit_length bits.
 fn hash_to_prime(data: &[u8], bit_length: usize) -> BigUint {
     let byte_len = (bit_length + 7) / 8;
