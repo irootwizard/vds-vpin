@@ -189,3 +189,17 @@ pub const LENET_CIFAR: NetworkTopology = NetworkTopology {
         },
     ],
 };
+
+/// SimpleCNN Face: 3 conv + 2 FC, 5 truncation phases
+pub const SIMPLE_CNN_FACE: NetworkTopology = NetworkTopology {
+    network_id: "simple_cnn_face",
+    pool_kernel: 0,
+    pool_stride: 0,
+    truncation_phases: &[
+        TruncationPhase { phase_id: "after_conv1", client_action: "relu_pool_shift", shift_bits: Some(32), shape: &[1, 16, 32, 32], pool_kernel: Some(2), input_shape: Some(&[1, 16, 64, 64]) },
+        TruncationPhase { phase_id: "after_conv2", client_action: "relu_pool_shift", shift_bits: Some(32), shape: &[1, 32, 16, 16], pool_kernel: Some(2), input_shape: Some(&[1, 32, 32, 32]) },
+        TruncationPhase { phase_id: "after_conv3", client_action: "relu_pool_shift", shift_bits: Some(32), shape: &[1, 64, 8, 8], pool_kernel: Some(2), input_shape: Some(&[1, 64, 16, 16]) },
+        TruncationPhase { phase_id: "after_fc1",  client_action: "relu_then_shift", shift_bits: Some(32), shape: &[1, 128], pool_kernel: None, input_shape: None },
+        TruncationPhase { phase_id: "after_fc2",  client_action: "logits_only",     shift_bits: None,    shape: &[1, 50],  pool_kernel: None, input_shape: None },
+    ],
+};
