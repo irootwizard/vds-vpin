@@ -35,10 +35,26 @@ def register_model(
     metrics_path = weights_dir / "metrics.json"
     if acc is None and metrics_path.is_file():
         meta = json.loads(metrics_path.read_text(encoding="utf-8"))
-        for phase in reversed(meta.get("phases", [])):
-            if phase.get("name") == "fixed" and "best_test_acc" in phase:
-                acc = float(phase["best_test_acc"]) * 100.0
-                break
+        ev = meta.get("evaluation") or {}
+        if "fixed_acc" in ev:
+            acc = float(ev["fixed_acc"]) * 100.0
+        else:
+            for phase in reversed(meta.get("phases", [])):
+                if phase.get("name") == "fixed" and "best_test_acc" in phase:
+                    acc = float(phase["best_test_acc"]) * 100.0
+                    break
+
+    float_acc_pct: float | None = None
+    if metrics_path.is_file():
+        meta = json.loads(metrics_path.read_text(encoding="utf-8"))
+        ev = meta.get("evaluation") or {}
+        if "float_acc" in ev:
+            float_acc_pct = float(ev["float_acc"]) * 100.0
+        else:
+            for phase in meta.get("phases", []):
+                if phase.get("name") == "float" and "best_test_acc" in phase:
+                    float_acc_pct = float(phase["best_test_acc"]) * 100.0
+                    break
 
     from datetime import datetime, timezone
 
@@ -49,7 +65,8 @@ def register_model(
         "task": "图像分类",
         "params_count_m": 1.21,
         "input_shape": "1x28x28",
-        "accuracy": acc or 0.0,
+        "accuracy": float_acc_pct if float_acc_pct is not None else (acc or 0.0),
+        "accuracy_fixed": acc or 0.0,
         "network": "A",
         "topology": "cnn_mnist_v1",
         "weights_dir": store_weights_path(weights_dir, repo_root=REPO),

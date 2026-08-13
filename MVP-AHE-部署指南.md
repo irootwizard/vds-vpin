@@ -2,29 +2,26 @@
 
 MNIST-CNN 加法同态加密推理（Network A）端到端部署，含 **Python 标准栈**、**Rust 加速栈**（Arkworks / EC 曲线）与 Tauri 桌面前端。
 
+> **第一次配环境？** 从零安装 Python/Node/Rust、OVDS、Console 等请先看  
+> [`docs/开发环境完整配置指南.md`](docs/开发环境完整配置指南.md)。本文偏 AHE 部署细节。
+
 ---
 
 ## 1. 系统要求
 
-| 依赖 | 最低版本 | 用途 |
-|------|---------|------|
-| **Python** | 3.10+ | Python 推理后端 + `vpin-client` |
-| **Rust** | 1.75+ (含 cargo) | Tauri 桌面壳 + **`vpin-platform` 中 `ahe-server` / `ahe-cli`** |
-| **Node.js** | 18+ (含 npm) | 前端 Vite 构建 |
-| **Git** | 2.30+ | 仓库管理 |
+| 依赖 | 基线（验证通过） | 兼容区间 | 用途 |
+|------|------------------|----------|------|
+| **Python** | **3.11.7** | **3.11.x** | 推理后端 + `vpin-client`（`requires-python >=3.11`） |
+| **Rust** | **1.91.1 stable** | stable ≥1.75 | Tauri + `ahe-cli` / `ahe-server` |
+| **Node.js** | **22.22.0** | 18 / 20 / 22 LTS | 前端 Vite 构建 |
+| **npm** | **11.9.0** | 随 Node LTS | 依赖安装（尊重 `package-lock.json`） |
+| **Git** | 2.40+ | 2.30+ | 仓库管理 |
+
+> **版本必须一致或兼容**：见 [`docs/开发环境完整配置指南.md`](docs/开发环境完整配置指南.md) §1。CP-SNARK 另需 **nightly-2023-06-26**，不得设为全局 default。
 
 > **当前指南与一键脚本仅验证 Windows**（PowerShell、`.venv\Scripts\python.exe`、Tauri `lib.rs` 路径）。Linux/macOS 可参考 CLI 与后端部分，桌面端需自行适配 Python 路径。
 
 > Windows：确保已安装 [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) C++ 工作负载（Tauri 编译需要）。
-
-### 当前验证通过的版本
-
-```
-Python  3.11.7
-Rust    1.91.1
-Node.js 22.22.0
-npm     11.9.0
-```
 
 ---
 
@@ -34,34 +31,42 @@ npm     11.9.0
 experiment-reproduction/          # 示例父目录（路径因机器而异）
 ├── vPIN-main/                    # 本仓库
 │   ├── .venv/                    # Python 虚拟环境（不入仓库）
-│   ├── vpin-backend/             # FastAPI 推理后端（:8000）
-│   ├── vpin-client/              # Python 客户端（AHE 加解密 + WS 协议）
+│   ├── .env.example              # 环境变量模板（复制为 .env 可选）
+│   ├── scripts/                  # setup / check-env / build-rust-ahe 等
+│   ├── vpin-backend/             # FastAPI 推理后端（:8000）+ ahe-server
+│   ├── vpin-client/              # Python 客户端 + ahe-cli（Rust）
 │   ├── vpin_frontend/vpin-frontend/  # Vue3 + Tauri 桌面端（:1420）
 │   ├── model_training/
 │   │   └── outputs/              # ★ 预训练权重（npy + 元数据，随仓库分发）
-│   │       ├── 20260622_184254/  #   Network A (cnn-mnist-trained)
-│   │       └── 20260623_185935/  #   LeNet-CIFAR (lenet-cifar10)
-│   ├── src/Pre_computed_table/   # Python BSGS 表 table.pickle（~230MB，需本地生成）
-│   ├── src/cnn_networks/         # Legacy 权重
-│   ├── scripts/
-│   ├── start-ahe.ps1             # 一键启动（Python 路线 + Tauri）
+│   ├── src/Pre_computed_table/   # Python BSGS table.pickle（~230MB，需本地生成）
+│   ├── start-ahe.ps1             # 一键启动（Python + Tauri）
+│   ├── docs/环境配置与手动步骤.md  # 无法自动化的步骤清单
 │   └── MVP-AHE-部署指南.md
-└── vpin-platform/                # ★ Rust AHE 栈（与 vPIN-main 同级目录）
-    ├── apps/ahe-server/          # axum WebSocket 同态服务端
-    ├── apps/ahe-cli/             # Rust 客户端 CLI（Tauri 推理时 spawn）
-    ├── tests/fixtures/table.bin  # Rust BSGS 表（推荐，随 platform 仓分发）
-    └── target/release/
-        ├── ahe-server.exe
-        └── ahe-cli.exe
+└── vpin-platform/                # （可选）旧 sibling 布局；Rust 栈已迁入 vPIN-main
 ```
 
-Tauri `lib.rs` 默认在 `VPIN_REPO_ROOT` 的**父目录**查找 `vpin-platform/`；也可设置 `VPIN_PLATFORM_ROOT` 指向 platform 根目录。
+Tauri `lib.rs` 默认在 `vpin-client/target/release/ahe-cli` 查找 Rust 客户端；BSGS `table.bin` 优先 `vpin-client/tests/fixtures/table.bin`（**不进 Git，须本地拷贝**，见 [`docs/环境配置与手动步骤.md`](docs/环境配置与手动步骤.md)）。
 
 ---
 
 ## 3. 环境初始化（首次）
 
+> **推荐一键流程**（Windows）：
+>
+> ```powershell
+> cd vPIN-main
+> .\scripts\setup.ps1              # venv + pip + npm + Rust 检查
+> .\scripts\generate-bsgs-pickle.ps1 # Python BSGS（~30 分钟，可后台）
+> # 手动：拷贝 table.bin → vpin-client/tests/fixtures/（Rust 路线，见手动步骤文档）
+> .\scripts\build-rust-ahe.ps1     # 可选：Rust 引擎
+> .\scripts\check-env.ps1          # 预检
+> ```
+>
+> 无法自动化的步骤（VS Build Tools、table.bin 拷贝、MNIST 首次下载等）见 **[`docs/环境配置与手动步骤.md`](docs/环境配置与手动步骤.md)**。
+
 ### 3.1 创建 Python 虚拟环境
+
+**自动化**：`setup.ps1` 会创建 `.venv`。手动等价：
 
 ```powershell
 cd vPIN-main
@@ -69,6 +74,8 @@ python -m venv .venv
 ```
 
 ### 3.2 安装 Python 依赖
+
+**自动化**：`setup.ps1`。手动等价：
 
 ```powershell
 # 客户端（editable 安装，含 ecdsa/numpy/websockets/pillow）
@@ -144,18 +151,17 @@ Python 与 Rust 使用**不同格式**的 BSGS 表，按所选推理引擎准备
 | 栈 | 文件 | 路径 | 说明 |
 |----|------|------|------|
 | **Python** | `table.pickle` | `src/Pre_computed_table/table.pickle` | ~230MB，`ecdsa` 客户端解密用 |
-| **Rust** | `table.bin` | `../vpin-platform/tests/fixtures/table.bin`（推荐） | `ahe-cli` / `ahe-server` 用；Tauri 优先读此路径 |
-| Rust 回退 | `table.bin` | `src/Pre_computed_table/table.bin` | platform fixture 不存在时使用 |
+| **Rust** | `table.bin` | `vpin-client/tests/fixtures/table.bin`（推荐） | `ahe-cli` / `ahe-server` 用；**不进 Git，须本地拷贝** |
+| Rust 回退 | `table.bin` | `src/Pre_computed_table/table.bin` | fixture 不存在时使用 |
+| 旧 layout | `table.bin` | `../vpin-platform/tests/fixtures/table.bin` | sibling platform 仍存在时 |
 
-**Python 表**因体积过大已被 `.gitignore` 排除，**首次部署须生成**：
+**Python 表**因体积过大已被 `.gitignore` 排除。**自动化生成**：
 
 ```powershell
-cd src\Pre_computed_table
-..\..\.venv\Scripts\python.exe baby-step-giant-step.py
-# 约 30 分钟，生成 table.pickle (~230MB)
+.\scripts\generate-bsgs-pickle.ps1
 ```
 
-**Rust 表**：优先使用 `vpin-platform/tests/fixtures/table.bin`（随 platform 仓提供）。勿使用损坏的 `table.bin`，否则 Rust 推理报 `discrete log not found`。
+**Rust 表**：从开发机或 sibling `vpin-platform` **手动拷贝**到 `vpin-client/tests/fixtures/table.bin`。勿使用损坏文件，否则 Rust 推理报 `discrete log not found`。
 
 ### 3.7 模型注册表
 
@@ -181,21 +187,29 @@ cd src\Pre_computed_table
 
 **一般无需手动编辑** `registry.json`；若从旧环境拷贝了含绝对路径的注册表，重启后端即可自动修复。
 
-### 3.8 Rust AHE 栈（`vpin-platform`，可选）
+### 3.8 Rust AHE 栈（本仓 `vpin-client` / `vpin-backend`，可选）
 
 UI `/demo/ahe` 提供三种推理引擎；除 Python 外，另两种需编译并启动 Rust server：
 
 | UI 引擎 | 客户端（Tauri spawn） | 服务端 | WS 端口 | 密码栈 |
 |---------|----------------------|--------|---------|--------|
 | Python 标准 · vpin-backend | `vpin_client.cli` | `vpin-backend` | **8000** | Python `ecdsa` |
-| Rust 加速 · Arkworks | `ahe-cli` | `ahe-server` | **8001** | `AHE_CRYPTO_BACKEND=ark` |
-| Rust 加速 · EC 曲线 | `ahe-cli` | `ahe-server` | **8002** | `AHE_CRYPTO_BACKEND=ec` |
+| Rust 加速 · Arkworks | `ahe-cli --crypto-backend ark` | `ahe-server` | **8001** | Rust E2 |
+| Rust 加速 · EC 曲线 | `ahe-cli --crypto-backend ec` | `ahe-server` | **8002** | Rust EC |
 
-编译（在 `vpin-platform/` 根目录，首次约数分钟）：
+**自动化编译**：
 
 ```powershell
-cd ..\vpin-platform
-cargo build --release -p ahe-server -p ahe-cli
+.\scripts\build-rust-ahe.ps1
+# 输出:
+#   vpin-client/target/release/ahe-cli.exe
+#   vpin-backend/target/release/ahe-server.exe
+```
+
+**自动化启动 Rust server**：
+
+```powershell
+.\scripts\start-rust-ahe.ps1 -Both   # :8001 + :8002
 ```
 
 Rust 栈与 Python 栈共用 `VPIN_REPO_ROOT` 下的权重与 MNIST；模型列表 REST API 仍走 Python `:8000`，Rust server 启动时读取同一 `registry.json`。
@@ -293,26 +307,27 @@ CLI 结果写入仓库根目录 `reports/batch_{limit}_{时间戳}.json`。`--co
 **终端 — Rust server · Ark（:8001）**
 
 ```powershell
-cd ..\vpin-platform
-$env:VPIN_REPO_ROOT = "D:\path\to\vPIN-main"   # 改为本机 clone 路径
-$env:VPIN_BSGS_TABLE = "D:\path\to\vpin-platform\tests\fixtures\table.bin"
-$env:AHE_SERVER_HOST = "127.0.0.1"
+.\scripts\start-rust-ahe.ps1
+# 或手动：
+$env:VPIN_REPO_ROOT = "D:\path\to\vPIN-main"
+$env:VPIN_BSGS_TABLE = "D:\path\to\vPIN-main\vpin-client\tests\fixtures\table.bin"
 $env:AHE_SERVER_PORT = "8001"
-$env:AHE_CRYPTO_BACKEND = "ark"
-.\target\release\ahe-server.exe
+.\vpin-backend\target\release\ahe-server.exe
 ```
 
 **终端 — Rust server · EC（:8002）**
 
-同上，将 `AHE_SERVER_PORT=8002`、`AHE_CRYPTO_BACKEND=ec`。
+```powershell
+.\scripts\start-rust-ahe.ps1 -Both
+# 或手动将 AHE_SERVER_PORT=8002 另开进程
+```
 
 **CLI 单图冒烟（无需 Tauri）**
 
 ```powershell
-cd ..\vpin-platform
 $env:VPIN_REPO_ROOT = "D:\path\to\vPIN-main"
-$env:VPIN_BSGS_TABLE = "D:\path\to\vpin-platform\tests\fixtures\table.bin"
-.\target\release\ahe-cli.exe infer `
+$env:VPIN_BSGS_TABLE = "D:\path\to\vPIN-main\vpin-client\tests\fixtures\table.bin"
+.\vpin-client\target\release\ahe-cli.exe infer `
   --crypto-backend ec `
   --model cnn-mnist-trained `
   --mnist-index 0 `
@@ -331,9 +346,7 @@ $env:VPIN_BSGS_TABLE = "D:\path\to\vpin-platform\tests\fixtures\table.bin"
 **三引擎自动化对照**（需 8000 + 8001 + 8002 均已启动）：
 
 ```powershell
-cd ..\vpin-platform
-$env:VPIN_REPO_ROOT = "D:\path\to\vPIN-main"
-.\tools\run_ahe_triple_test.ps1 -Limit 10
+.\scripts\run_ahe_triple_test.ps1 -Limit 10
 ```
 
 UI 中切换引擎时，预处理区分为 **Python 轨**（REST :8000）与 **Rust 轨**（本地 `ahe-cli` 预处理）；两轨画廊与时间线相互独立。
@@ -410,17 +423,17 @@ UI 中切换引擎时，预处理区分为 **Python 轨**（REST :8000）与 **R
 
 > 所有 `weights_dir` 均相对 `VPIN_REPO_ROOT` 解析。
 
-### 6.2 Rust AHE（`vpin-platform` + Tauri）
+### 6.2 Rust AHE（本仓 + Tauri）
 
 | 环境变量 | 作用 | 典型值 |
 |---------|------|--------|
 | `VPIN_REPO_ROOT` | 权重、MNIST、registry 根 | `...\vPIN-main` |
-| `VPIN_PLATFORM_ROOT` | Tauri 定位 `ahe-cli`（可选） | `...\vpin-platform` |
-| `VPIN_BSGS_TABLE` | Rust 客户端 BSGS | `...\vpin-platform\tests\fixtures\table.bin` |
+| `VPIN_CLIENT_ROOT` | Tauri 定位 `ahe-cli` | `...\vPIN-main\vpin-client` |
+| `VPIN_BSGS_TABLE` | Rust 客户端 BSGS | `...\vpin-client\tests\fixtures\table.bin` |
 | `AHE_SERVER_HOST` | Rust server 绑定 | `127.0.0.1` |
 | `AHE_SERVER_PORT` | Rust server 端口 | `8001`（ark）/ `8002`（ec） |
-| `AHE_CRYPTO_BACKEND` | Rust 密码栈 | `ark` / `ec` |
-| `PYTHONUNBUFFERED` | 子进程 progress 即时输出 | `1`（Tauri 已自动设置） |
+
+Rust 密码栈由 **`ahe-cli --crypto-backend ark|ec`** 指定，非 `AHE_CRYPTO_BACKEND` 环境变量。
 
 Tauri 前端代理配置：
 
@@ -468,9 +481,9 @@ Stop-Process -Id <PID> -Force
 
 ### Rust 引擎无法推理
 
-1. 确认已编译：`vpin-platform\target\release\ahe-server.exe` 与 `ahe-cli.exe`  
-2. 确认对应端口 server 已启动（Ark → :8001，EC → :8002）  
-3. 确认 `VPIN_BSGS_TABLE` 指向有效 `table.bin`（推荐 platform fixtures）  
+1. 确认已编译：`vpin-backend\target\release\ahe-server.exe` 与 `vpin-client\target\release\ahe-cli.exe`（`scripts\build-rust-ahe.ps1`）
+2. 确认对应端口 server 已启动（`scripts\start-rust-ahe.ps1 -Both`）
+3. 确认 `VPIN_BSGS_TABLE` 指向有效 `table.bin`（见手动步骤文档）  
 4. 确认 `VPIN_REPO_ROOT` 指向 `vPIN-main` 根目录（含 `model_training/outputs/`）
 
 停止 Rust server：`Get-Process ahe-server -ErrorAction SilentlyContinue | Stop-Process -Force`
@@ -479,7 +492,7 @@ Stop-Process -Id <PID> -Force
 
 **Python 路线**：生成 `table.pickle`（见 §3.6）。
 
-**Rust 路线**：使用 `vpin-platform/tests/fixtures/table.bin`；若无 platform 仓，勿用损坏的 `table.bin` 替代。
+**Rust 路线**：手动拷贝有效 `table.bin` 到 `vpin-client/tests/fixtures/`（见 [`docs/环境配置与手动步骤.md`](docs/环境配置与手动步骤.md) §3.2）。
 
 ### Tauri 编译失败
 

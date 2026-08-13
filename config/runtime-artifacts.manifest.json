@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "description": "vPIN runtime artifacts bundled in release package",
+  "bundled": [
+    {
+      "id": "network_a_weights",
+      "type": "dir",
+      "model_id": "cnn-mnist-trained",
+      "source": "model_training/outputs/20260622_184254",
+      "dest": "data/weights/cnn-mnist-trained",
+      "files": [
+        "weight_fc1_64_16.npy",
+        "bias_fc1_16.npy",
+        "weight_fc2_16_10.npy",
+        "bias_fc2_10.npy",
+        "truncation_config.json",
+        "registry_snippet.json"
+      ]
+    },
+    {
+      "id": "mnist_raw",
+      "type": "dir-all",
+      "source": "model_training/data/MNIST/raw",
+      "dest": "model_training/data/MNIST/raw"
+    },
+    {
+      "id": "bsgs_table_bin",
+      "type": "file",
+      "source": "vpin-client/tests/fixtures/table.bin",
+      "dest": "data/bsgs/table.bin"
+    },
+    {
+      "id": "bsgs_table_pickle",
+      "type": "file",
+      "source": "src/Pre_computed_table/table.pickle",
+      "dest": "data/bsgs/table.pickle"
+    },
+    {
+      "id": "network_a_proof_artifacts",
+      "type": "dir-all-recursive",
+      "model_id": "cnn-mnist-trained",
+      "source": "model_training/outputs/20260622_184254/proof_artifacts",
+      "dest": "data/proof/cnn-mnist-trained/proof_artifacts"
+    }
+  ]
+}

@@ -36,14 +36,14 @@ fn parse_u128_vec(v: &[String]) -> Result<Vec<u128>, String> {
         .collect()
 }
 
-/// Parse trace decimal (signed fixed-point mod $2^{32}$) to u128 field element.
 fn parse_fixed_point_u128(s: &str) -> Result<u128, String> {
+    const MOD: u128 = 1u128 << 32;
     if let Ok(v) = s.parse::<u128>() {
-        return Ok(v);
+        return Ok(v % MOD);
     }
     let signed: i128 = s.parse().map_err(|e| format!("{s}: {e}"))?;
-    const MOD: i128 = 1i128 << 32;
-    let mut x = signed.rem_euclid(MOD);
+    const MOD_S: i128 = 1i128 << 32;
+    let x = signed.rem_euclid(MOD_S);
     Ok(x as u128)
 }
 
@@ -148,4 +148,33 @@ fn reshape_fc2_weights(flat: &[u128]) -> Vec<Vec<u128>> {
     (0..INPUTS)
         .map(|k| flat[k * OUTPUTS..(k + 1) * OUTPUTS].to_vec())
         .collect()
+}
+
+#[cfg(test)]
+mod trained_trace_tests {
+    use std::path::PathBuf;
+
+    use crate::challenge::ClientChallenge;
+    use crate::layer_proof::verify::{verify_fc_eq10_rlc_only, verify_fc_eq8_per_output};
+    use crate::trace::fc::load_fc_layer_specs;
+
+    #[test]
+    fn trained_run_fc_eq8_and_rlc() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../model_training/outputs/20260622_184254");
+        if !repo.is_dir() {
+            return;
+        }
+        std::env::set_var("VPIN_RUN_DIR", repo.to_string_lossy().as_ref());
+        std::env::set_var(
+            "VPIN_TRACE_ROOT",
+            repo.join("proof_artifacts").to_string_lossy().as_ref(),
+        );
+        let layers = load_fc_layer_specs("A").expect("fc specs");
+        let ch = ClientChallenge::sample(2144, 178);
+        for (i, fc) in layers.iter().enumerate() {
+            verify_fc_eq8_per_output(fc).unwrap_or_else(|e| panic!("fc eq8 layer {i}: {e:?}"));
+            verify_fc_eq10_rlc_only(fc, &ch).unwrap_or_else(|e| panic!("fc rlc layer {i}: {e:?}"));
+        }
+    }
 }

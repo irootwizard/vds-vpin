@@ -68,11 +68,9 @@ class ProveRequest(BaseModel):
     network_id: str
     challenge: ClientChallenge
     setup_artifact: Path | None = None
-    run_dir: Path | None = None
     model_id: str | None = None
+    run_dir: Path | None = None
     schedule_mode: str = "paper_proof"
-    model_id: str | None = None
-    run_dir: Path | None = None
 
 
 class SetupRequest(BaseModel):

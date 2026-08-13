@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vPIN 三端交互示意图</title>
+  <style>
+    :root {
+      --ink: #1c2836;
+      --muted: #5a6578;
+      --rule: #c8d0da;
+      --paper: #f7f8fa;
+      --card: #ffffff;
+      --client: #2c5282;
+      --custody: #276749;
+      --infer: #7b341e;
+      --client-bg: #ebf4ff;
+      --custody-bg: #f0fff4;
+      --infer-bg: #fffaf0;
+      --accent: #2d3748;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Source Han Serif SC", "Noto Serif SC", "Georgia", "Songti SC", serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 40px 32px 48px;
+    }
+    .poster {
+      max-width: 1080px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--rule);
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .header {
+      padding: 36px 48px 28px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .header .label {
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      line-height: 1.35;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 0.92rem;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 720px;
+    }
+    .subtitle em {
+      font-style: normal;
+      color: var(--ink);
+      font-weight: 500;
+    }
+    .figure {
+      padding: 32px 40px 24px;
+    }
+    .figure-caption {
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 16px;
+      letter-spacing: 0.02em;
+    }
+    svg { display: block; width: 100%; height: auto; }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--rule);
+    }
+    .legend-item {
+      padding: 20px 28px 24px;
+      border-right: 1px solid var(--rule);
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+    }
+    .legend-item:last-child { border-right: none; }
+    .legend-item h3 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid;
+    }
+    .legend-item.client h3 { color: var(--client); border-color: var(--client); }
+    .legend-item.custody h3 { color: var(--custody); border-color: var(--custody); }
+    .legend-item.infer h3 { color: var(--infer); border-color: var(--infer); }
+    .legend-item ul {
+      list-style: none;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+    .legend-item li::before {
+      content: "— ";
+      color: var(--rule);
+    }
+    .flows {
+      padding: 0 48px 32px;
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+    }
+    .flows h2 {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    th, td {
+      border: 1px solid var(--rule);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f3f6;
+      font-weight: 600;
+      color: var(--accent);
+      width: 22%;
+    }
+    td code {
+      font-family: "Consolas", "Source Han Sans SC", monospace;
+      font-size: 0.88em;
+      background: #f1f3f6;
+      padding: 1px 4px;
+    }
+    .footer {
+      padding: 16px 48px 24px;
+      border-top: 1px solid var(--rule);
+      font-family: "Segoe UI", "PingFang SC", sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .footer a { color: var(--client); text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <article class="poster">
+    <header class="header">
+      <div class="label">Figure · Three-Party Interaction</div>
+      <h1>vPIN 三端交互示意图</h1>
+      <p class="subtitle">
+        平台由 <em>客户端</em>、<em>信任数据托管服务器</em>、<em>无头密态推理服务</em> 三角色构成；
+        数据面与控制面分离，托管链路与推理链路独立终结于 TLS。
+        依据顶层抽象架构、数据流图与隐私保护文档绘制。
+      </p>
+    </header>
+
+    <section class="figure">
+      <svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="vPIN 三端交互示意图">
+        <defs>
+          <marker id="m-solid" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#4a5568" />
+          </marker>
+          <marker id="m-dash" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#a0aec0" />
+          </marker>
+        </defs>
+
+        <!-- 外框 -->
+        <rect x="20" y="20" width="960" height="580" fill="none" stroke="#e2e8f0" stroke-width="1" />
+
+        <!-- 三端节点 -->
+        <!-- 客户端 左 -->
+        <rect x="60" y="200" width="220" height="200" rx="2" fill="var(--client-bg)" stroke="var(--client)" stroke-width="2" />
+        <text x="170" y="238" text-anchor="middle" font-family="Georgia, Songti SC, serif" font-size="17" font-weight="600" fill="var(--client)">客户端</text>
+        <text x="170" y="260" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#4a5568">Client</text>
+        <line x1="80" y1="272" x2="260" y2="272" stroke="#bee3f8" stroke-width="1" />
+        <text x="170" y="292" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">启动优化 · 预处理 · 密钥域</text>
+        <text x="170" y="310" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">P0–P2 控制面发起方</text>
+        <text x="170" y="328" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">推理交互方（可选）</text>
+        <text x="170" y="346" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">验证对象 / 本地复核</text>
+        <text x="170" y="378" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096" font-style="italic">plaintext_zone</text>
+
+        <!-- 托管 上 -->
+        <rect x="390" y="50" width="220" height="180" rx="2" fill="var(--custody-bg)" stroke="var(--custody)" stroke-width="2" />
+        <text x="500" y="88" text-anchor="middle" font-family="Georgia, Songti SC, serif" font-size="16" font-weight="600" fill="var(--custody)">信任数据托管服务器</text>
+        <text x="500" y="108" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#4a5568">Trust Custody Host</text>
+        <line x1="410" y1="118" x2="590" y2="118" stroke="#c6f6d5" stroke-width="1" />
+        <text x="500" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">VADS / OVDS 可验证数据流</text>
+        <text x="500" y="156" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">JWT · ACL · AuthContext</text>
+        <text x="500" y="174" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">推理交互方 / 验证对象（可选）</text>
+        <text x="500" y="206" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096" font-style="italic">custody_visible</text>
+
+        <!-- 推理 右 -->
+        <rect x="720" y="200" width="220" height="200" rx="2" fill="var(--infer-bg)" stroke="var(--infer)" stroke-width="2" />
+        <text x="830" y="238" text-anchor="middle" font-family="Georgia, Songti SC, serif" font-size="16" font-weight="600" fill="var(--infer)">无头密态推理服务</text>
+        <text x="830" y="260" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="11" fill="#4a5568">Headless Inference Service</text>
+        <line x1="740" y1="272" x2="920" y2="272" stroke="#feebc8" stroke-width="1" />
+        <text x="830" y="292" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">密文专属数据面</text>
+        <text x="830" y="310" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">P0–P6 会话编排 · Preflight</text>
+        <text x="830" y="328" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">HE 同态前向 / MPC 参与方</text>
+        <text x="830" y="346" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" fill="#4a5568">witness · π（不可自证）</text>
+        <text x="830" y="378" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096" font-style="italic">server_visible</text>
+
+        <!-- 中心：用户指定 -->
+        <ellipse cx="500" cy="380" rx="118" ry="52" fill="#f7fafc" stroke="#a0aec0" stroke-width="1.2" stroke-dasharray="4 3" />
+        <text x="500" y="368" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10.5" font-weight="600" fill="#2d3748">DataBindingRecord</text>
+        <text x="500" y="384" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096">inference_peer · verifier_target</text>
+        <text x="500" y="400" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096">custody_mode · data_digest</text>
+
+        <!-- 链路 1: C ↔ O -->
+        <path d="M 170 200 L 170 140 L 390 140" fill="none" stroke="#4a5568" stroke-width="1.4" marker-end="url(#m-solid)" />
+        <rect x="218" y="108" width="128" height="36" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+        <text x="282" y="124" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="600" fill="#276749">链路 α · 托管面</text>
+        <text x="282" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#718096">HTTPS · OVDS 读写</text>
+
+        <path d="M 390 170 L 280 200" fill="none" stroke="#a0aec0" stroke-width="1" stroke-dasharray="5 4" marker-end="url(#m-dash)" />
+        <text x="318" y="192" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">ovds_verify_ref</text>
+
+        <!-- 链路 2: C ↔ I -->
+        <path d="M 280 300 L 720 300" fill="none" stroke="#4a5568" stroke-width="1.4" marker-end="url(#m-solid)" />
+        <rect x="430" y="278" width="140" height="36" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+        <text x="500" y="294" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="600" fill="#2c5282">链路 β · 推理面</text>
+        <text x="500" y="308" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#718096">HTTPS 控制 + WSS 密文</text>
+
+        <!-- 链路 3: O ↔ I -->
+        <path d="M 590 200 L 720 240" fill="none" stroke="#4a5568" stroke-width="1.3" marker-end="url(#m-solid)" />
+        <rect x="618" y="198" width="118" height="32" fill="#fff" stroke="#e2e8f0" stroke-width="1" />
+        <text x="677" y="212" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" font-weight="600" fill="#7b341e">链路 γ · 服务间</text>
+        <text x="677" y="224" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#718096">HTTPS / mTLS</text>
+
+        <!-- P3 协作环 -->
+        <path d="M 830 400 L 830 470 L 500 470 L 170 470 L 170 400" fill="none" stroke="#718096" stroke-width="1.2" stroke-dasharray="6 4" />
+        <text x="500" y="458" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#4a5568">P3 双端交互协作环（多轮）</text>
+        <text x="500" y="492" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#718096">TruncateRequest → 明文域非线性 → 密文回注</text>
+        <text x="500" y="508" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="9" fill="#a0aec0">往返端点由 inference_peer 指定（client_local | custody_host）</text>
+
+        <!-- 阶段条 -->
+        <rect x="60" y="530" width="880" height="56" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+        <text x="80" y="552" font-family="Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#718096">PHASE</text>
+        <text x="130" y="552" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#2d3748">0 启动与选型</text>
+        <text x="130" y="568" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">StartupOptimizer · SchemeSelection</text>
+
+        <line x1="248" y1="538" x2="248" y2="578" stroke="#e2e8f0" />
+        <text x="268" y="552" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#2d3748">A 数据绑定</text>
+        <text x="268" y="568" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">OVDS append · DataBindingRecord</text>
+
+        <line x1="420" y1="538" x2="420" y2="578" stroke="#e2e8f0" />
+        <text x="440" y="552" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#2d3748">B 密态推理</text>
+        <text x="440" y="568" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">P0–P5 · 密文专属契约</text>
+
+        <line x1="580" y1="538" x2="580" y2="578" stroke="#e2e8f0" />
+        <text x="600" y="552" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#2d3748">C 可验证结论</text>
+        <text x="600" y="568" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">双验证器 · VerificationReport</text>
+
+        <line x1="780" y1="538" x2="780" y2="578" stroke="#e2e8f0" />
+        <text x="800" y="552" font-family="Segoe UI, sans-serif" font-size="9.5" fill="#2d3748">复核</text>
+        <text x="800" y="568" font-family="Segoe UI, sans-serif" font-size="8.5" fill="#a0aec0">client_reverify（可选）</text>
+      </svg>
+      <p class="figure-caption">图 1　vPIN 三角色拓扑、三条主链路（α 托管 / β 推理 / γ 服务间）与 P3 协作环</p>
+    </section>
+
+    <section class="legend">
+      <div class="legend-item client">
+        <h3>客户端</h3>
+        <ul>
+          <li>用户明文预处理与密钥持有</li>
+          <li>发起 P0–P2 与密态选型</li>
+          <li>可作 inference_peer / verifier_target</li>
+          <li>必收 VerificationReport 副本</li>
+        </ul>
+      </div>
+      <div class="legend-item custody">
+        <h3>信任数据托管服务器</h3>
+        <ul>
+          <li>VADS/OVDS 分片存储与验签</li>
+          <li>JWT + ACL 接入控制</li>
+          <li>hosted 模式数据入库主落点</li>
+          <li>可代行 P3 非线性与 P6 验证</li>
+        </ul>
+      </div>
+      <div class="legend-item infer">
+        <h3>无头密态推理服务</h3>
+        <ul>
+          <li>仅密文专属数据面</li>
+          <li>线性层密态 / MPC 协议算子</li>
+          <li>输出 witness、π，不可自证</li>
+          <li>与托管链路 TLS 独立部署</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="flows">
+      <h2>交互载荷摘要</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>链路</th>
+            <th>方向</th>
+            <th>主要载荷</th>
+            <th>传输</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>α 托管面</td>
+            <td>客户端 → 托管</td>
+            <td>OVDS 分片、<code>append_*</code>、<code>query</code>/<code>verify</code></td>
+            <td>HTTPS TLS 1.2+</td>
+          </tr>
+          <tr>
+            <td>β 推理面</td>
+            <td>客户端 → 推理</td>
+            <td>P0–P2 控制消息、密文输入句柄、<code>InputDigest</code></td>
+            <td>HTTPS + WSS</td>
+          </tr>
+          <tr>
+            <td>β 推理面</td>
+            <td>推理 → 交互方</td>
+            <td><code>CiphertextPayload</code>、<code>TruncateRequest</code>、密文回注</td>
+            <td>WSS TLS</td>
+          </tr>
+          <tr>
+            <td>γ 服务间</td>
+            <td>推理 ↔ 托管</td>
+            <td>绑定证明复核、<code>ovds_verify_ref</code>、代行 P3 密文</td>
+            <td>HTTPS / mTLS</td>
+          </tr>
+          <tr>
+            <td>P6 验证</td>
+            <td>验证对象 → 客户端</td>
+            <td><code>VerificationReport</code>、证明工件、<code>client_reverify</code></td>
+            <td>HTTPS / 本地</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="footer">
+      参考：
+      <a href="./vpin-平台顶层抽象架构.md">vpin-平台顶层抽象架构.md</a> ·
+      <a href="./vpin-平台数据流图.md">vpin-平台数据流图.md</a> ·
+      <a href="./vpin-平台隐私保护.md">vpin-平台隐私保护.md</a>
+      &nbsp;|&nbsp; 实线箭头：主数据路径；虚线：可选 / 审计 / P3 协作环
+    </footer>
+  </article>
+</body>
+</html>

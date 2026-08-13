@@ -65,7 +65,8 @@ class EcWitnessBundle:
 
 def load_ec_witness_from_run(run_dir: Path, model_id: str = "A") -> EcWitnessBundle:
     run_dir = run_dir.resolve()
-    counts = load_paper_proof_counts(model_id, run_dir=run_dir)
+    # Schedule counts are topology-scoped (Network A), not AHE catalog model_id.
+    counts = load_paper_proof_counts("A", run_dir=run_dir)
     root = run_dir / "proof_artifacts" / "ec_witness"
     manifest_path = root / "manifest.json"
     manifest: EcWitnessManifest | None = None

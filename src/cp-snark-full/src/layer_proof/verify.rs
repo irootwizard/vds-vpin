@@ -6,10 +6,35 @@ use super::common::challenge_for_stage;
 use super::conv::ConvLayerProofSpec;
 use super::fc::FcLayerProofSpec;
 use super::pool::PoolLayerProofSpec;
-use super::rlc::{conv_rlc_left, conv_rlc_right, fc_rlc_left, fc_rlc_right, mac_filter_window};
+use super::rlc::{conv_rlc_left, conv_rlc_right, fc_rlc_left, mac_filter_window};
 use super::common::LayerProofStage;
 use crate::challenge::ClientChallenge;
 use crate::curve::embed_u128_to_scalar;
+
+/// Fixed-point ring mod $2^{32}$ (matches AHE / trace export semantics).
+const FP_MOD: u128 = 1u128 << 32;
+
+fn fp_reduce(v: u128) -> u128 {
+    v % FP_MOD
+}
+
+fn fp_add(a: u128, b: u128) -> u128 {
+    fp_reduce(a.wrapping_add(b))
+}
+
+fn fp_mul(a: u128, b: u128) -> u128 {
+    fp_reduce(a.wrapping_mul(b))
+}
+
+fn fc_mac_u32(spec: &FcLayerProofSpec, j: usize) -> u128 {
+    let mut acc = 0u128;
+    for (k, row) in spec.weights_in_out.iter().enumerate() {
+        let w = row.get(j).copied().unwrap_or(0);
+        let d = spec.inputs.get(k).copied().unwrap_or(0);
+        acc = fp_add(acc, fp_mul(w, d));
+    }
+    fp_add(acc, spec.bias[j])
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LayerProofError {
@@ -116,14 +141,8 @@ pub fn verify_fc_eq8_per_output(spec: &FcLayerProofSpec) -> LayerProofResult<()>
         });
     }
     for j in 0..out_dim {
-        let mut mac = Scalar::zero();
-        for (k, row) in spec.weights_in_out.iter().enumerate() {
-            let w = row.get(j).copied().unwrap_or(0);
-            let d = spec.inputs.get(k).copied().unwrap_or(0);
-            mac += embed_u128_to_scalar(w) * embed_u128_to_scalar(d);
-        }
-        mac += embed_u128_to_scalar(spec.bias[j]);
-        if mac != embed_u128_to_scalar(spec.outputs[j]) {
+        let expected = fc_mac_u32(spec, j);
+        if fp_reduce(spec.outputs[j]) != expected {
             return Err(LayerProofError::EquationFailed {
                 stage: LayerProofStage::FullyConnected,
                 detail: format!("output {j}"),
@@ -139,13 +158,11 @@ pub fn verify_fc_eq10_rlc_only(
     challenge: &ClientChallenge,
 ) -> LayerProofResult<()> {
     let gamma_prime = challenge_for_stage(LayerProofStage::FullyConnected, challenge);
+    let macs: Vec<u128> = (0..spec.outputs.len())
+        .map(|j| fc_mac_u32(spec, j))
+        .collect();
     let left = fc_rlc_left(&spec.outputs, &gamma_prime);
-    let right = fc_rlc_right(
-        &spec.inputs,
-        &spec.weights_in_out,
-        &spec.bias,
-        &gamma_prime,
-    );
+    let right = fc_rlc_left(&macs, &gamma_prime);
     if left != right {
         return Err(LayerProofError::RlcMismatch {
             stage: LayerProofStage::FullyConnected,
@@ -160,18 +177,5 @@ pub fn verify_fc_eq10_rlc(
     challenge: &ClientChallenge,
 ) -> LayerProofResult<()> {
     verify_fc_eq8_per_output(spec)?;
-    let gamma_prime = challenge_for_stage(LayerProofStage::FullyConnected, challenge);
-    let left = fc_rlc_left(&spec.outputs, &gamma_prime);
-    let right = fc_rlc_right(
-        &spec.inputs,
-        &spec.weights_in_out,
-        &spec.bias,
-        &gamma_prime,
-    );
-    if left != right {
-        return Err(LayerProofError::RlcMismatch {
-            stage: LayerProofStage::FullyConnected,
-        });
-    }
-    Ok(())
+    verify_fc_eq10_rlc_only(spec, challenge)
 }

@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from vpin_backend.api.routes import crypto, health, models, mnist, session
+from vpin_backend.api.routes import crypto, datasets, health, models, mnist, proof, security, session
 from vpin_backend.config import get_settings
 
 
@@ -29,7 +29,10 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(crypto.router, prefix="/api/v1/crypto")
     app.include_router(models.router, prefix="/api/v1")
+    app.include_router(datasets.router, prefix="/api/v1")
     app.include_router(mnist.router, prefix="/api/v1")
+    app.include_router(proof.router, prefix="/api/v1")
+    app.include_router(security.router, prefix="/api/v1")
     app.include_router(session.router, prefix="/api/v1")
 
     @app.on_event("startup")

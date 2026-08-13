@@ -152,6 +152,15 @@ fn prover_pipeline_inner(
         ));
     }
 
+    let scalar_trace_digest_hex = if plan.is_some() {
+        Some(
+            crate::trace::scalar_trace_digest_hex(network)
+                .map_err(|e| ProverError::Io(format!("trace digest: {e}")))?,
+        )
+    } else {
+        None
+    };
+
     let prove_mac_ms = 0u128;
     let mac_proof = None;
 
@@ -218,6 +227,7 @@ fn prover_pipeline_inner(
             total_pt_mul: p.witness.schedule.total_pt_mul,
             total_pt_add: p.witness.schedule.total_pt_add,
         }),
+        scalar_trace_digest_hex,
     })
 }
 
@@ -232,15 +242,9 @@ fn run_scalar_check(
     }
     match build_linear_stack_optional(network) {
         Ok(w) => {
-            // Full FC eq10 requires homomorphic trace consistent in E1; 20260622 export
-            // satisfies conv/pool. Try FC first; fall back to conv+pool-only M1.
-            let mut stack = w.stack.clone();
-            if stack.verify_all_client(challenge).is_err() {
-                stack.fc_layers.clear();
-                stack
-                    .verify_all_client(challenge)
-                    .map_err(|e| ProverError::ScalarCheck(format!("{e:?}")))?;
-            }
+            w.stack
+                .verify_all_client(challenge)
+                .map_err(|e| ProverError::ScalarCheck(format!("M1 verify_all_client: {e:?}")))?;
             Ok((true, ProofCoverageV2::EcPlusScalarCheck))
         }
         Err(e) => Err(ProverError::Stack(e)),

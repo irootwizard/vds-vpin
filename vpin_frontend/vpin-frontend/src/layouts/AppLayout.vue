@@ -69,7 +69,7 @@ const menuOptions = [
     key: "security-group",
     type: "group",
     children: [
-      { label: "运行状态", key: "security", icon: icon(ShieldCheckmarkOutline) },
+      { label: "通信与推理用量", key: "security", icon: icon(ShieldCheckmarkOutline) },
       { label: "验证报告", key: "verification", icon: icon(DocumentTextOutline) },
     ],
   },

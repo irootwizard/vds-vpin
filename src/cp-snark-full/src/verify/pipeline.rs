@@ -77,15 +77,15 @@ fn verify_m1_scalar_stack(artifacts: &ProtocolArtifacts) -> Result<(), String> {
     activate_run_context(artifacts)?;
     let witness = build_linear_stack_optional(&artifacts.network)
         .map_err(|e| format!("build_linear_stack: {e:?}"))?;
-    let mut stack = witness.stack.clone();
-    if stack
+    witness
+        .stack
         .verify_all_client(&artifacts.client_challenge)
-        .is_err()
-    {
-        stack.fc_layers.clear();
-        stack
-            .verify_all_client(&artifacts.client_challenge)
-            .map_err(|e| format!("M1 scalar verify (conv+pool): {e:?}"))?;
+        .map_err(|e| format!("M1 verify_all_client (conv+pool+fc): {e:?}"))?;
+    if let Some(ref expected) = artifacts.scalar_trace_digest_hex {
+        let actual = crate::trace::scalar_trace_digest_hex(&artifacts.network)?;
+        if expected != &actual {
+            return Err("scalar_trace_digest mismatch".into());
+        }
     }
     Ok(())
 }

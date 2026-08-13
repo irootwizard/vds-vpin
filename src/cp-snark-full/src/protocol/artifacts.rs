@@ -83,6 +83,9 @@ pub struct ProtocolArtifacts {
     /// Run-dir witness context (v3).
     #[serde(default)]
     pub model_proof_context: Option<ModelProofContextJson>,
+    /// SHA-256 over conv/pool/fc trace JSON (M1 binding).
+    #[serde(default)]
+    pub scalar_trace_digest_hex: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -136,6 +139,18 @@ impl ProtocolArtifacts {
 }
 
 pub fn artifacts_dir(network: &str) -> PathBuf {
+    if let Ok(root) = std::env::var("VPIN_CP_SNARK_ROOT") {
+        if !root.is_empty() {
+            return PathBuf::from(root).join("artifacts").join(network);
+        }
+    }
+    if let Ok(repo) = std::env::var("VPIN_REPO_ROOT") {
+        return PathBuf::from(repo)
+            .join("data")
+            .join("cp-snark")
+            .join("artifacts")
+            .join(network);
+    }
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("artifacts")
         .join(network)

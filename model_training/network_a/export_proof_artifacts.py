@@ -47,6 +47,7 @@ LEGACY_RUST = (
     / "A"
 )
 NETWORK_A_W_STAR_LEN = 1219
+_U32_MOD = 1 << 32
 
 _VPIN_BACKEND = REPO / "vpin-backend"
 if str(_VPIN_BACKEND) not in sys.path:
@@ -55,6 +56,15 @@ if str(_VPIN_BACKEND) not in sys.path:
 
 def _int_str(x: int | float) -> str:
     return str(int(x))
+
+
+def _mod_u32(x: int | float) -> int:
+    """Fixed-point field element mod 2^32 (matches cp-snark-full trace / W* semantics)."""
+    return int(x) % _U32_MOD
+
+
+def _fp_str(x: int | float) -> str:
+    return str(_mod_u32(x))
 
 
 def _load_image(mnist_index: int = 0) -> tuple[torch.Tensor, int, int | None]:
@@ -88,11 +98,11 @@ def _conv_windows(
                     iy = oy - pad + fi
                     ix = ox - pad + fj
                     if 0 <= iy < h and 0 <= ix < w:
-                        win.append(_int_str(int(inp[iy, ix])))
+                        win.append(_fp_str(inp[iy, ix]))
                     else:
                         win.append("0")
             windows.append(win)
-            outputs.append(_int_str(int(out[oy, ox])))
+            outputs.append(_fp_str(out[oy, ox]))
     return windows, outputs, filter_flat
 
 
@@ -108,9 +118,9 @@ def _pool_trace(after_conv_relu: torch.Tensor, plan: TruncationPlan) -> dict[str
         for j in range(ow):
             block = x[i * stride : i * stride + k, j * stride : j * stride + k]
             flat = block.flatten().tolist()
-            windows.append([_int_str(v) for v in flat])
+            windows.append([_fp_str(v) for v in flat])
             summed = int(block.sum())
-            outputs.append(_int_str(summed))
+            outputs.append(_fp_str(summed))
     return {
         "kernel": k,
         "stride": stride,
@@ -136,10 +146,13 @@ def _fc_trace(model: NetworkA, after_pool: torch.Tensor) -> dict[str, Any]:
 
     def layer_dict(inputs, weights, bias, outputs):
         return {
-            "inputs": [_int_str(v) for v in inputs.tolist()],
-            "weights_in_out": [[_int_str(weights[i, j]) for j in range(weights.shape[1])] for i in range(weights.shape[0])],
-            "bias": [_int_str(v) for v in bias.tolist()],
-            "outputs": [_int_str(v) for v in outputs.tolist()],
+            "inputs": [_fp_str(v) for v in inputs.tolist()],
+            "weights_in_out": [
+                [_fp_str(weights[i, j]) for j in range(weights.shape[1])]
+                for i in range(weights.shape[0])
+            ],
+            "bias": [_fp_str(v) for v in bias.tolist()],
+            "outputs": [_fp_str(v) for v in outputs.tolist()],
         }
 
     return {
@@ -162,15 +175,9 @@ def _full_weights(model: NetworkA) -> dict[str, Any]:
     b2 = _quantize_fc_weight(model.fc2.bias.data.cpu()).numpy()
 
     def to_u128_list(arr: np.ndarray) -> list[int]:
-        out = []
-        for x in arr.flatten().tolist():
-            v = int(x)
-            if v < 0:
-                v += 1 << 32
-            out.append(v)
-        return out
+        return [_mod_u32(x) for x in arr.flatten().tolist()]
 
-    flat: list[int] = [int(x) for x in conv]
+    flat: list[int] = [_mod_u32(x) for x in conv]
     flat.extend(to_u128_list(w1))
     flat.extend(to_u128_list(b1))
     flat.extend(to_u128_list(w2))
@@ -342,31 +349,35 @@ def export_proof_artifacts(
         write_ec_schedule_bundle(run_dir, out / "ec_witness_schedule.json")
         print(f"Wrote ec_witness_schedule.json")
 
-    if from_legacy_ec or not (out / "ec_witness" / "pointMult" / "weight.json").is_file():
-        export_ec_witness_from_legacy(
-            run_dir,
-            apply_rlc=apply_rlc,
-            gamma_mult_hex=gamma_mult_hex,
+    ec_root = out / "ec_witness"
+    from model_training.network_a.paper_proof_witness_exporter import export_paper_proof_ec_witness
+
+    if export_rlcr_ec:
+        from model_training.network_a.export_rlcr_ec_witness import export_rlcr_ec_witness
+
+        rlcr_summary = export_rlcr_ec_witness(
+            run_dir, mnist_index=mnist_index, write_manifest=False
         )
-        print(f"Exported ec_witness from legacy -> {out / 'ec_witness'}")
+        print(
+            f"Exported rLCR EC witness (optional): PtMul={rlcr_summary['pt_mul']} "
+            f"PtAdd={rlcr_summary['pt_add']} -> {rlcr_summary['ec_witness']}"
+        )
+    elif not (ec_root / "pointMult" / "weight.json").is_file():
+        if from_legacy_ec:
+            export_paper_proof_ec_witness(run_dir, bootstrap_ec_coordinates=True)
+            print("Bootstrapped EC coordinates from legacy rust_files/A (explicit opt-in)")
+        else:
+            raise FileNotFoundError(
+                f"EC witness missing at {ec_root / 'pointMult' / 'weight.json'}. "
+                "Use existing run ec_witness/, --from-legacy for one-time bootstrap, "
+                "or --export-rlcr-ec (AHE path — not required for cp-snark proof)."
+            )
+    else:
+        export_paper_proof_ec_witness(run_dir, bootstrap_ec_coordinates=False)
+        print("Synced paper_proof PtMul conv slots from trained W*")
 
     write_ec_witness_manifest(run_dir)
     print("Wrote ec_witness/manifest.json")
-
-    if export_rlcr_ec:
-        cp_python = REPO / "src" / "cp-snark-full" / "python"
-        if str(cp_python) not in sys.path:
-            sys.path.insert(0, str(cp_python))
-        from export_rlcr_ec_witness import export_rlcr_ec_witness
-
-        summary = export_rlcr_ec_witness(
-            run_dir, network="A", mnist_index=mnist_idx, write_manifest=True
-        )
-        print(
-            f"Exported rLCR EC witness: mnist_index={summary['mnist_index']} "
-            f"pt_mul={summary['pt_mul']} (derived={summary['derived_pt_mul']}) "
-            f"pt_add={summary['pt_add']} -> {summary['rust_files']}"
-        )
 
     return out
 
@@ -376,7 +387,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-dir", type=Path, default=STANDARD_RUN)
     parser.add_argument("--mirror-cp-snark", action="store_true")
     parser.add_argument("--export-rlcr-ec", action="store_true", help="Also run headless rLCR EC witness export")
-    parser.add_argument("--from-legacy", action="store_true", help="copy rust_files/A into ec_witness/")
+    parser.add_argument(
+        "--bootstrap-ec-coordinates",
+        action="store_true",
+        dest="from_legacy",
+        help="one-time copy rLCR EC px/py from rust_files/A (explicit; not silent legacy)",
+    )
+    parser.add_argument("--from-legacy", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--apply-rlc", action="store_true", help="rewrite FC PtMul weights with gamma_mult")
     parser.add_argument("--gamma-mult", dest="gamma_mult", default=None, help="32-byte hex gamma_prime")
     parser.add_argument("--skip-ec-schedule", action="store_true", help="Skip ec_witness_schedule.json bundle")

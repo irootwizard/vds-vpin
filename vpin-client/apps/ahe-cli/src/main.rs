@@ -3,10 +3,10 @@ use std::process::Command;
 use std::sync::Arc;
 
 use ahe_client::{
-    load_bsgs, load_bsgs_ec, load_official_preprocessed, official_batch_to_ui_json,
-    official_to_ui_json, preprocess_upload_path, run_ahe_session, run_ahe_session_ec,
-    upload_path_to_ui_json, MnistLoadError, PlatformConfig, PreprocessedSample, ProgressCb,
-    MNIST_TEST_LEN,
+    dataset_batch_to_ui_json, dataset_to_ui_json, load_bsgs, load_bsgs_ec, load_official_preprocessed,
+    official_batch_to_ui_json, official_to_ui_json, preprocess_upload_path, run_ahe_session,
+    run_ahe_session_ec, upload_path_to_ui_json, MnistLoadError, PlatformConfig, PreprocessedSample,
+    ProgressCb, MNIST_TEST_LEN,
 };
 use clap::{Parser, Subcommand, ValueEnum};
 use rand::thread_rng;
@@ -66,11 +66,18 @@ enum Commands {
     },
     /// Official MNIST preprocess (UI JSON)
     Preprocess {
+        #[arg(long, default_value = "mnist-test")]
+        dataset_id: String,
         #[arg(long, default_value = "0")]
-        mnist_index: i32,
+        index: i32,
+        /// Legacy alias for mnist-test
+        #[arg(long)]
+        mnist_index: Option<i32>,
     },
-    /// Batch official MNIST preprocess (UI JSON)
+    /// Batch official preprocess (UI JSON)
     PreprocessBatch {
+        #[arg(long, default_value = "mnist-test")]
+        dataset_id: String,
         #[arg(long, default_value = "0")]
         start: u32,
         #[arg(long, default_value = "10")]
@@ -87,12 +94,26 @@ async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let cfg = PlatformConfig::load();
     match cli.cmd {
-        Commands::Preprocess { mnist_index } => {
-            let json = official_to_ui_json(&cfg.repo_root, mnist_index)?;
+        Commands::Preprocess {
+            dataset_id,
+            index,
+            mnist_index,
+        } => {
+            let idx = mnist_index.unwrap_or(index);
+            let ds = if mnist_index.is_some() && dataset_id == "mnist-test" {
+                "mnist-test"
+            } else {
+                dataset_id.as_str()
+            };
+            let json = dataset_to_ui_json(&cfg.repo_root, ds, idx)?;
             println!("{}", serde_json::to_string(&json)?);
         }
-        Commands::PreprocessBatch { start, count } => {
-            let json = official_batch_to_ui_json(&cfg.repo_root, start, count)?;
+        Commands::PreprocessBatch {
+            dataset_id,
+            start,
+            count,
+        } => {
+            let json = dataset_batch_to_ui_json(&cfg.repo_root, &dataset_id, start, count)?;
             println!("{}", serde_json::to_string(&json)?);
         }
         Commands::PreprocessUpload { path } => {

@@ -18,6 +18,10 @@ impl PlatformConfig {
         let bsgs = std::env::var("VPIN_BSGS_TABLE")
             .map(PathBuf::from)
             .unwrap_or_else(|_| {
+                let release = repo.join("data/bsgs/table.bin");
+                if release.is_file() {
+                    return release;
+                }
                 let fixture_bin = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                     .join("../../../tests/fixtures/table.bin");
                 if fixture_bin.is_file() {

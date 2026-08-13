@@ -8,6 +8,7 @@ use thiserror::Error;
 use crate::preprocess_core::{self, PreprocessStages, PAD};
 
 pub const MNIST_TEST_LEN: i32 = 10_000;
+pub const MNIST_TRAIN_LEN: i32 = 60_000;
 
 #[derive(Clone, Debug)]
 pub struct PreprocessedSample {
@@ -30,18 +31,28 @@ pub enum MnistLoadError {
 }
 
 pub fn load_official_stages(repo: &Path, index: i32) -> Result<PreprocessStages, MnistLoadError> {
-    if !(0..MNIST_TEST_LEN).contains(&index) {
+    load_mnist_stages(repo, index, false)
+}
+
+pub fn load_mnist_stages(repo: &Path, index: i32, train: bool) -> Result<PreprocessStages, MnistLoadError> {
+    let limit = if train { MNIST_TRAIN_LEN } else { MNIST_TEST_LEN };
+    if !(0..limit).contains(&index) {
         return Err(MnistLoadError::IndexOutOfRange(index));
     }
-    let (image, _label) = load_raw_sample(repo, index as u32)?;
+    let (image, _label) = load_raw_sample(repo, index as u32, train)?;
     Ok(preprocess_core::preprocess_uint8_28x28(&image))
 }
 
 pub fn load_official_preprocessed(repo: &Path, index: i32) -> Result<PreprocessedSample, MnistLoadError> {
-    if !(0..MNIST_TEST_LEN).contains(&index) {
+    load_mnist_preprocessed(repo, index, false)
+}
+
+pub fn load_mnist_preprocessed(repo: &Path, index: i32, train: bool) -> Result<PreprocessedSample, MnistLoadError> {
+    let limit = if train { MNIST_TRAIN_LEN } else { MNIST_TEST_LEN };
+    if !(0..limit).contains(&index) {
         return Err(MnistLoadError::IndexOutOfRange(index));
     }
-    let (image, label) = load_raw_sample(repo, index as u32)?;
+    let (image, label) = load_raw_sample(repo, index as u32, train)?;
     let stages = preprocess_core::preprocess_uint8_28x28(&image);
     Ok(PreprocessedSample {
         mnist_index: index,
@@ -78,11 +89,19 @@ fn read_file_bytes(path: &Path) -> Result<Vec<u8>, std::io::Error> {
     }
 }
 
-fn load_raw_sample(repo: &Path, index: u32) -> Result<([u8; 784], i32), MnistLoadError> {
+fn load_raw_sample(repo: &Path, index: u32, train: bool) -> Result<([u8; 784], i32), MnistLoadError> {
     let dir = mnist_raw_dir(repo);
-    let images_path = resolve_raw_file(&dir, "t10k-images-idx3-ubyte")
+    let (images_stem, labels_stem, limit) = if train {
+        ("train-images-idx3-ubyte", "train-labels-idx1-ubyte", MNIST_TRAIN_LEN as u32)
+    } else {
+        ("t10k-images-idx3-ubyte", "t10k-labels-idx1-ubyte", MNIST_TEST_LEN as u32)
+    };
+    if index >= limit {
+        return Err(MnistLoadError::IndexOutOfRange(index as i32));
+    }
+    let images_path = resolve_raw_file(&dir, images_stem)
         .ok_or_else(|| MnistLoadError::RawNotFound(dir.clone()))?;
-    let labels_path = resolve_raw_file(&dir, "t10k-labels-idx1-ubyte")
+    let labels_path = resolve_raw_file(&dir, labels_stem)
         .ok_or_else(|| MnistLoadError::RawNotFound(dir))?;
 
     let images = read_file_bytes(&images_path).map_err(MnistLoadError::Io)?;

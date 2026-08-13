@@ -227,3 +227,11 @@ def check_bounds(tensor_max_abs: float, layer_name: str, *, limit: int = AHE_ABS
         raise ValueError(
             f"{layer_name} max|x|={tensor_max_abs:.0e} exceeds safe limit {limit}"
         )
+
+
+def load_plan_for_run(run_dir: Path) -> TruncationPlan:
+    """Load truncation plan from run dir, falling back to topology defaults."""
+    cfg = run_dir / "truncation_config.json"
+    if cfg.is_file():
+        return TruncationPlan.load(cfg)
+    return plan_from_topology()

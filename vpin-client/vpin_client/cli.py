@@ -27,6 +27,14 @@ from vpin_client.pipeline import (
     run_ahe_batch,
     run_ahe_inference,
 )
+from vpin_client.pipeline.proof_pipeline import (
+    fetch_proof_plan,
+    is_network_a_proof_model,
+    proof_result_to_dict,
+    run_computation_proof,
+    save_proof_artifact_remote,
+    verify_proof_remote,
+)
 
 
 def _configure_stdio_utf8() -> None:
@@ -281,6 +289,45 @@ def main(argv: list[str] | None = None) -> int:
     )
     bench.add_argument("--json-out", default=None, help="Write JSON report path")
 
+    proof = sub.add_parser(
+        "computation-proof",
+        help="Network A computation proof P4–P6 (cp-snark-full via vpin-backend)",
+    )
+    proof.add_argument(
+        "--backend-http",
+        default="http://127.0.0.1:8000",
+        help="vpin-backend HTTP root (not WebSocket)",
+    )
+    proof.add_argument("--model", default="cnn-mnist-trained")
+    proof.add_argument("--network", default="A")
+    proof.add_argument("--session-id", default="")
+    proof.add_argument(
+        "--skip-client-verify",
+        action="store_true",
+        help="Skip local M1 verify (server prove only)",
+    )
+    proof.add_argument(
+        "--progress-ndjson",
+        action="store_true",
+        help="Emit proof phases on stderr as NDJSON",
+    )
+
+    proof_verify = sub.add_parser(
+        "computation-proof-verify",
+        help="P6 verify existing protocol.json on vpin-backend",
+    )
+    proof_verify.add_argument("--backend-http", default="http://127.0.0.1:8000")
+    proof_verify.add_argument("--network", default="A")
+
+    proof_save = sub.add_parser(
+        "computation-proof-save",
+        help="Save protocol.json to a local path",
+    )
+    proof_save.add_argument("--backend-http", default="http://127.0.0.1:8000")
+    proof_save.add_argument("--network", default="A")
+    proof_save.add_argument("--dest", required=True, help="Destination file path")
+    proof_save.add_argument("--source", default="", help="Optional local source protocol.json")
+
     args = parser.parse_args(argv)
     if args.cmd == "sample-challenge":
         c = sample_challenge(args.num_pt_add, args.num_pt_mult)
@@ -326,9 +373,96 @@ def main(argv: list[str] | None = None) -> int:
             print(f"bench-mnist-ahe failed: {exc}", file=sys.stderr, flush=True)
             traceback.print_exc(file=sys.stderr)
             return 1
+    if args.cmd == "computation-proof":
+        return _cmd_computation_proof(args)
+    if args.cmd == "computation-proof-verify":
+        return _cmd_computation_proof_verify(args)
+    if args.cmd == "computation-proof-save":
+        return _cmd_computation_proof_save(args)
 
     parser.print_help()
     return 1
+
+
+async def _cmd_computation_proof_async(args: argparse.Namespace) -> int:
+    if not is_network_a_proof_model(args.model):
+        raise ValueError(f"computation-proof only supports Network A models, got {args.model!r}")
+    backend = args.backend_http.rstrip("/")
+    if args.progress_ndjson:
+        _emit_progress_ndjson("proof_plan", {"model_id": args.model})
+    plan = await fetch_proof_plan(f"{backend}/api/v1", model_id=args.model)
+    if args.progress_ndjson:
+        _emit_progress_ndjson(
+            "proof_challenge",
+            {"total_pt_mul": plan.total_pt_mul, "total_pt_add": plan.total_pt_add},
+        )
+    if args.progress_ndjson:
+        _emit_progress_ndjson("proof_prove", {"message": "server cp-snark-full prove"})
+    result = await run_computation_proof(
+        f"{backend}/api/v1",
+        model_id=args.model,
+        network_id=args.network,
+        session_id=args.session_id or "cli-proof",
+        verify_locally=not args.skip_client_verify,
+    )
+    if args.progress_ndjson:
+        _emit_progress_ndjson("proof_verify", {"verify_ok": result.verify_ok})
+    raw: dict = {}
+    if result.artifact_path and result.artifact_path.is_file():
+        raw = json.loads(result.artifact_path.read_text(encoding="utf-8"))
+    payload = proof_result_to_dict(result, plan=plan, artifact_raw=raw)
+    print(json.dumps(payload, indent=2))
+    return 0 if result.ok and result.verify_ok else 1
+
+
+def _cmd_computation_proof(args: argparse.Namespace) -> int:
+    try:
+        return asyncio.run(_cmd_computation_proof_async(args))
+    except Exception as exc:
+        if getattr(args, "progress_ndjson", False):
+            _emit_progress_ndjson("error", {"message": str(exc)})
+        print(f"computation-proof failed: {exc}", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        return 1
+
+
+async def _cmd_computation_proof_verify_async(args: argparse.Namespace) -> int:
+    backend = args.backend_http.rstrip("/")
+    result = await verify_proof_remote(f"{backend}/api/v1", network_id=args.network)
+    print(json.dumps(result, indent=2))
+    return 0 if result.get("ok") else 1
+
+
+def _cmd_computation_proof_verify(args: argparse.Namespace) -> int:
+    try:
+        return asyncio.run(_cmd_computation_proof_verify_async(args))
+    except Exception as exc:
+        print(f"computation-proof-verify failed: {exc}", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        return 1
+
+
+async def _cmd_computation_proof_save_async(args: argparse.Namespace) -> int:
+    backend = args.backend_http.rstrip("/")
+    source = Path(args.source) if args.source else None
+    dest = Path(args.dest)
+    await save_proof_artifact_remote(
+        f"{backend}/api/v1",
+        dest,
+        network_id=args.network,
+        source_path=source,
+    )
+    print(json.dumps({"ok": True, "dest": str(dest)}, indent=2))
+    return 0
+
+
+def _cmd_computation_proof_save(args: argparse.Namespace) -> int:
+    try:
+        return asyncio.run(_cmd_computation_proof_save_async(args))
+    except Exception as exc:
+        print(f"computation-proof-save failed: {exc}", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

@@ -13,6 +13,20 @@
       "weights_dir": "src/cnn_networks/Pre_trained_model"
     },
     {
+      "id": "resnet18-cifar10",
+      "name": "ResNet-18 CIFAR-10",
+      "framework": "PyTorch",
+      "task": "\u56fe\u50cf\u5206\u7c7b",
+      "params_count_m": 11.17,
+      "input_shape": "3x32x32",
+      "accuracy": 57.4,
+      "network": "resnet_cifar",
+      "topology": "resnet18_cifar_v1",
+      "weights_dir": "src/cnn_networks/Pre_trained_model",
+      "deployable": false,
+      "message": "\u6f14\u793a\u8ba1\u65f6\u53ef\u7528\uff1b\u771f AHE \u5f85 HDC \u56fe\u4e0e\u6743\u91cd\u5bfc\u51fa"
+    },
+    {
       "id": "lenet-cifar10",
       "name": "LeNet CIFAR-10 (trained)",
       "framework": "PyTorch",
@@ -35,12 +49,11 @@
       "task": "\u56fe\u50cf\u5206\u7c7b",
       "params_count_m": 1.21,
       "input_shape": "1x28x28",
-      "accuracy": 92.93,
-      "accuracy_fixed": 10.41,
+      "accuracy": 10.47,
       "network": "A",
       "topology": "cnn_mnist_v1",
-      "weights_dir": "model_training/outputs/20260622_184254",
-      "updated": "2026-06-22T18:50:32.216503+00:00"
+      "weights_dir": "model_training/outputs/20260622_174721",
+      "updated": "2026-06-22T18:00:57.727319+00:00"
     }
   ]
 }

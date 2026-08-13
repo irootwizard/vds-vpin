@@ -7,6 +7,195 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/components.css">
     <link rel="stylesheet" href="../css/theme.css">
+    <style>
+        .section-hint {
+            margin: 0 0 16px;
+            font-size: 14px;
+            color: #8c8c8c;
+        }
+
+        .dataset-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .dataset-tab {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            color: #595959;
+        }
+
+        .dataset-tab.active {
+            border-color: #1890ff;
+            color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .dataset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .dataset-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 16px;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .dataset-card:hover {
+            border-color: #91d5ff;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.08);
+        }
+
+        .dataset-card.selected {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.15);
+        }
+
+        .dataset-card__head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .dataset-card__head h4 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .dataset-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+
+        .dataset-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #f6ffed;
+            color: #52c41a;
+            white-space: nowrap;
+        }
+
+        .dataset-badge.badge-muted {
+            background: #fafafa;
+            color: #8c8c8c;
+        }
+
+        .dataset-badge.badge-info {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .dataset-card__meta {
+            margin: 0 0 6px;
+            font-size: 13px;
+            color: #595959;
+        }
+
+        .dataset-card__hint {
+            margin: 0;
+            font-size: 12px;
+            color: #8c8c8c;
+            line-height: 1.5;
+        }
+
+        .dataset-preview-grid {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .dataset-thumb {
+            padding: 0;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            background: #fafafa;
+            cursor: pointer;
+            line-height: 0;
+        }
+
+        .dataset-thumb:hover {
+            border-color: #1890ff;
+        }
+
+        .dataset-thumb img {
+            width: 48px;
+            height: 48px;
+            display: block;
+            border-radius: 5px;
+        }
+
+        .dataset-empty {
+            color: #bfbfbf;
+            font-size: 14px;
+            grid-column: 1 / -1;
+        }
+
+        .dataset-load-hint {
+            margin: 0 0 12px;
+            font-size: 13px;
+            color: #8c8c8c;
+        }
+
+        .dataset-select-status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #1890ff;
+        }
+
+        .dataset-preview-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .dataset-preview-modal[hidden] {
+            display: none;
+        }
+
+        .dataset-preview-dialog {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 90vw;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .dataset-preview-dialog img {
+            max-width: 280px;
+            max-height: 280px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .dataset-preview-caption {
+            margin: 12px 0 16px;
+            font-size: 13px;
+            color: #595959;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -29,11 +218,40 @@
                         </div>
                         <div class="step active">
                             <div class="step-number">2</div>
-                            <div class="step-label">隐私配置</div>
+                            <div class="step-label">预处理与字段</div>
                         </div>
                         <div class="step">
                             <div class="step-number">3</div>
                             <div class="step-label">预览确认</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 现有数据集 -->
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <img src="../assets/icons/history.svg" alt="数据集">
+                            现有数据集
+                        </h2>
+                        <p id="datasetLoadHint" class="dataset-load-hint">正在加载数据集目录…</p>
+                        <div class="dataset-tabs">
+                            <button type="button" class="dataset-tab active" data-tab="local">本地</button>
+                            <button type="button" class="dataset-tab" data-tab="remote">远程</button>
+                        </div>
+                        <div id="datasetPanelLocal">
+                            <div id="datasetListLocal" class="dataset-grid"></div>
+                        </div>
+                        <div id="datasetPanelRemote" hidden>
+                            <div id="datasetListRemote" class="dataset-grid"></div>
+                        </div>
+                        <p id="datasetSelectStatus" class="dataset-select-status">点击卡片选择数据集；图像类可点击缩略图预览</p>
+                    </div>
+
+                    <!-- 预览弹窗 -->
+                    <div id="datasetPreviewModal" class="dataset-preview-modal" hidden aria-hidden="true">
+                        <div class="dataset-preview-dialog" role="dialog" aria-modal="true">
+                            <img id="datasetPreviewImage" src="" alt="数据集预览">
+                            <p id="datasetPreviewCaption" class="dataset-preview-caption"></p>
+                            <button type="button" id="datasetPreviewClose" class="btn-secondary">关闭</button>
                         </div>
                     </div>
                     
@@ -98,10 +316,10 @@
                             <div class="source-option">
                                 <div class="option-header">
                                     <img src="../assets/icons/history.svg" alt="历史">
-                                    <h3>使用历史数据集</h3>
+                                    <h3>使用已选数据集</h3>
                                 </div>
                                 <div class="option-body">
-                                    <p>选择之前上传的数据集</p>
+                                    <p>在上方「现有数据集」中选择本地或远程目录后，在此确认用于本次任务。</p>
                                 </div>
                             </div>
                         </div>
@@ -125,97 +343,16 @@
                         <p id="preprocessStatus" style="margin: 12px 0 0; color: #8c8c8c;">等待图像与精度配置</p>
                     </div>
                     
-                    <!-- 隐私配置 -->
+                    <!-- 字段级数据配置 -->
                     <div class="config-section">
                         <h2 class="section-title">
-                            <img src="../assets/icons/security.svg" alt="隐私">
-                            隐私保护配置
+                            <img src="../assets/icons/security.svg" alt="字段">
+                            字段级隐私配置
                         </h2>
                         
                         <div class="privacy-config">
-                            <!-- 全局设置 -->
-                            <div class="privacy-global">
-                                <h3>全局安全设置</h3>
-                                <div class="toggle-group">
-                                    <div class="toggle-item">
-                                        <label class="toggle-label">
-                                            <input type="checkbox" checked>
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-text">
-                                                <img src="../assets/icons/encryption.svg" alt="加密">
-                                                启用端到端加密
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            所有数据在传输和存储过程中进行加密
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="toggle-item">
-                                        <label class="toggle-label">
-                                            <input type="checkbox" checked>
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-text">
-                                                <img src="../assets/icons/access-control.svg" alt="访问控制">
-                                                启用访问控制
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            基于角色的数据访问权限管理
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="toggle-item">
-                                        <label class="toggle-label">
-                                            <input type="checkbox">
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-text">
-                                                <img src="../assets/icons/dp.svg" alt="差分隐私">
-                                                启用本地差分隐私
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            在数据源头添加噪声保护隐私
-                                            <button class="btn-link">配置参数</button>
-                                        </div>
-                                    </div>
-
-                                    <div class="toggle-item">
-                                        <label class="toggle-label">
-                                            <input id="privacyAhe" type="checkbox" checked>
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-text">
-                                                <img src="../assets/icons/encryption.svg" alt="AHE">
-                                                启用 AHE 同态加密
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            用于推理过程中的同态密文计算，可与 CP-SNARK 同时启用。
-                                        </div>
-                                    </div>
-
-                                    <div class="toggle-item">
-                                        <label class="toggle-label">
-                                            <input id="privacySnark" type="checkbox" checked>
-                                            <span class="toggle-slider"></span>
-                                            <span class="toggle-text">
-                                                <img src="../assets/icons/verification.svg" alt="CP-SNARK">
-                                                启用 CP-SNARK 零知识证明
-                                            </span>
-                                        </label>
-                                        <div class="toggle-description">
-                                            提供结果可验证性证明，可与 AHE 多选组合。
-                                        </div>
-                                    </div>
-                                </div>
-                                <p id="privacyProtocolStatus" style="margin-top: 12px; color:#8c8c8c;">
-                                    当前隐私机制：AHE 同态加密、CP-SNARK 零知识证明
-                                </p>
-                            </div>
-                            
-                            <!-- 字段级配置 -->
                             <div class="privacy-field">
-                                <h3>字段级隐私配置</h3>
+                                <p class="section-hint">为各数据字段指定脱敏、噪声或泛化策略（协议级 AHE / CP-SNARK 请在安全中心或新建任务向导中配置）。</p>
                                 <div class="table-responsive">
                                     <table class="field-table">
                                         <thead>
@@ -306,12 +443,12 @@
     </div>
     
     <script src="../js/app.js"></script>
+    <script src="../js/datasets-panel.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const state = {
             hasPreprocessedImage: false
         };
-        const privacyStorageKey = "vpinPrivacyProtocols";
 
         document.getElementById("btnInitPreprocess").addEventListener("click", function() {
             const imageInput = document.getElementById("imageInput");
@@ -362,53 +499,6 @@
             }
             document.getElementById("preprocessStatus").textContent = "图像精度处理结果已确认，可进入下一步预览确认。";
         });
-
-        const privacyAhe = document.getElementById("privacyAhe");
-        const privacySnark = document.getElementById("privacySnark");
-        const privacyProtocolStatus = document.getElementById("privacyProtocolStatus");
-
-        function renderPrivacyProtocolStatus() {
-            const selected = [];
-            if (privacyAhe.checked) {
-                selected.push("AHE 同态加密");
-            }
-            if (privacySnark.checked) {
-                selected.push("CP-SNARK 零知识证明");
-            }
-            privacyProtocolStatus.textContent = selected.length > 0
-                ? ("当前隐私机制：" + selected.join("、"))
-                : "当前隐私机制：未启用（建议至少启用一种）";
-        }
-
-        function loadPrivacyProtocolSelection() {
-            const raw = localStorage.getItem(privacyStorageKey);
-            if (!raw) {
-                renderPrivacyProtocolStatus();
-                return;
-            }
-            try {
-                const parsed = JSON.parse(raw);
-                privacyAhe.checked = !!parsed.ahe;
-                privacySnark.checked = !!parsed.snark;
-            } catch (error) {
-                // ignore parse error and use default selection
-            }
-            renderPrivacyProtocolStatus();
-        }
-
-        function persistPrivacyProtocolSelection() {
-            localStorage.setItem(privacyStorageKey, JSON.stringify({
-                ahe: privacyAhe.checked,
-                snark: privacySnark.checked
-            }));
-            renderPrivacyProtocolStatus();
-        }
-
-        [privacyAhe, privacySnark].forEach(item => {
-            item.addEventListener("change", persistPrivacyProtocolSelection);
-        });
-
-        loadPrivacyProtocolSelection();
     });
     </script>
 </body>

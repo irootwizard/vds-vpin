@@ -11,13 +11,36 @@
 | `vPIN-main/` | Python 后端、前端 Tauri、vpin-client、权重与 MNIST |
 | `vpin-platform/` | Rust `ahe-server` / `ahe-cli`（与 vPIN-main **同级目录**） |
 
-示例根目录：
+示例根目录（路径因机器而异）：
 
 ```
-d:\WorkStation\pythoncode\experiment-reproduction\
-├── vPIN-main\
-└── vpin-platform\
+<parent>/
+├── vPIN-main/          # 本仓库
+└── vpin-platform/      # 可选：旧版同级 Rust 仓库（脚本会自动探测）
 ```
+
+> Rust 二进制优先使用 `vPIN-main/vpin-client` 与 `vPIN-main/vpin-backend` 内编译产物；若不存在则回退到同级 `vpin-platform/`。
+
+---
+
+## 3.5 一键启动（推荐）
+
+在 **`vPIN-main` 仓库根目录** 执行（无需硬编码路径）：
+
+| 场景 | 命令 |
+|------|------|
+| **三引擎 + Tauri**（各服务独立窗口） | `.\scripts\start-ahe-full.ps1` |
+| Python + Tauri（当前终端阻塞） | `.\start-ahe.ps1` |
+| 仅 Rust 引擎 | `.\scripts\start-rust-ahe.ps1 -Both -Detach` |
+| 首次环境 | `.\scripts\setup.ps1` → `.\scripts\check-env.ps1` |
+
+可选环境变量（一般不必设置，脚本自动探测）：
+
+| 变量 | 作用 |
+|------|------|
+| `VPIN_REPO_ROOT` | 覆盖仓库根目录 |
+| `VPIN_PLATFORM_ROOT` | 覆盖同级 `vpin-platform` 路径 |
+| `VPIN_BSGS_TABLE` | 覆盖 Rust 用 `table.bin` 路径 |
 
 ---
 
@@ -85,18 +108,24 @@ cd vPIN-main
 
 ---
 
-## 4. 各端启动命令
+## 4. 各端启动命令（手动 / 调试）
 
-以下均在 **独立终端** 中运行；Agent 需按所选推理引擎启动对应 Server。
+以下在 **独立终端** 中运行；日常测试优先用 **§3.5 一键脚本**。手动启动时先在仓库根目录点源公共库：
+
+```powershell
+cd vPIN-main
+. .\scripts\lib\vpin-env.ps1
+$ROOT = Get-VpinRepoRoot
+Set-VpinDefaultEnv -RepoRoot $ROOT
+```
 
 ### 4.1 Python 后端（必选，端口 8000）
 
 REST + Python 路线 WS 推理共用。
 
 ```powershell
-cd vPIN-main\vpin-backend
-$env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main"
-..\..\.venv\Scripts\python.exe -m vpin_backend.main
+Start-VpinPythonBackend -RepoRoot $ROOT -Detach
+# 或前台：Start-VpinPythonBackend -RepoRoot $ROOT
 ```
 
 健康检查：
@@ -109,13 +138,7 @@ Invoke-WebRequest http://127.0.0.1:8000/api/v1/health -UseBasicParsing
 ### 4.2 Rust AHE Server · Ark（端口 8001，测 Rust Ark 时启动）
 
 ```powershell
-cd vpin-platform
-$env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main"
-$env:VPIN_BSGS_TABLE = "d:\WorkStation\pythoncode\experiment-reproduction\vpin-platform\tests\fixtures\table.bin"
-$env:AHE_SERVER_HOST = "127.0.0.1"
-$env:AHE_SERVER_PORT = "8001"
-$env:AHE_CRYPTO_BACKEND = "ark"
-.\target\release\ahe-server.exe
+Start-VpinRustServer -RepoRoot $ROOT -Port 8001 -Detach
 ```
 
 健康检查：
@@ -127,13 +150,7 @@ Invoke-WebRequest http://127.0.0.1:8001/api/v1/health -UseBasicParsing
 ### 4.3 Rust AHE Server · EC（端口 8002，测 Rust EC 时启动）
 
 ```powershell
-cd vpin-platform
-$env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main"
-$env:VPIN_BSGS_TABLE = "d:\WorkStation\pythoncode\experiment-reproduction\vpin-platform\tests\fixtures\table.bin"
-$env:AHE_SERVER_HOST = "127.0.0.1"
-$env:AHE_SERVER_PORT = "8002"
-$env:AHE_CRYPTO_BACKEND = "ec"
-.\target\release\ahe-server.exe
+Start-VpinRustServer -RepoRoot $ROOT -Port 8002 -Detach
 ```
 
 健康检查：
@@ -145,7 +162,7 @@ Invoke-WebRequest http://127.0.0.1:8002/api/v1/health -UseBasicParsing
 ### 4.4 Tauri 桌面端（UI + Client 桥）
 
 ```powershell
-cd vPIN-main\vpin_frontend\vpin-frontend
+cd (Get-VpinFrontendDir -RepoRoot $ROOT)
 npm install   # 首次
 npm run tauri dev
 ```
@@ -157,6 +174,10 @@ npm run tauri dev
 ---
 
 ## 5. 推荐启动顺序
+
+**推荐**：直接运行 `.\scripts\start-ahe-full.ps1`（自动按序启动并做健康检查）。
+
+手动顺序：
 
 ```
 1. Python vpin-backend (:8000)     ← 始终需要（REST + Python 推理）
@@ -203,9 +224,10 @@ cd vPIN-main
 Rust 批量（需对应 ahe-server）：
 
 ```powershell
-cd vpin-platform
-$env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main"
-.\target\release\ahe-cli.exe eval-mnist-ahe --start 1000 --limit 5 --concurrency 2 --progress-ndjson --crypto-backend ec --model cnn-mnist-trained
+cd vPIN-main
+. .\scripts\lib\vpin-env.ps1
+$cli = Get-AheCliBin
+& $cli eval-mnist-ahe --start 1000 --limit 5 --concurrency 2 --progress-ndjson --crypto-backend ec --model cnn-mnist-trained
 ```
 
 UI 批量手测：Tauri `/demo/ahe` → 批量 → 范围 `1000–1004`、并发 2；或多选 3 张上传图 → 确认报告 accuracy 与 CLI 一致。
@@ -222,9 +244,8 @@ cd vPIN-main
 Rust 三栈脚本（需对应 server）：
 
 ```powershell
-cd vpin-platform
-$env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-main"
-.\tools\run_ahe_triple_test.ps1 -Limit 10
+cd vPIN-main
+.\scripts\run_ahe_triple_test.ps1 -Limit 10
 ```
 
 ---
@@ -233,13 +254,14 @@ $env:VPIN_REPO_ROOT = "d:\WorkStation\pythoncode\experiment-reproduction\vPIN-ma
 
 | 变量 | 作用 | 典型值 |
 |------|------|--------|
-| `VPIN_REPO_ROOT` | 权重、MNIST、table 查找根 | `...\vPIN-main` |
-| `VPIN_PLATFORM_ROOT` | Tauri 找 `ahe-cli`（可选） | `...\vpin-platform` |
-| `VPIN_BSGS_TABLE` | Rust 客户端 BSGS | `...\vpin-platform\tests\fixtures\table.bin` |
+| `VPIN_REPO_ROOT` | 权重、MNIST、table 查找根 | 自动探测为 `vPIN-main` |
+| `VPIN_PLATFORM_ROOT` | 同级旧版 Rust 仓库（可选） | 自动探测 `../vpin-platform` |
+| `VPIN_BSGS_TABLE` | Rust 客户端 BSGS | 自动：`vpin-client/tests/fixtures/table.bin` 或同级 platform |
 | `AHE_SERVER_PORT` | Rust server 监听端口 | `8001` / `8002` |
-| `AHE_CRYPTO_BACKEND` | Rust server 密码栈 | `ark` / `ec` |
 | `AHE_SERVER_HOST` | 绑定地址 | `127.0.0.1` |
 | `PYTHONUNBUFFERED` | Tauri 子进程 progress 即时输出 | `1`（Tauri 已自动设置） |
+
+> Rust 密码栈由 **`ahe-cli --crypto-backend ark|ec`** 指定，**不由** `ahe-server` 环境变量控制。
 
 ---
 

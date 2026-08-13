@@ -65,7 +65,7 @@ def main() -> None:
             device=args.device,
             batch_size=256 if args.batch_size == 64 else args.batch_size,
             lr=0.1,
-            epochs=120 if args.epochs == 3 else args.epochs,
+            epochs=args.epochs,
             amp=None,
         )
         return

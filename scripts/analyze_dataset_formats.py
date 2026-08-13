@@ -25,13 +25,14 @@ from vpin_client.data.core import (  # noqa: E402
     compute_input_digest,
     preprocess_uint8_28x28,
 )
+from vpin_client.data.mnist_loader import _mnist_test_dataset  # noqa: E402
 from vpin_client.data.official import load_official_test  # noqa: E402
-from vpin_client.data.official_mnist import (  # noqa: E402
-    MNIST_RESOURCES,
-    _raw_dir,
-    download_official_mnist,
-    official_mnist_root,
-)
+
+
+def _mnist_raw_dir() -> Path:
+    """Official IDX cache: model_training/data/MNIST/raw/."""
+    _mnist_test_dataset()  # ensure torchvision download
+    return REPO / "model_training" / "data" / "MNIST" / "raw"
 
 
 def _now() -> str:
@@ -49,15 +50,18 @@ def _array_stats(arr: np.ndarray) -> dict:
 
 
 def analyze_official_idx(index: int = 0) -> dict:
-    root = download_official_mnist()
-    raw_dir = _raw_dir(root)
+    raw_dir = _mnist_raw_dir()
     files = {}
-    for fname, md5 in MNIST_RESOURCES:
-        extracted = raw_dir / fname.replace(".gz", "")
+    for fname in (
+        "train-images-idx3-ubyte",
+        "train-labels-idx1-ubyte",
+        "t10k-images-idx3-ubyte",
+        "t10k-labels-idx1-ubyte",
+    ):
+        extracted = raw_dir / fname
         files[fname] = {
             "path": str(extracted),
             "size_bytes": extracted.stat().st_size if extracted.is_file() else 0,
-            "md5_expected": md5,
         }
     # Parse IDX header for test images
     img_path = raw_dir / "t10k-images-idx3-ubyte"
@@ -262,7 +266,7 @@ def main() -> int:
                 "uint8 (28,28)",
                 "/255 float",
                 "pad to (1,1,32,32)",
-                "per-image min-max clip [0.001, 0.9999999]",
+                "per-image min-max clip [0, 1]",
                 "× 2^16 → int32",
                 "SHA256 → input_digest_hex",
             ],

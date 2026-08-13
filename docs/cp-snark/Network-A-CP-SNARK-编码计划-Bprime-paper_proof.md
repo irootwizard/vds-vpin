@@ -1,6 +1,7 @@
 # Network A 各层计算量证明 — 编码计划（B′ + paper_proof）
 
-> **已合并至唯一计划：** [`.cursor/plans/network_a_cp-snark_442840ea.plan.md`](../../.cursor/plans/network_a_cp-snark_442840ea.plan.md)（含前后端产品流程、曲线嵌入、核心收尾）。**本文档仅保留规范引用，不再单独维护实施 todo。**
+> **严格算法（唯一正文）：** [`Network-A-CP-SNARK-严格算法规范.md`](Network-A-CP-SNARK-严格算法规范.md)  
+> **已合并至唯一计划：** [`.cursor/plans/network_a_cp-snark_442840ea.plan.md`](../../.cursor/plans/network_a_cp-snark_442840ea.plan.md)
 
 > **项目内副本**：2026-06-26 同步  
 > **标准 run**：`model_training/outputs/20260622_184254/proof_artifacts/`

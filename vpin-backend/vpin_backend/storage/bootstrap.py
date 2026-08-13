@@ -160,6 +160,30 @@ def _register_from_output_runs() -> None:
         )
 
 
+def _register_proof_plans_from_runs() -> None:
+    """Link AHE model_id → proof run_dir (same training output, independent prove path)."""
+    from vpin_backend.proof.registry import register_proof_plan
+
+    settings = get_settings()
+    outputs = settings.repo_root / "model_training" / "outputs"
+    if not outputs.is_dir():
+        return
+
+    for run_dir in outputs.iterdir():
+        if not run_dir.is_dir():
+            continue
+        ec_w = run_dir / "proof_artifacts" / "ec_witness" / "pointMult" / "weight.json"
+        if not ec_w.is_file():
+            continue
+        snippet = run_dir / "registry_snippet.json"
+        model_id = f"cnn-mnist-trained-{run_dir.name}"
+        if snippet.is_file():
+            entry = json.loads(snippet.read_text(encoding="utf-8"))
+            model_id = str(entry.get("id", model_id))
+        register_proof_plan(model_id, run_dir, "paper_proof")
+        register_proof_plan("A", run_dir, "paper_proof")
+
+
 def bootstrap_ahe_models() -> None:
     """Ensure at least one AHE-capable model is registered."""
     try:
@@ -168,6 +192,7 @@ def bootstrap_ahe_models() -> None:
             _register_builtin_legacy(legacy_dir)
         _register_from_output_runs()
         repair_registry_paths()
+        _register_proof_plans_from_runs()
     except Exception as exc:
         print(f"Warning: Model bootstrap failed: {exc}", file=sys.stderr)
         print(

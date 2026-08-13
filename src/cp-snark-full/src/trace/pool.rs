@@ -41,8 +41,13 @@ pub fn load_pool_trace(network: &str) -> Result<Option<PoolTraceInput>, String> 
         .map(|w| parse_u128_vec(w))
         .collect::<Result<_, _>>()?;
     let output_sums = parse_u128_vec(&b.output_flat)?;
+    let inv_k_squared_fp = b
+        .inv_k_squared_fp
+        .parse::<u128>()
+        .map_err(|e| format!("pool inv_k_squared_fp: {e}"))?;
     Ok(Some(PoolTraceInput {
         windows,
         output_sums,
+        inv_k_squared_fp,
     }))
 }

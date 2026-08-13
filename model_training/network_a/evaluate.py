@@ -216,6 +216,109 @@ def eval_fixed(model: NetworkA, loader, device: torch.device) -> float:
     return correct / max(total, 1)
 
 
+def eval_float(model: NetworkA, loader, device: torch.device) -> float:
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for images, labels in loader:
+            images, labels = images.to(device), labels.to(device)
+            pred = model.forward_float(images).argmax(dim=1)
+            correct += (pred == labels).sum().item()
+            total += labels.size(0)
+    return correct / max(total, 1)
+
+
+def run_full_test(
+    run_dir: Path,
+    *,
+    target_acc: float = 0.90,
+    update_metrics: bool = True,
+) -> dict[str, Any]:
+    """Evaluate float + fixed accuracy on the full official MNIST test set (10k)."""
+    from collections import Counter
+    from datetime import datetime, timezone
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model, plan = _load_model(run_dir)
+    model = model.to(device)
+    _, test_loader = build_mnist_loaders(batch_size=256)
+
+    float_correct = fixed_correct = agree = total = 0
+    per_class_correct: dict[int, int] = {i: 0 for i in range(10)}
+    per_class_total: dict[int, int] = {i: 0 for i in range(10)}
+    fixed_preds: list[int] = []
+
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            float_logits = model.forward_float(images)
+            fixed_logits = model.forward_fixed_point(images, plan=plan)
+            fp = float_logits.argmax(dim=1)
+            fx = fixed_logits.argmax(dim=1)
+            float_correct += (fp == labels).sum().item()
+            fixed_correct += (fx == labels).sum().item()
+            agree += (fp == fx).sum().item()
+            total += labels.size(0)
+            for pred, label in zip(fx.cpu().tolist(), labels.cpu().tolist()):
+                fixed_preds.append(pred)
+                per_class_total[label] += 1
+                if pred == label:
+                    per_class_correct[label] += 1
+
+    float_acc = float_correct / total
+    fixed_acc = fixed_correct / total
+    per_class_acc = {
+        str(k): per_class_correct[k] / per_class_total[k] if per_class_total[k] else 0.0
+        for k in range(10)
+    }
+    report: dict[str, Any] = {
+        "run_dir": str(run_dir.resolve()),
+        "mode": "full_test",
+        "evaluated_at": datetime.now(timezone.utc).isoformat(),
+        "test_size": total,
+        "float_acc": float_acc,
+        "fixed_acc": fixed_acc,
+        "float_fixed_agree": agree / total,
+        "float_fixed_mismatches": total - agree,
+        "target_acc": target_acc,
+        "fixed_pass": fixed_acc >= target_acc,
+        "per_class_fixed_acc": per_class_acc,
+        "fixed_pred_distribution": dict(sorted(Counter(fixed_preds).items())),
+    }
+
+    out_path = run_dir / "full_test_report.json"
+    out_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(
+        f"[full_test] float={float_acc:.4f} fixed={fixed_acc:.4f} "
+        f"agree={report['float_fixed_agree']:.4f} pass={report['fixed_pass']}"
+    )
+    print(f"Wrote {out_path}")
+
+    if update_metrics:
+        metrics_path = run_dir / "metrics.json"
+        metrics: dict[str, Any] = {}
+        if metrics_path.is_file():
+            metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        metrics["float_fixed_acc"] = fixed_acc
+        metrics["evaluation"] = {
+            "evaluated_at": report["evaluated_at"],
+            "test_size": total,
+            "float_acc": float_acc,
+            "fixed_acc": fixed_acc,
+            "float_fixed_agree": report["float_fixed_agree"],
+            "fixed_pass": report["fixed_pass"],
+        }
+        for phase in metrics.get("phases", []):
+            if phase.get("name") == "float":
+                phase["best_test_acc"] = float_acc
+            if phase.get("name") == "fixed":
+                phase["best_test_acc"] = fixed_acc
+        metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+        print(f"Updated {metrics_path}")
+
+    return report
+
+
 def eval_bounds(
     model: NetworkA, loader, device: torch.device, n: int = 500
 ) -> tuple[dict[str, float], bool, str]:
@@ -395,7 +498,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--mode",
         default="all",
-        help="fixed|layerwise|fixed_acc|bounds|ahe|feasibility|all",
+        help="fixed|layerwise|fixed_acc|full_test|bounds|ahe|feasibility|all",
     )
     parser.add_argument("--model-id", default="cnn-mnist-trained")
     parser.add_argument("--ahe-limit", type=int, default=50)
@@ -424,6 +527,12 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"fixed_acc ({report['limit']} samples) = {report['fixed_acc']:.4f}")
         return 0
+
+    if args.mode == "full_test":
+        report = run_full_test(run_dir)
+        if args.json:
+            print(json.dumps(report, indent=2))
+        return 0 if report["fixed_pass"] else 1
 
     modes = [args.mode] if args.mode != "all" else ["all"]
     run_evaluation(

@@ -202,6 +202,9 @@ async def _advance_engine(
         ).model_dump(),
     )
     if inference_complete:
+        from vpin_backend.api.routes.security import record_inference_session
+
+        record_inference_session(num_add, num_mult)
         complete = InferenceComplete(
             num_pt_add=num_add,
             num_pt_mult=num_mult,

@@ -1,6 +1,7 @@
 //! Homomorphic inference **trace** (EC JSON + optional conv windows export).
 
 pub mod conv;
+pub mod digest;
 pub mod ec;
 pub mod ec_layer;
 pub mod fc;
@@ -14,6 +15,7 @@ pub use build::{
     BuildStackInput, LinearStackWitness,
 };
 pub use conv::{load_conv_trace, ConvTraceBundle, ConvWitnessSource};
+pub use digest::{scalar_trace_digest_hex, scalar_trace_digest_hex_from_dir};
 pub use ec::{load_ec_trace, EcTrace};
 pub use ec_layer::{
     load_ec_manifest, manifest_path, slice_ec_by_layer, EcLayerManifest, EcLayerRange, EcLayerSlice,

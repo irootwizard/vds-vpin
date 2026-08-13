@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "description": "Portable release bundle baseline — all paths relative to bundle root",
+  "required_files": [
+    { "path": "vpin-console.exe", "label": "vpin-console.exe", "min_mb": 8 },
+    { "path": "start-vpin-console.ps1", "label": "start script (ps1)" },
+    { "path": "start-vpin-console.bat", "label": "start script (bat)" },
+    { "path": "bin/ahe-cli.exe", "label": "ahe-cli" },
+    { "path": "bin/ahe-server.exe", "label": "ahe-server" },
+    { "path": "data/bsgs/table.bin", "label": "BSGS table.bin", "min_mb": 200 },
+    { "path": "data/weights/cnn-mnist-trained/weight_fc1_64_16.npy", "label": "weight_fc1" },
+    { "path": "data/weights/cnn-mnist-trained/weight_fc2_16_10.npy", "label": "weight_fc2" },
+    { "path": "data/weights/cnn-mnist-trained/bias_fc1_16.npy", "label": "bias_fc1" },
+    { "path": "data/weights/cnn-mnist-trained/bias_fc2_10.npy", "label": "bias_fc2" },
+    { "path": "data/weights/cnn-mnist-trained/truncation_config.json", "label": "truncation_config" },
+    { "path": "data/weights/cnn-mnist-trained/registry_snippet.json", "label": "registry_snippet" },
+    { "path": "config/models-registry.json", "label": "models-registry" },
+    { "path": "config/datasets-catalog.json", "label": "datasets-catalog" },
+    { "path": "config/runtime-artifacts.manifest.json", "label": "runtime-artifacts manifest" },
+    { "path": "config/proof-registry.json", "label": "proof-registry" },
+    { "path": "bin/cp-snark-full.exe", "label": "cp-snark-full (proof CLI)" },
+    { "path": "data/proof/cnn-mnist-trained/proof_artifacts/ec_witness/pointMult/weight.json", "label": "EC witness weight.json" },
+    { "path": "data/proof/cnn-mnist-trained/proof_artifacts/proof_manifest.json", "label": "proof_manifest" },
+    { "path": "model_training/data/MNIST/raw/t10k-images-idx3-ubyte", "label": "MNIST t10k images", "min_mb": 7 },
+    { "path": "model_training/data/MNIST/raw/t10k-labels-idx1-ubyte", "label": "MNIST t10k labels" },
+    { "path": "model_training/data/MNIST/raw/train-images-idx3-ubyte", "label": "MNIST train images", "min_mb": 40 },
+    { "path": "model_training/data/MNIST/raw/train-labels-idx1-ubyte", "label": "MNIST train labels" }
+  ],
+  "optional_files": [
+    { "path": "data/bsgs/table.pickle", "label": "BSGS table.pickle (Python)", "min_mb": 220 }
+  ],
+  "forbidden_patterns": [
+    "\\.md$",
+    "\\.txt$",
+    "(^|/)docs(/|$)"
+  ],
+  "pinned_sha256": {
+    "data/bsgs/table.bin": "f95979470b029a1f87a114031f3c775e5ee0f6d7900570cedf0b5a953399f81c"
+  },
+  "system_prerequisites": [
+    {
+      "id": "webview2",
+      "label": "Microsoft Edge WebView2 Runtime",
+      "note": "Win11 通常已预装；白屏时需安装 Evergreen Bootstrapper"
+    },
+    {
+      "id": "vcruntime140",
+      "label": "Microsoft Visual C++ 2015-2022 Redistributable (x64)",
+      "dll": "VCRUNTIME140.dll",
+      "note": "ahe-cli / ahe-server 依赖；可从 microsoft.com 下载 vc_redist.x64.exe"
+    }
+  ]
+}

@@ -2,6 +2,8 @@
 
 可复现的 **charm-crypto + PBC** 环境，替代手工 WSL `crypto-libs` 配置。
 
+> 零基础最小配置：[`docs/开发环境完整配置指南.md`](../docs/开发环境完整配置指南.md)（§4 OVDS）。
+
 ## 前置
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) 已启动

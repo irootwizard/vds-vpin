@@ -22,6 +22,7 @@ pub struct BuildStackInput<'a> {
 pub struct PoolTraceInput {
     pub windows: Vec<Vec<u128>>,
     pub output_sums: Vec<u128>,
+    pub inv_k_squared_fp: u128,
 }
 
 #[derive(Clone, Debug)]
@@ -65,31 +66,23 @@ pub fn build_linear_stack(input: &BuildStackInput<'_>) -> Result<LinearStackWitn
     let pool = input.pool.as_ref().map(|p| PoolLayerProofSpec {
         windows: p.windows.clone(),
         output_sums: p.output_sums.clone(),
-        inv_k_squared_fp: input.model.pool.inv_k_squared_fp,
+        inv_k_squared_fp: p.inv_k_squared_fp,
     });
 
-    let fc_layers: Vec<FcLayerProofSpec> = if !input.model.fc.is_empty() {
-        if input.model.fc.len() != input.fc.len() {
-            return Err(BuildStackError::FcLayerCount {
-                expected: input.model.fc.len(),
-                got: input.fc.len(),
-            });
-        }
-        input
-            .model
-            .fc
-            .iter()
-            .zip(input.fc.iter())
-            .map(|(params, trace)| FcLayerProofSpec {
-                weights_in_out: params.weights.clone(),
-                bias: params.bias.clone(),
-                inputs: trace.inputs.clone(),
-                outputs: trace.outputs.clone(),
-            })
-            .collect()
-    } else {
+    // FC: activations from trace, static W* from run export (paper §10 / bind_l1).
+    let fc_layers: Vec<FcLayerProofSpec> = if input.fc.is_empty() {
         crate::trace::fc::load_fc_layer_specs(&input.model.network_id)
             .map_err(BuildStackError::ModelLoad)?
+    } else {
+        let specs = crate::trace::fc::load_fc_layer_specs(&input.model.network_id)
+            .map_err(BuildStackError::ModelLoad)?;
+        if specs.len() != input.fc.len() {
+            return Err(BuildStackError::FcLayerCount {
+                expected: input.fc.len(),
+                got: specs.len(),
+            });
+        }
+        specs
     };
 
     Ok(LinearStackWitness {

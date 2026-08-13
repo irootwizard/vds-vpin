@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "vpin-client"))
 sys.path.insert(0, str(REPO / "vpin-backend"))
 
-from vpin_client.crypto.challenge import challenge_from_hex, sample_challenge
-from vpin_client.protocol.messages import ProofBundle
-from vpin_client.verify.pipeline import ModelOpening, TraceBundle, verify_session
+from vpin_backend.crypto.challenge import challenge_from_hex, sample_challenge
+from vpin_backend.protocol.messages import ProofBundle
+from vpin_backend.proof.verify.pipeline import ModelOpening, TraceBundle, verify_session
 from vpin_backend.crypto.server_crypto.bridge import ServerCryptoBridge
 from vpin_backend.protocol.messages import ClientChallenge as BackendChallenge
 from vpin_backend.protocol.server_inputs import ProveRequest, SetupRequest

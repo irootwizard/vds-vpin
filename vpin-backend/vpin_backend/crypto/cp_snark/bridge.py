@@ -1,8 +1,8 @@
 """
-Bridge to src/cp-snark-full (Rust) — **DEPRECATED**.
+Bridge to src/cp-snark-full (Rust) — **computation proof path**.
 
-Use vpin_backend.crypto.server_crypto.bridge.ServerCryptoBridge instead.
-Kept for historical cross-process reference only.
+Use for trained run_dir witness + paper_proof EC schedule (n₂ = q₁ curve embed).
+AHE inference remains separate; do not use vpin-server-crypto for Network A proof.
 """
 
 from __future__ import annotations
@@ -40,8 +40,20 @@ class CpSnarkResult:
     summary: dict | None = None
 
 
+def _challenge_json_for_rust(challenge: object) -> str:
+    """cp-snark-full expects num_point_adds / num_point_mults (Rust serde names)."""
+    data = {
+        "gamma": challenge.gamma,
+        "gamma_add": challenge.gamma_add,
+        "gamma_mult": challenge.gamma_mult,
+        "num_point_adds": challenge.num_pt_add,
+        "num_point_mults": challenge.num_pt_mult,
+    }
+    return json.dumps(data, indent=2)
+
+
 class CpSnarkBridge:
-    """Deprecated — prefer ServerCryptoBridge."""
+    """cp-snark-full CLI bridge for trained Network A computation proof."""
     def __init__(self, repo_root: Path | None = None) -> None:
         settings = get_settings()
         self.repo_root = repo_root or settings.repo_root
@@ -186,6 +198,89 @@ class CpSnarkBridge:
     def run_r4_protocol(self, network: str) -> CpSnarkResult:
         """Cross-process compliant: client γ → server prove → client verify-file."""
         return self.run_phase(network, "r4")
+
+    def run_prove_with_challenge(self, request: "ProveRequest") -> CpSnarkResult:
+        """Prove with client γ using trained run_dir witness (cp-snark-full)."""
+        from vpin_backend.protocol.server_inputs import ProveRequest as PR
+
+        assert isinstance(request, PR)
+        if not request.challenge.gamma:
+            return CpSnarkResult(
+                ok=False,
+                phase="prove-with-challenge",
+                network=request.network_id,
+                stdout="",
+                stderr="missing client gamma",
+            )
+
+        import os
+
+        from vpin_backend.proof.registry import load_proof_plan, resolve_run_dir
+
+        model_id = request.model_id or request.network_id
+        try:
+            run_dir = resolve_run_dir(model_id, request.run_dir)
+            plan = load_proof_plan(
+                model_id,
+                run_dir=run_dir,
+                schedule_mode=request.schedule_mode,
+            )
+        except (KeyError, FileNotFoundError, ValueError) as exc:
+            return CpSnarkResult(
+                ok=False,
+                phase="prove-with-challenge",
+                network=request.network_id,
+                stdout="",
+                stderr=str(exc),
+            )
+
+        env = os.environ.copy()
+        env["VPIN_RUN_DIR"] = str(plan.run_dir)
+        env["VPIN_EC_WITNESS_ROOT"] = str(plan.witness.root)
+        env["VPIN_TRACE_ROOT"] = str(plan.run_dir / "proof_artifacts")
+
+        ch_dir = self.cp_snark_root / "artifacts" / request.network_id
+        ch_dir.mkdir(parents=True, exist_ok=True)
+        ch_path = ch_dir / "client_challenge.json"
+        ch_path.write_text(
+            _challenge_json_for_rust(request.challenge),
+            encoding="utf-8",
+        )
+
+        cmd = [
+            "cargo",
+            "run",
+            "--quiet",
+            "--manifest-path",
+            str(self.manifest),
+            "--",
+            "prove-with-challenge",
+            request.network_id,
+            str(ch_path),
+        ]
+        proc = subprocess.run(
+            cmd,
+            cwd=str(self.cp_snark_root),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=600,
+            env=env,
+        )
+        artifact = self.cp_snark_root / "artifacts" / request.network_id / "protocol.json"
+        return self._result(proc, "prove-with-challenge", request.network_id, artifact)
+
+    def verify_artifact(self, artifact_path: Path) -> CpSnarkResult:
+        proc = self._cargo("verify-file", str(artifact_path))
+        return CpSnarkResult(
+            ok=proc.returncode == 0,
+            phase="verify-file",
+            network=artifact_path.parent.name,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            artifact_path=artifact_path if artifact_path.is_file() else None,
+        )
 
 
 def main() -> None:

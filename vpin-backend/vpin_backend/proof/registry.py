@@ -11,6 +11,7 @@ STANDARD_NETWORK_A_RUN = REPO / "model_training" / "outputs" / "20260622_184254"
 
 _REGISTRY: dict[str, tuple[Path, str]] = {
     "A": (STANDARD_NETWORK_A_RUN, "paper_proof"),
+    "cnn-mnist-trained": (STANDARD_NETWORK_A_RUN, "paper_proof"),
     "cnn-mnist-trained-20260622_184254": (STANDARD_NETWORK_A_RUN, "paper_proof"),
 }
 
