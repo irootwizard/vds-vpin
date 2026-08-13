@@ -1,0 +1,27 @@
+[[permission]]
+identifier = "ahe-commands"
+description = "AHE 推理：invoke 启动 ahe-cli，经 WebSocket 连 ahe-server，进度经 ahe-progress 事件回传"
+commands.allow = [
+  "ensure_runtime_artifacts",
+  "ensure_ahe_server",
+  "ping_ahe_server_health",
+  "get_communication_profile",
+  "run_ahe_inference",
+  "run_ahe_batch_inference",
+  "ahe_preprocess_rust",
+  "ahe_preprocess_batch_rust",
+  "preprocess_upload_file_rust",
+  "ahe_preprocess",
+  "ahe_preprocess_batch",
+  "preprocess_dataset_single",
+  "preprocess_dataset_batch",
+  "preprocess_upload_file",
+  "read_datasets_catalog",
+  "read_models_registry",
+  "read_proof_plan",
+  "proof_prove",
+  "read_proof_artifact",
+  "proof_verify",
+  "write_text_file",
+  "greet",
+]

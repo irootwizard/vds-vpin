@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+_REPO = Path(__file__).resolve().parents[2]
+for sub in ("", "vpin-client"):
+    p = (_REPO / sub) if sub else _REPO
+    if p.is_dir() and str(p) not in sys.path:
+        sys.path.insert(0, str(p))
+
 import uvicorn
 
 from vpin_backend.api.app import create_app

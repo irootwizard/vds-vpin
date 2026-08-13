@@ -16,11 +16,10 @@ pub struct PoolTraceBundle {
     pub output_flat: Vec<String>,
 }
 
+use crate::trace::paths::trace_file;
+
 fn path(network: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("model_exports")
-        .join(network)
-        .join("pool_trace.json")
+    trace_file(network, "pool_trace.json")
 }
 
 fn parse_u128_vec(v: &[String]) -> Result<Vec<u128>, String> {
@@ -42,8 +41,13 @@ pub fn load_pool_trace(network: &str) -> Result<Option<PoolTraceInput>, String> 
         .map(|w| parse_u128_vec(w))
         .collect::<Result<_, _>>()?;
     let output_sums = parse_u128_vec(&b.output_flat)?;
+    let inv_k_squared_fp = b
+        .inv_k_squared_fp
+        .parse::<u128>()
+        .map_err(|e| format!("pool inv_k_squared_fp: {e}"))?;
     Ok(Some(PoolTraceInput {
         windows,
         output_sums,
+        inv_k_squared_fp,
     }))
 }

@@ -1,0 +1,40 @@
+{
+  "model_id": "A",
+  "mode": "paper_proof",
+  "total_pt_mul": 178,
+  "total_pt_add": 2144,
+  "layers": [
+    {
+      "layer_id": "conv",
+      "kind": "convolution",
+      "pt_mul_start": 0,
+      "pt_mul_end": 18,
+      "pt_add_start": 0,
+      "pt_add_end": 16
+    },
+    {
+      "layer_id": "pool",
+      "kind": "average_pooling",
+      "pt_mul_start": 18,
+      "pt_mul_end": 18,
+      "pt_add_start": 16,
+      "pt_add_end": 1936
+    },
+    {
+      "layer_id": "fc1",
+      "kind": "fully_connected",
+      "pt_mul_start": 18,
+      "pt_mul_end": 146,
+      "pt_add_start": 1936,
+      "pt_add_end": 2094
+    },
+    {
+      "layer_id": "fc2",
+      "kind": "fully_connected",
+      "pt_mul_start": 146,
+      "pt_mul_end": 178,
+      "pt_add_start": 2094,
+      "pt_add_end": 2144
+    }
+  ]
+}

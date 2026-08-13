@@ -17,17 +17,20 @@ from vpin_backend.storage.registry import get_model, load_registry, save_registr
 
 
 def _has_npy_bundle(directory: Path, network: str) -> bool:
-    from vpin_client.models.weights_layout import is_lenet_cifar
+    try:
+        from vpin_client.models.weights_layout import is_lenet_cifar
 
-    if is_lenet_cifar(network):
-        from vpin_client.models.lenet_weights_layout import get_lenet_layout
+        if is_lenet_cifar(network):
+            from vpin_client.models.lenet_weights_layout import get_lenet_layout
 
-        layout = get_lenet_layout()
-    else:
-        from vpin_client.models.weights_layout import get_layout
+            layout = get_lenet_layout()
+        else:
+            from vpin_client.models.weights_layout import get_layout
 
-        layout = get_layout(network)
-    return all((directory / name).is_file() for name in layout.required_files)
+            layout = get_layout(network)
+        return all((directory / name).is_file() for name in layout.required_files)
+    except (KeyError, ImportError, FileNotFoundError, TypeError, AttributeError):
+        return False
 
 
 def _restore_legacy_weights() -> Path | None:
@@ -134,34 +137,65 @@ def _register_from_output_runs() -> None:
     if not candidates:
         return
 
-    candidates.sort(key=lambda x: x[0], reverse=True)
-    _, weights_dir, entry = candidates[0]
-    model_id = entry.get("id", "cnn-mnist-trained")
     default = settings.cnn_networks_dir / "Pre_trained_model"
-    stored = store_weights_path(weights_dir, repo_root=settings.repo_root)
-    existing = get_model(model_id)
-    if existing:
-        if (
-            resolve_weights_dir(existing, default) == weights_dir.resolve()
-            and existing.get("weights_dir") == stored
-        ):
-            return
+    for _, weights_dir, entry in sorted(candidates, key=lambda x: x[0], reverse=True):
+        model_id = entry.get("id", "cnn-mnist-trained")
+        stored = store_weights_path(weights_dir, repo_root=settings.repo_root)
+        existing = get_model(model_id)
+        if existing:
+            if (
+                resolve_weights_dir(existing, default) == weights_dir.resolve()
+                and existing.get("weights_dir") == stored
+            ):
+                continue
 
-    upsert_model(
-        {
-            **entry,
-            "id": model_id,
-            "weights_dir": stored,
-            "framework": entry.get("framework", "npy"),
-            "network": entry.get("network", "A"),
-        }
-    )
+        upsert_model(
+            {
+                **entry,
+                "id": model_id,
+                "weights_dir": stored,
+                "framework": entry.get("framework", "npy"),
+                "network": entry.get("network", "A"),
+            }
+        )
+
+
+def _register_proof_plans_from_runs() -> None:
+    """Link AHE model_id → proof run_dir (same training output, independent prove path)."""
+    from vpin_backend.proof.registry import register_proof_plan
+
+    settings = get_settings()
+    outputs = settings.repo_root / "model_training" / "outputs"
+    if not outputs.is_dir():
+        return
+
+    for run_dir in outputs.iterdir():
+        if not run_dir.is_dir():
+            continue
+        ec_w = run_dir / "proof_artifacts" / "ec_witness" / "pointMult" / "weight.json"
+        if not ec_w.is_file():
+            continue
+        snippet = run_dir / "registry_snippet.json"
+        model_id = f"cnn-mnist-trained-{run_dir.name}"
+        if snippet.is_file():
+            entry = json.loads(snippet.read_text(encoding="utf-8"))
+            model_id = str(entry.get("id", model_id))
+        register_proof_plan(model_id, run_dir, "paper_proof")
+        register_proof_plan("A", run_dir, "paper_proof")
 
 
 def bootstrap_ahe_models() -> None:
     """Ensure at least one AHE-capable model is registered."""
-    legacy_dir = _restore_legacy_weights()
-    if legacy_dir is not None:
-        _register_builtin_legacy(legacy_dir)
-    _register_from_output_runs()
-    repair_registry_paths()
+    try:
+        legacy_dir = _restore_legacy_weights()
+        if legacy_dir is not None:
+            _register_builtin_legacy(legacy_dir)
+        _register_from_output_runs()
+        repair_registry_paths()
+        _register_proof_plans_from_runs()
+    except Exception as exc:
+        print(f"Warning: Model bootstrap failed: {exc}", file=sys.stderr)
+        print(
+            "Server starting without registered models - some features may be limited",
+            file=sys.stderr,
+        )

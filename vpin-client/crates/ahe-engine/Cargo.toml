@@ -1,0 +1,14 @@
+[package]
+name = "ahe-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ahe-codec-ec.workspace = true
+ahe-crypto-e2-ec.workspace = true
+num-bigint.workspace = true
+ahe-crypto-e2.workspace = true
+ahe-homomorphic.workspace = true
+ahe-model-bundle.workspace = true
+rand.workspace = true
+thiserror.workspace = true

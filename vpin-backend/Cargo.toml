@@ -1,3 +1,48 @@
 [workspace]
-members = ["crates/vpin-server-crypto"]
 resolver = "2"
+members = [
+    "apps/ahe-server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+# Shared AHE crypto crates live in vpin-client; server links them at build time only.
+# Runtime: ahe-server ↔ ahe-cli communicate via WebSocket (P0–P3), no in-process coupling.
+[workspace.dependencies]
+ahe-crypto-e2 = { path = "../vpin-client/crates/ahe-crypto-e2" }
+ahe-crypto-e2-ec = { path = "../vpin-client/crates/ahe-crypto-e2-ec" }
+ahe-codec = { path = "../vpin-client/crates/ahe-codec" }
+ahe-codec-ec = { path = "../vpin-client/crates/ahe-codec-ec" }
+ahe-model-bundle = { path = "../vpin-client/crates/ahe-model-bundle" }
+ahe-homomorphic = { path = "../vpin-client/crates/ahe-homomorphic" }
+ahe-engine = { path = "../vpin-client/crates/ahe-engine" }
+ahe-protocol = { path = "../vpin-client/crates/ahe-protocol" }
+ahe-client = { path = "../vpin-client/crates/ahe-client" }
+ark-ff = "0.5"
+ark-ec = "0.5"
+ark-serialize = "0.5"
+num-bigint = "0.4"
+num-traits = "0.2"
+rand = "0.8"
+rayon = "1.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7", features = ["ws"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tokio-tungstenite = "0.24"
+futures-util = "0.3"
+ndarray = "0.16"
+ndarray-npy = "0.9"
+memmap2 = "0.9"
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"
+sha2 = "0.10"
+base64 = "0.22"

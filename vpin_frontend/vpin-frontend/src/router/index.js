@@ -9,6 +9,7 @@ import DemoWelcomeView from "../views/demo/DemoWelcomeView.vue";
 import DemoDeployView from "../views/demo/DemoDeployView.vue";
 import DemoSessionView from "../views/demo/DemoSessionView.vue";
 import AheDemoView from "../views/demo/AheDemoView.vue";
+import SecurityCenterView from "../views/SecurityCenterView.vue";
 
 const routes = [
   {
@@ -38,8 +39,8 @@ const routes = [
       {
         path: "security",
         name: "security",
-        component: EmbedPage,
-        meta: { page: "security-center.html", title: "安全中心" },
+        component: SecurityCenterView,
+        meta: { title: "安全中心" },
       },
       {
         path: "security/verification",

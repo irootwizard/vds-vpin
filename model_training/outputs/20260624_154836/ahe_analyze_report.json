@@ -1,0 +1,699 @@
+{
+  "model_id": "lenet-cifar10",
+  "family": "lenet_cifar",
+  "adapter_id": "cifar_rgb",
+  "input_shape": [
+    3,
+    32,
+    32
+  ],
+  "unsupported_ops": [],
+  "overflow_causes": [],
+  "warnings": [],
+  "failure_class": "none",
+  "failure_reasons": [],
+  "interaction_cost": 4,
+  "parse_source": "family_template",
+  "deployable": true,
+  "graph": {
+    "family": "lenet_cifar",
+    "adapter_id": "cifar_rgb",
+    "input_shape": [
+      3,
+      32,
+      32
+    ],
+    "nodes": [
+      {
+        "op": "encrypt",
+        "name": "encrypt",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "shape": [
+            3,
+            32,
+            32
+          ]
+        }
+      },
+      {
+        "op": "conv",
+        "name": "conv1",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "in_ch": 3,
+          "out_ch": 6,
+          "kernel": 5,
+          "out_shape": [
+            6,
+            28,
+            28
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_conv1",
+        "f_in": 16,
+        "f_out": 16,
+        "client_op": "relu",
+        "checkpoint": "after_conv1",
+        "params": {
+          "shape": [
+            6,
+            28,
+            28
+          ]
+        }
+      },
+      {
+        "op": "sum_pool",
+        "name": "pool1",
+        "f_in": 16,
+        "f_out": 28,
+        "params": {
+          "k": 2,
+          "inv_bits": 10,
+          "average": false,
+          "out_shape": [
+            6,
+            14,
+            14
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_pool1",
+        "f_in": 28,
+        "f_out": 16,
+        "client_op": "shift",
+        "checkpoint": "after_pool1",
+        "params": {
+          "shape": [
+            6,
+            14,
+            14
+          ]
+        }
+      },
+      {
+        "op": "conv",
+        "name": "conv2",
+        "f_in": 16,
+        "f_out": 16,
+        "params": {
+          "in_ch": 6,
+          "out_ch": 16,
+          "kernel": 5,
+          "out_shape": [
+            16,
+            10,
+            10
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_conv2",
+        "f_in": 16,
+        "f_out": 16,
+        "client_op": "relu",
+        "checkpoint": "after_conv2",
+        "params": {
+          "shape": [
+            16,
+            10,
+            10
+          ]
+        }
+      },
+      {
+        "op": "sum_pool",
+        "name": "pool2",
+        "f_in": 16,
+        "f_out": 28,
+        "params": {
+          "k": 2,
+          "inv_bits": 10,
+          "average": false,
+          "out_shape": [
+            16,
+            5,
+            5
+          ]
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_pool2",
+        "f_in": 28,
+        "f_out": 16,
+        "client_op": "shift",
+        "checkpoint": "after_pool2",
+        "params": {
+          "shape": [
+            16,
+            5,
+            5
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc1",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 400,
+          "out": 120
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_fc1",
+        "f_in": 32,
+        "f_out": 16,
+        "client_op": "relu_then_shift",
+        "checkpoint": "after_fc1",
+        "params": {
+          "shape": [
+            120
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc2",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 120,
+          "out": 84
+        }
+      },
+      {
+        "op": "relu",
+        "name": "after_fc2",
+        "f_in": 32,
+        "f_out": 16,
+        "client_op": "relu_then_shift",
+        "checkpoint": "after_fc2",
+        "params": {
+          "shape": [
+            84
+          ]
+        }
+      },
+      {
+        "op": "fc",
+        "name": "fc3",
+        "f_in": 16,
+        "f_out": 32,
+        "params": {
+          "in": 84,
+          "out": 10
+        }
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "after_conv1",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "id": "after_pool1",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16
+      },
+      {
+        "id": "after_conv2",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16
+      },
+      {
+        "id": "after_pool2",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16
+      },
+      {
+        "id": "after_fc1",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16
+      },
+      {
+        "id": "after_fc2",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16
+      }
+    ]
+  },
+  "runtime_checkpoints": [
+    {
+      "id": "after_conv1",
+      "compile_client_op": "relu",
+      "runtime_client_op": "conv_relu",
+      "shift_bits": null,
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool1",
+      "compile_client_op": "shift",
+      "runtime_client_op": "shift",
+      "shift_bits": 28,
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_conv2",
+      "compile_client_op": "relu",
+      "runtime_client_op": "conv_relu",
+      "shift_bits": null,
+      "from_bits": 16,
+      "to_bits": 16
+    },
+    {
+      "id": "after_pool2",
+      "compile_client_op": "shift",
+      "runtime_client_op": "shift",
+      "shift_bits": 28,
+      "from_bits": 28,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc1",
+      "compile_client_op": "relu_then_shift",
+      "runtime_client_op": "relu_then_shift",
+      "shift_bits": 32,
+      "from_bits": 32,
+      "to_bits": 16
+    },
+    {
+      "id": "after_fc2",
+      "compile_client_op": "relu_then_shift",
+      "runtime_client_op": "relu_then_shift",
+      "shift_bits": 32,
+      "from_bits": 32,
+      "to_bits": 16
+    }
+  ],
+  "diagnostics": {
+    "residual_adds": 0,
+    "checkpoint_count": 6,
+    "bsgs_limit": 10239999999999,
+    "int32_limit": 2147483647,
+    "engine_available": true,
+    "dataset_gate_cifar10": true
+  },
+  "deploy_plan": {
+    "model_id": "lenet-cifar10",
+    "family": "lenet_cifar",
+    "adapter_id": "cifar_rgb",
+    "input_shape": [
+      3,
+      32,
+      32
+    ],
+    "graph": {
+      "family": "lenet_cifar",
+      "adapter_id": "cifar_rgb",
+      "input_shape": [
+        3,
+        32,
+        32
+      ],
+      "nodes": [
+        {
+          "op": "encrypt",
+          "name": "encrypt",
+          "f_in": 16,
+          "f_out": 16,
+          "params": {
+            "shape": [
+              3,
+              32,
+              32
+            ]
+          }
+        },
+        {
+          "op": "conv",
+          "name": "conv1",
+          "f_in": 16,
+          "f_out": 16,
+          "params": {
+            "in_ch": 3,
+            "out_ch": 6,
+            "kernel": 5,
+            "out_shape": [
+              6,
+              28,
+              28
+            ]
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_conv1",
+          "f_in": 16,
+          "f_out": 16,
+          "client_op": "relu",
+          "checkpoint": "after_conv1",
+          "params": {
+            "shape": [
+              6,
+              28,
+              28
+            ]
+          }
+        },
+        {
+          "op": "sum_pool",
+          "name": "pool1",
+          "f_in": 16,
+          "f_out": 28,
+          "params": {
+            "k": 2,
+            "inv_bits": 10,
+            "average": false,
+            "out_shape": [
+              6,
+              14,
+              14
+            ]
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_pool1",
+          "f_in": 28,
+          "f_out": 16,
+          "client_op": "shift",
+          "checkpoint": "after_pool1",
+          "params": {
+            "shape": [
+              6,
+              14,
+              14
+            ]
+          }
+        },
+        {
+          "op": "conv",
+          "name": "conv2",
+          "f_in": 16,
+          "f_out": 16,
+          "params": {
+            "in_ch": 6,
+            "out_ch": 16,
+            "kernel": 5,
+            "out_shape": [
+              16,
+              10,
+              10
+            ]
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_conv2",
+          "f_in": 16,
+          "f_out": 16,
+          "client_op": "relu",
+          "checkpoint": "after_conv2",
+          "params": {
+            "shape": [
+              16,
+              10,
+              10
+            ]
+          }
+        },
+        {
+          "op": "sum_pool",
+          "name": "pool2",
+          "f_in": 16,
+          "f_out": 28,
+          "params": {
+            "k": 2,
+            "inv_bits": 10,
+            "average": false,
+            "out_shape": [
+              16,
+              5,
+              5
+            ]
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_pool2",
+          "f_in": 28,
+          "f_out": 16,
+          "client_op": "shift",
+          "checkpoint": "after_pool2",
+          "params": {
+            "shape": [
+              16,
+              5,
+              5
+            ]
+          }
+        },
+        {
+          "op": "fc",
+          "name": "fc1",
+          "f_in": 16,
+          "f_out": 32,
+          "params": {
+            "in": 400,
+            "out": 120
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_fc1",
+          "f_in": 32,
+          "f_out": 16,
+          "client_op": "relu_then_shift",
+          "checkpoint": "after_fc1",
+          "params": {
+            "shape": [
+              120
+            ]
+          }
+        },
+        {
+          "op": "fc",
+          "name": "fc2",
+          "f_in": 16,
+          "f_out": 32,
+          "params": {
+            "in": 120,
+            "out": 84
+          }
+        },
+        {
+          "op": "relu",
+          "name": "after_fc2",
+          "f_in": 32,
+          "f_out": 16,
+          "client_op": "relu_then_shift",
+          "checkpoint": "after_fc2",
+          "params": {
+            "shape": [
+              84
+            ]
+          }
+        },
+        {
+          "op": "fc",
+          "name": "fc3",
+          "f_in": 16,
+          "f_out": 32,
+          "params": {
+            "in": 84,
+            "out": 10
+          }
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "after_conv1",
+          "client_op": "relu",
+          "from_bits": 16,
+          "to_bits": 16
+        },
+        {
+          "id": "after_pool1",
+          "client_op": "shift",
+          "from_bits": 28,
+          "to_bits": 16
+        },
+        {
+          "id": "after_conv2",
+          "client_op": "relu",
+          "from_bits": 16,
+          "to_bits": 16
+        },
+        {
+          "id": "after_pool2",
+          "client_op": "shift",
+          "from_bits": 28,
+          "to_bits": 16
+        },
+        {
+          "id": "after_fc1",
+          "client_op": "relu_then_shift",
+          "from_bits": 32,
+          "to_bits": 16
+        },
+        {
+          "id": "after_fc2",
+          "client_op": "relu_then_shift",
+          "from_bits": 32,
+          "to_bits": 16
+        }
+      ]
+    },
+    "checkpoints": [
+      {
+        "id": "after_conv1",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16,
+        "is_shift": false,
+        "m_pre": 122795.0,
+        "m_post": 122795.0,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": true,
+        "m_pre_formula": 65535.9934464,
+        "m_pre_actual": 122795.0
+      },
+      {
+        "id": "after_pool1",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16,
+        "is_shift": true,
+        "m_pre": 440309760.0,
+        "m_post": 107497.5,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": false,
+        "m_pre_formula": 268435429.1564544,
+        "m_pre_actual": 440309760.0
+      },
+      {
+        "id": "after_conv2",
+        "client_op": "relu",
+        "from_bits": 16,
+        "to_bits": 16,
+        "is_shift": false,
+        "m_pre": 184298.0,
+        "m_post": 184298.0,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": true,
+        "m_pre_formula": 65535.9934464,
+        "m_pre_actual": 184298.0
+      },
+      {
+        "id": "after_pool2",
+        "client_op": "shift",
+        "from_bits": 28,
+        "to_bits": 16,
+        "is_shift": true,
+        "m_pre": 712714240.0,
+        "m_post": 174002.5,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": false,
+        "m_pre_formula": 268435429.1564544,
+        "m_pre_actual": 712714240.0
+      },
+      {
+        "id": "after_fc1",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16,
+        "is_shift": true,
+        "m_pre": 38712958986.0,
+        "m_post": 590712.8751525879,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": true,
+        "m_pre_formula": 4294966866.5032706,
+        "m_pre_actual": 38712958986.0
+      },
+      {
+        "id": "after_fc2",
+        "client_op": "relu_then_shift",
+        "from_bits": 32,
+        "to_bits": 16,
+        "is_shift": true,
+        "m_pre": 24488413002.0,
+        "m_post": 373663.5284729004,
+        "bsgs_ok": true,
+        "int32_ok": true,
+        "needs_client_return": true,
+        "m_pre_formula": 4294966866.5032706,
+        "m_pre_actual": 24488413002.0
+      }
+    ],
+    "truncation_phases": [
+      "after_conv1",
+      "after_conv2",
+      "after_fc1",
+      "after_fc2"
+    ],
+    "skip_return_phases": [
+      "after_pool1",
+      "after_pool2"
+    ],
+    "range_ok": true,
+    "accuracy_ok": true,
+    "feasible": true,
+    "deployable": true,
+    "accuracy": {
+      "n_samples": 2048,
+      "reference_acc": 0.58056640625,
+      "ahe_acc": 0.58056640625,
+      "acc_gap": 0.0,
+      "pred_mismatches": 0,
+      "tolerance": 0.1,
+      "ok": true,
+      "ahe_mode": "plain_homomorphic_proxy",
+      "float_fixed_diagnostic": {
+        "n_samples": 2048,
+        "float_acc": 0.560546875,
+        "fixed_acc": 0.58056640625,
+        "float_fixed_gap": 0.02001953125,
+        "pred_mismatches": 383,
+        "diagnostic_only": true
+      }
+    },
+    "calibration": {},
+    "constants": {
+      "F": 16,
+      "eps_min": 0.001,
+      "eps_max": 0.9999999,
+      "bsgs_limit": 10239999999999,
+      "int32_limit": 2147483647,
+      "acc_gap_threshold": 0.1
+    },
+    "feasible_reasons": [],
+    "errors": []
+  }
+}

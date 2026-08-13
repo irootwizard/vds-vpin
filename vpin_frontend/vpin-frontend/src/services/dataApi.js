@@ -1,5 +1,8 @@
 const API_BASE = import.meta.env.VITE_VPIN_API || "/api/v1";
 
+const CLIENT_ONLY =
+  "输入预处理已移至客户端（Tauri / vpin_client），服务端不再提供 /data/* 预处理 API。";
+
 async function getJson(path) {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
@@ -9,35 +12,27 @@ async function getJson(path) {
   return res.json();
 }
 
-/** Server-side official MNIST preprocess (single sample). */
-export function fetchOfficialPreprocess(index) {
-  return getJson(`/data/official/test/${index}`);
+/** @deprecated Use aheClient.pythonPreprocessOfficial / rustPreprocessOfficial (local Tauri). */
+export function fetchOfficialPreprocess(_index) {
+  return Promise.reject(new Error(CLIENT_ONLY));
 }
 
-/** Server-side official MNIST batch preprocess. */
-export function fetchOfficialBatch(start = 0, count = 10) {
-  return getJson(`/data/official/batch?start=${start}&count=${count}`);
+/** @deprecated Use aheClient.pythonPreprocessBatch (local Tauri). */
+export function fetchOfficialBatch(_start = 0, _count = 10) {
+  return Promise.reject(new Error(CLIENT_ONLY));
 }
 
-/** Upload image file → server preprocess + store. */
-export async function uploadAndPreprocess(file) {
-  const form = new FormData();
-  form.append("file", file);
-  const res = await fetch(`${API_BASE}/data/upload/preprocess`, {
-    method: "POST",
-    body: form,
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `upload preprocess ${res.status}`);
-  }
-  return res.json();
+/** @deprecated Use aheClient.pythonPreprocessUpload (local file path via Tauri). */
+export async function uploadAndPreprocess(_file) {
+  throw new Error(CLIENT_ONLY);
 }
 
-export function listUploads(limit = 50) {
-  return getJson(`/data/uploads?limit=${limit}`);
+/** @deprecated Server-side upload index removed. */
+export function listUploads(_limit = 50) {
+  return Promise.reject(new Error(CLIENT_ONLY));
 }
 
-export function getUploadMeta(uploadId) {
-  return getJson(`/data/upload/${uploadId}`);
+/** @deprecated Server-side upload meta removed. */
+export function getUploadMeta(_uploadId) {
+  return Promise.reject(new Error(CLIENT_ONLY));
 }

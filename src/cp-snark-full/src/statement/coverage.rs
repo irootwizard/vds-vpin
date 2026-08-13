@@ -10,6 +10,7 @@ pub enum ProofCoverageV2 {
     EcPlusL1Binding,
     EcPlusScalarCheck,
     EcPlusMacRlc,
+    LayerProofsPlusCps,
 }
 
 impl ProofCoverageV2 {
@@ -19,6 +20,7 @@ impl ProofCoverageV2 {
             Self::EcPlusL1Binding => "ec_plus_l1_binding",
             Self::EcPlusScalarCheck => "ec_plus_scalar_check",
             Self::EcPlusMacRlc => "ec_plus_mac_rlc",
+            Self::LayerProofsPlusCps => "layer_proofs_plus_cps",
         }
     }
 }

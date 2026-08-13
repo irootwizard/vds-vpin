@@ -1,0 +1,26 @@
+{
+  "engine": "rust-ec",
+  "backend": "ws://127.0.0.1:8000/api/v1/session/ws",
+  "model_id": "cnn-mnist-trained",
+  "start": 0,
+  "limit": 100,
+  "concurrency_levels": [
+    8,
+    16,
+    24,
+    32,
+    48
+  ],
+  "watch_names": [
+    "ahe-cli.exe",
+    "ahe-server.exe"
+  ],
+  "host": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.7",
+    "cpu_count": 16,
+    "pid": 43228
+  },
+  "rows": [],
+  "created_at": "2026-06-28T09:45:14.238722+00:00"
+}

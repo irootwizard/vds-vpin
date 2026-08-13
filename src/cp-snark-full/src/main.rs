@@ -75,9 +75,10 @@ fn main() {
             println!("  prove time: {} ms", artifacts.prove_time_ms);
         }
         "prove" => {
-            let (num_point_mults, _, _, _, _) = cp_snark_full::load_data::load_data(network);
+            let (num_point_mults, _, _, _, _) =
+                cp_snark_full::load_data::load_data(network).expect("load_data");
             let (num_point_adds, _, _, _, _, _) =
-                cp_snark_full::load_data_add::load_data_add(network);
+                cp_snark_full::load_data_add::load_data_add(network).expect("load_data_add");
             let challenge = ClientChallenge::sample(num_point_adds, num_point_mults);
             let artifacts = prover_run(network, challenge);
             save_artifacts(&artifacts).expect("save");

@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from vpin_backend.config import get_settings
+from vpin_backend.inference.ec_schedule import load_paper_proof_counts
 from vpin_backend.inference.trace_export import export_traces, load_trace_bundle
 
 
@@ -55,12 +56,11 @@ def run_inference_subprocess(network: str = "A") -> InferenceResult:
             check=False,
         )
     trace_paths = export_traces(network)
-    num_pt_mult = 178 if network.upper() == "A" else 0
-    num_pt_add = 2144 if network.upper() == "A" else 0
+    counts = load_paper_proof_counts(network)
     return InferenceResult(
         network_id=network,
-        num_pt_add=num_pt_add,
-        num_pt_mult=num_pt_mult,
+        num_pt_add=counts.num_pt_add,
+        num_pt_mult=counts.num_pt_mul,
         trace_paths=trace_paths,
         witness_root=witness_root if witness_root.is_dir() else None,
     )

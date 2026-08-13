@@ -11,6 +11,7 @@ pub mod protocol;
 pub mod statement;
 pub mod trace;
 pub mod verify;
+pub mod witness;
 pub mod load_data;
 pub mod load_data_add;
 
@@ -26,4 +27,8 @@ pub use protocol::{
     prover_run, prover_with_challenge_json, run_full_protocol, sample_challenge_json,
     save_artifacts, setup_and_commit, verifier_from_path, verifier_pipeline, verifier_run,
     ProtocolArtifacts,
+};
+pub use witness::{
+    clear_active_ec_witness_root, discover_run_bundle, load_ec_witness, load_ec_witness_from_run_dir,
+    set_active_ec_witness_root, EcWitnessBundle, EcWitnessManifest, ModelProofContext, ProofPlan,
 };

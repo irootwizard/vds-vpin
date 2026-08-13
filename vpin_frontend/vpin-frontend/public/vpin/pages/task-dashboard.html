@@ -227,67 +227,40 @@
                         </div>
                     </div>
                     
-                    <!-- 安全运行状态面板 -->
+                    <!-- 安全运行状态面板（详情见 Vue 安全中心 /security） -->
                     <div class="security-panel">
                         <h2 class="section-title">
                             <img src="../assets/icons/shield-check.svg" alt="安全">
                             安全运行状态
                         </h2>
-                        
+                        <p style="color: #8c8c8c; margin-bottom: 16px;">
+                            通信方式、推理用量与计算量证明校验已迁移至
+                            <a href="../pages/security-center.html">安全中心</a>。
+                        </p>
                         <div class="security-status-grid">
-                            <div class="status-card secure">
-                                <div class="status-icon">
-                                    <img src="../assets/icons/lock-check.svg" alt="TEE">
-                                </div>
-                                <div class="status-content">
-                                    <h3>TEE保护状态</h3>
-                                    <p>当前任务在可信执行环境中运行</p>
-                                    <div class="status-details">
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/check.svg" alt="通过">
-                                            硬件隔离: 启用
-                                        </span>
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/check.svg" alt="通过">
-                                            内存加密: 启用
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
                             <div class="status-card secure">
                                 <div class="status-icon">
                                     <img src="../assets/icons/encryption.svg" alt="加密">
                                 </div>
                                 <div class="status-content">
                                     <h3>加密通信</h3>
-                                    <p>端到端TLS 1.3加密</p>
+                                    <p>HTTP / WS 明文（开发环境）</p>
                                     <div class="status-details">
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/check.svg" alt="通过">
-                                            证书验证: 通过
-                                        </span>
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/check.svg" alt="通过">
-                                            前向保密: 启用
-                                        </span>
+                                        <span class="detail-item">应用层：AHE 密文载荷</span>
+                                        <span class="detail-item">证书：未配置</span>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="status-card warning">
                                 <div class="status-icon">
-                                    <img src="../assets/icons/privacy.svg" alt="隐私">
+                                    <img src="../assets/icons/privacy.svg" alt="用量">
                                 </div>
                                 <div class="status-content">
-                                    <h3>隐私预算</h3>
-                                    <p>剩余预算: 42%</p>
+                                    <h3>推理用量</h3>
+                                    <p>总推理次数与 pt_add/pt_mult 统计</p>
                                     <div class="status-details">
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/alert.svg" alt="警告">
-                                            本周已使用: 58%
-                                        </span>
-                                        <button class="btn-link">调整预算</button>
+                                        <span class="detail-item">详见安全中心图表</span>
                                     </div>
                                 </div>
                             </div>
@@ -297,14 +270,10 @@
                                     <img src="../assets/icons/verification.svg" alt="验证">
                                 </div>
                                 <div class="status-content">
-                                    <h3>远程证明</h3>
-                                    <p>最新验证: 2小时前</p>
+                                    <h3>计算量证明校验</h3>
+                                    <p>待接入 server-crypto / CP-SNARK</p>
                                     <div class="status-details">
-                                        <span class="detail-item">
-                                            <img src="../assets/icons/check.svg" alt="通过">
-                                            TEE完整性: 已验证
-                                        </span>
-                                        <button class="btn-link">查看报告</button>
+                                        <a class="btn-link" href="../pages/verification-report.html">查看报告</a>
                                     </div>
                                 </div>
                             </div>

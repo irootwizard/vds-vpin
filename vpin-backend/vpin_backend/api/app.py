@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from vpin_backend.api.routes import crypto, data, health, models, mnist, session
+from vpin_backend.api.routes import crypto, datasets, health, models, mnist, proof, security, session
 from vpin_backend.config import get_settings
 
 
@@ -29,15 +29,16 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(crypto.router, prefix="/api/v1/crypto")
     app.include_router(models.router, prefix="/api/v1")
+    app.include_router(datasets.router, prefix="/api/v1")
     app.include_router(mnist.router, prefix="/api/v1")
-    app.include_router(data.router, prefix="/api/v1")
+    app.include_router(proof.router, prefix="/api/v1")
+    app.include_router(security.router, prefix="/api/v1")
     app.include_router(session.router, prefix="/api/v1")
 
     @app.on_event("startup")
     async def _startup() -> None:
         settings.resolved_data_dir.mkdir(parents=True, exist_ok=True)
         (settings.resolved_data_dir / "models").mkdir(exist_ok=True)
-        (settings.resolved_data_dir / "uploads").mkdir(exist_ok=True)
         from vpin_backend.storage.bootstrap import bootstrap_ahe_models
 
         bootstrap_ahe_models()

@@ -1,0 +1,15 @@
+[package]
+name = "ahe-homomorphic"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ahe-codec.workspace = true
+ahe-codec-ec.workspace = true
+ahe-crypto-e2.workspace = true
+ahe-model-bundle.workspace = true
+ndarray.workspace = true
+num-bigint.workspace = true
+rand.workspace = true
+rayon.workspace = true
+thiserror.workspace = true

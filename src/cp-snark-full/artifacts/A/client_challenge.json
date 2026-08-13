@@ -1,0 +1,7 @@
+{
+  "gamma": "132577d0666665c1923752cdda4ff08fddda1516ec80ac83cfa71586bebbaaa3",
+  "gamma_add": "d424f7e4656954ffba466d80db58d605476326808eabc7fc6f4a583a1042ff77",
+  "gamma_mult": "019f3d7dc8a92e99a45022adfbb822132d51a86a399101fb3552eb14d3e0884f",
+  "num_point_adds": 2144,
+  "num_point_mults": 178
+}

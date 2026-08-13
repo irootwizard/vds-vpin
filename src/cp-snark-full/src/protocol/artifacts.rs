@@ -5,7 +5,9 @@ use std::path::PathBuf;
 
 use crate::challenge::ClientChallenge;
 use crate::circuit::ec::SubCircuitProof;
+use crate::circuit::layer::LayerProofBundle;
 use crate::circuit::mac_rlc::MacRlcProof;
+use crate::commit::cps::CpsCommitment;
 use crate::commit::{
     InputCommitmentBundle, InputCommitmentOpening, ModelCommitmentBundle, ModelCommitmentOpening,
 };
@@ -70,6 +72,29 @@ pub struct ProtocolArtifacts {
     pub prove_timing: Option<ProveTiming>,
     pub prove_time_ms: u128,
     pub verify_time_ms: u128,
+    /// B′ Spartan PC commitment over W* (replaces Pedersen cm_W when present).
+    #[serde(default)]
+    pub cps_commitment: Option<CpsCommitment>,
+    #[serde(default)]
+    pub cps_aux_commitment: Option<CpsCommitment>,
+    /// M5 per-layer π stubs / future R1CS proofs.
+    #[serde(default)]
+    pub layer_proofs: Option<LayerProofBundle>,
+    /// Run-dir witness context (v3).
+    #[serde(default)]
+    pub model_proof_context: Option<ModelProofContextJson>,
+    /// SHA-256 over conv/pool/fc trace JSON (M1 binding).
+    #[serde(default)]
+    pub scalar_trace_digest_hex: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ModelProofContextJson {
+    pub model_id: String,
+    pub run_dir: String,
+    pub schedule_mode: String,
+    pub total_pt_mul: usize,
+    pub total_pt_add: usize,
 }
 
 fn default_proof_coverage_str() -> String {
@@ -107,12 +132,25 @@ impl ProtocolArtifacts {
             }
             "ec_plus_mac_rlc" | "server_linear_layers" => ProofCoverageV2::EcPlusMacRlc,
             "ec_plus_l1_binding" => ProofCoverageV2::EcPlusL1Binding,
+            "layer_proofs_plus_cps" => ProofCoverageV2::LayerProofsPlusCps,
             _ => ProofCoverageV2::EcOnly,
         }
     }
 }
 
 pub fn artifacts_dir(network: &str) -> PathBuf {
+    if let Ok(root) = std::env::var("VPIN_CP_SNARK_ROOT") {
+        if !root.is_empty() {
+            return PathBuf::from(root).join("artifacts").join(network);
+        }
+    }
+    if let Ok(repo) = std::env::var("VPIN_REPO_ROOT") {
+        return PathBuf::from(repo)
+            .join("data")
+            .join("cp-snark")
+            .join("artifacts")
+            .join(network);
+    }
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("artifacts")
         .join(network)

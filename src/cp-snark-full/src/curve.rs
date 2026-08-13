@@ -123,4 +123,26 @@ mod tests {
             embed_u128_to_scalar(w).to_bytes()
         );
     }
+
+    #[test]
+    fn curve_e2_base_field_equals_e1_modulus() {
+        let e2 = CurveE2Params::vpin_default();
+        let n2 = num::BigUint::parse_bytes(e2.curve_base_field.as_bytes(), 10)
+            .expect("parse n2");
+        let q1 = num::BigUint::parse_bytes(e1_field_modulus_hex().as_bytes(), 16)
+            .expect("parse q1");
+        assert_eq!(
+            n2, q1,
+            "paper setup requires n_2 = q_1 for AHE→SNARK embedding"
+        );
+    }
+
+    #[test]
+    fn embed_bigint_e2_base_matches_e1_modulus() {
+        let e2 = CurveE2Params::vpin_default();
+        let s = embed_bigint_str_to_scalar(&e2.curve_base_field);
+        // q1 as scalar should be zero mod q1
+        let q1_scalar = embed_bigint_str_to_scalar(e1_field_modulus_hex());
+        assert_eq!(s, q1_scalar);
+    }
 }

@@ -17,7 +17,8 @@ pub fn point_mult(network: &str) -> (
 ){
 
     // Read the JSON file
-    let (weights_len, weight_list, point_mult_x_byte, point_mult_y_byte, n) = load_data(network);
+    let (weights_len, weight_list, point_mult_x_byte, point_mult_y_byte, n) =
+        load_data(network).expect("load_data: set VPIN_EC_WITNESS_ROOT or activate ProofPlan");
 
     println!("Point Multiplication Gadget...");
 

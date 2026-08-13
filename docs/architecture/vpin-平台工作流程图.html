@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vPIN 平台工作流程图</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --border: #c5cdd8;
+      --text: #1a2332;
+      --muted: #5c6b7f;
+      --lane-client: #e8f4fc;
+      --lane-custody: #e8f8ef;
+      --lane-gov: #f3eef9;
+      --lane-vads: #fff8e6;
+      --lane-infer: #fdeef0;
+      --lane-verify: #eef2ff;
+      --arrow: #3d5a80;
+      --accent: #2563eb;
+      --decision: #fef3c7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.45;
+    }
+    header {
+      max-width: 1400px;
+      margin: 0 auto 20px;
+    }
+    h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+    .meta { font-size: 0.85rem; color: var(--muted); }
+    .meta a { color: var(--accent); }
+    .canvas-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      overflow-x: auto;
+      padding: 16px;
+    }
+    svg { display: block; min-width: 1320px; }
+    .lane-title { font-size: 13px; font-weight: 700; fill: var(--text); }
+    .box {
+      fill: #fff;
+      stroke: #64748b;
+      stroke-width: 1.2;
+      rx: 6;
+    }
+    .box-start, .box-end {
+      fill: #1e293b;
+      stroke: #0f172a;
+    }
+    .box-start text, .box-end text { fill: #fff; font-size: 12px; }
+    .box-decision {
+      fill: var(--decision);
+      stroke: #d97706;
+      stroke-width: 1.2;
+    }
+    .box-label { font-size: 11.5px; fill: var(--text); text-anchor: middle; }
+    .box-sublabel { font-size: 10px; fill: var(--muted); text-anchor: middle; }
+    .phase-tag {
+      font-size: 10px;
+      font-weight: 700;
+      fill: var(--accent);
+    }
+    .arrow-line {
+      fill: none;
+      stroke: var(--arrow);
+      stroke-width: 1.3;
+      marker-end: url(#arrowhead);
+    }
+    .arrow-dash {
+      fill: none;
+      stroke: #94a3b8;
+      stroke-width: 1;
+      stroke-dasharray: 5 4;
+      marker-end: url(#arrowhead-gray);
+    }
+    .note-box {
+      fill: #f8fafc;
+      stroke: #cbd5e1;
+      stroke-width: 1;
+      rx: 4;
+    }
+    .note-text { font-size: 10px; fill: var(--muted); }
+    footer {
+      max-width: 1400px;
+      margin: 16px auto 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer ul { margin: 8px 0 0 18px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>图 1　vPIN 端到端可验证隐私推理工作流程</h1>
+    <p class="meta">
+      依据
+      <a href="./vpin-平台顶层抽象架构.md">顶层抽象架构</a>、
+      <a href="./vpin-平台数据流图.md">数据流图</a>、
+      <a href="./vpin-平台隐私保护.md">隐私保护</a>　·　泳道对照参考：流数据密文访问控制工作流
+    </p>
+  </header>
+
+  <div class="canvas-wrap">
+    <svg viewBox="0 0 1320 1180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#3d5a80" />
+        </marker>
+        <marker id="arrowhead-gray" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#94a3b8" />
+        </marker>
+      </defs>
+
+      <!-- 泳道背景 -->
+      <rect x="10" y="50" width="150" height="1080" fill="var(--lane-client)" stroke="#b8d4ea" />
+      <rect x="160" y="50" width="150" height="1080" fill="var(--lane-custody)" stroke="#a8dcc0" />
+      <rect x="310" y="50" width="150" height="1080" fill="var(--lane-gov)" stroke="#d4c4e8" />
+      <rect x="460" y="50" width="150" height="1080" fill="var(--lane-vads)" stroke="#e8d9a0" />
+      <rect x="610" y="50" width="150" height="1080" fill="var(--lane-infer)" stroke="#e8b4bc" />
+      <rect x="760" y="50" width="150" height="1080" fill="var(--lane-verify)" stroke="#c4cff5" />
+      <rect x="910" y="50" width="150" height="1080" fill="var(--lane-client)" stroke="#b8d4ea" opacity="0.6" />
+
+      <!-- 泳道标题（竖排） -->
+      <text x="85" y="30" class="lane-title" text-anchor="middle">客户端</text>
+      <text x="85" y="46" class="note-text" text-anchor="middle">（用户 / 数据拥有者）</text>
+      <text x="235" y="30" class="lane-title" text-anchor="middle">信任数据</text>
+      <text x="235" y="46" class="lane-title" text-anchor="middle">托管服务器</text>
+      <text x="385" y="30" class="lane-title" text-anchor="middle">密态方案</text>
+      <text x="385" y="46" class="lane-title" text-anchor="middle">治理平面</text>
+      <text x="535" y="30" class="lane-title" text-anchor="middle">VADS/OVDS</text>
+      <text x="535" y="46" class="lane-title" text-anchor="middle">可验证绑定</text>
+      <text x="685" y="30" class="lane-title" text-anchor="middle">无头密态</text>
+      <text x="685" y="46" class="lane-title" text-anchor="middle">推理服务</text>
+      <text x="835" y="30" class="lane-title" text-anchor="middle">验证对象</text>
+      <text x="835" y="46" class="note-text" text-anchor="middle">client / custody</text>
+      <text x="985" y="30" class="lane-title" text-anchor="middle">客户端</text>
+      <text x="985" y="46" class="note-text" text-anchor="middle">（复核 / 结果）</text>
+
+      <!-- 阶段标注 -->
+      <text x="1060" y="90" class="phase-tag">阶段 0</text>
+      <text x="1060" y="280" class="phase-tag">阶段 A</text>
+      <text x="1060" y="520" class="phase-tag">阶段 B</text>
+      <text x="1060" y="880" class="phase-tag">阶段 C</text>
+
+      <!-- 开始 -->
+      <ellipse cx="85" cy="95" rx="42" ry="22" class="box-start" />
+      <text x="85" y="99" class="box-label" fill="#fff">开始</text>
+
+      <!-- 阶段0：启动 -->
+      <rect x="25" y="130" width="120" height="44" class="box" />
+      <text x="85" y="150" class="box-label">用户注册 / 登录</text>
+      <text x="85" y="165" class="box-sublabel">OIDC / JWT</text>
+
+      <rect x="25" y="190" width="120" height="50" class="box" />
+      <text x="85" y="210" class="box-label">StartupOptimizer</text>
+      <text x="85" y="225" class="box-sublabel">设备检测（可跳过）</text>
+
+      <polygon points="385,200 435,230 385,260 335,230" class="box-decision" />
+      <text x="385" y="228" class="box-label">同意检测?</text>
+      <text x="385" y="242" class="box-sublabel">full / skipped</text>
+
+      <rect x="335" y="275" width="100" height="44" class="box" />
+      <text x="385" y="295" class="box-label">SchemeSelection</text>
+      <text x="385" y="310" class="box-sublabel">+ deploy plan</text>
+
+      <rect x="25" y="275" width="120" height="44" class="box" />
+      <text x="85" y="295" class="box-label">PrivacyMode</text>
+      <text x="85" y="310" class="box-sublabel">Preference</text>
+
+      <!-- 阶段A：数据入库 -->
+      <rect x="25" y="340" width="120" height="44" class="box" />
+      <text x="85" y="358" class="box-label">预处理 / 定点化</text>
+      <text x="85" y="373" class="box-sublabel">客户端可信域</text>
+
+      <polygon points="85,410 125,440 85,470 45,440" class="box-decision" />
+      <text x="85" y="438" class="box-label">custody</text>
+      <text x="85" y="452" class="box-sublabel">mode?</text>
+
+      <rect x="185" y="400" width="100" height="50" class="box" />
+      <text x="235" y="420" class="box-label">JWT + ACL</text>
+      <text x="235" y="435" class="box-sublabel">AuthContext</text>
+
+      <rect x="25" y="490" width="120" height="44" class="box" />
+      <text x="85" y="508" class="box-label">append_client</text>
+      <text x="85" y="523" class="box-sublabel">HTTPS TLS</text>
+
+      <rect x="185" y="490" width="100" height="44" class="box" />
+      <text x="235" y="508" class="box-label">append_server</text>
+      <text x="235" y="523" class="box-sublabel">验签入库</text>
+
+      <rect x="485" y="490" width="100" height="44" class="box" />
+      <text x="535" y="508" class="box-label">VADS 分片</text>
+      <text x="535" y="523" class="box-sublabel">tag, σ, index</text>
+
+      <rect x="185" y="555" width="100" height="44" class="box" />
+      <text x="235" y="573" class="box-label">query + verify</text>
+      <text x="235" y="588" class="box-sublabel">verify_star</text>
+
+      <rect x="25" y="555" width="120" height="50" class="box" />
+      <text x="85" y="575" class="box-label">DataBinding</text>
+      <text x="85" y="590" class="box-sublabel">Record</text>
+
+      <!-- client_local 旁路 -->
+      <rect x="25" y="430" width="120" height="40" class="box" style="stroke-dasharray:4 3" />
+      <text x="85" y="448" class="box-label">client_local</text>
+      <text x="85" y="462" class="box-sublabel">仅 digest + 密文</text>
+
+      <!-- 阶段B：推理 -->
+      <rect x="25" y="630" width="120" height="44" class="box" />
+      <text x="85" y="648" class="box-label">P0 SessionStart</text>
+      <text x="85" y="663" class="box-sublabel">配置摘要</text>
+
+      <rect x="635" y="630" width="100" height="44" class="box" />
+      <text x="685" y="648" class="box-label">Preflight</text>
+      <text x="685" y="663" class="box-sublabel">binding 门禁</text>
+
+      <rect x="25" y="690" width="120" height="44" class="box" />
+      <text x="85" y="708" class="box-label">P1 cm_W</text>
+      <text x="85" y="723" class="box-sublabel">P2 InputDigest</text>
+
+      <rect x="635" y="690" width="100" height="44" class="box" />
+      <text x="685" y="708" class="box-label">密文专属</text>
+      <text x="685" y="723" class="box-sublabel">数据面接入</text>
+
+      <!-- P3 环 -->
+      <rect x="635" y="755" width="100" height="44" class="box" />
+      <text x="685" y="773" class="box-label">P3 线性层</text>
+      <text x="685" y="788" class="box-sublabel">密态执行</text>
+
+      <rect x="635" y="815" width="100" height="44" class="box" />
+      <text x="685" y="833" class="box-label">TruncateRequest</text>
+      <text x="685" y="848" class="box-sublabel">WSS TLS</text>
+
+      <rect x="785" y="815" width="100" height="50" class="box" />
+      <text x="835" y="833" class="box-label">推理交互方</text>
+      <text x="835" y="848" class="box-sublabel">非线性明文域</text>
+      <text x="835" y="860" class="box-sublabel">解密→处理→重加密</text>
+
+      <rect x="785" y="755" width="100" height="44" class="box" style="fill:#e0f2fe" />
+      <text x="835" y="773" class="box-label">或 custody_host</text>
+      <text x="835" y="788" class="box-sublabel">代行 P3 环</text>
+
+      <rect x="635" y="875" width="100" height="44" class="box" />
+      <text x="685" y="893" class="box-label">密文回注</text>
+      <text x="685" y="908" class="box-sublabel">phase_id</text>
+
+      <rect x="635" y="935" width="100" height="50" class="box" />
+      <text x="685" y="953" class="box-label">InferenceComplete</text>
+      <text x="685" y="968" class="box-sublabel">witness + π</text>
+
+      <!-- 阶段C：验证 -->
+      <rect x="785" y="1000" width="100" height="44" class="box" />
+      <text x="835" y="1018" class="box-label">模型推理</text>
+      <text x="835" y="1033" class="box-sublabel">验证器 Verify</text>
+
+      <rect x="785" y="1060" width="100" height="50" class="box" />
+      <text x="835" y="1078" class="box-label">密态流程</text>
+      <text x="835" y="1093" class="box-sublabel">OVDS + 日志审计</text>
+
+      <rect x="935" y="1030" width="100" height="50" class="box" />
+      <text x="985" y="1048" class="box-label">Verification</text>
+      <text x="985" y="1063" class="box-sublabel">Report</text>
+
+      <rect x="935" y="1095" width="100" height="44" class="box" style="stroke-dasharray:4 3" />
+      <text x="985" y="1113" class="box-label">client_reverify</text>
+      <text x="985" y="1128" class="box-sublabel">可选本地复核</text>
+
+      <ellipse cx="985" cy="1160" rx="42" ry="22" class="box-end" />
+      <text x="985" y="1164" class="box-label" fill="#fff">结束</text>
+
+      <!-- 箭头：主流程 -->
+      <path d="M 85 117 L 85 130" class="arrow-line" />
+      <path d="M 85 174 L 85 190" class="arrow-line" />
+      <path d="M 85 240 L 85 260 L 335 260 L 335 230" class="arrow-line" />
+      <path d="M 385 260 L 385 275" class="arrow-line" />
+      <path d="M 145 297 L 335 297" class="arrow-line" />
+      <path d="M 85 319 L 85 340" class="arrow-line" />
+      <path d="M 85 384 L 85 410" class="arrow-line" />
+      <path d="M 125 440 L 185 425" class="arrow-line" />
+      <path d="M 235 450 L 235 490" class="arrow-line" />
+      <path d="M 145 512 L 185 512" class="arrow-line" />
+      <path d="M 285 512 L 485 512" class="arrow-line" />
+      <path d="M 235 534 L 235 555" class="arrow-line" />
+      <path d="M 145 577 L 185 577" class="arrow-dash" />
+      <path d="M 85 534 L 85 555" class="arrow-line" />
+      <path d="M 85 605 L 85 630" class="arrow-line" />
+      <path d="M 145 652 L 635 652" class="arrow-line" />
+      <path d="M 85 674 L 85 690" class="arrow-line" />
+      <path d="M 145 712 L 635 712" class="arrow-line" />
+      <path d="M 685 734 L 685 755" class="arrow-line" />
+      <path d="M 685 799 L 685 815" class="arrow-line" />
+      <path d="M 735 837 L 785 837" class="arrow-line" />
+      <path d="M 835 865 L 835 890 L 685 890 L 685 875" class="arrow-line" />
+      <path d="M 685 919 L 685 935" class="arrow-line" />
+      <path d="M 735 960 L 785 1022" class="arrow-line" />
+      <path d="M 835 1044 L 835 1060" class="arrow-line" />
+      <path d="M 885 1085 L 935 1055" class="arrow-line" />
+      <path d="M 985 1080 L 985 1095" class="arrow-dash" />
+      <path d="M 985 1139 L 985 1138" class="arrow-line" />
+
+      <!-- client_local 旁路 -->
+      <path d="M 45 440 L 45 470 L 85 470 L 85 490" class="arrow-dash" />
+
+      <!-- 注释框 -->
+      <rect x="1080" y="120" width="220" height="72" class="note-box" />
+      <text x="1090" y="138" class="note-text">阶段 0：DeviceProfile、SchemeSelection、</text>
+      <text x="1090" y="152" class="note-text">PrivacyModePreference；MPC 须过</text>
+      <text x="1090" y="166" class="note-text">ComputeParityGate（算力对等）</text>
+      <text x="1090" y="182" class="note-text">产出 StartupOptimizerResult</text>
+
+      <rect x="1080" y="300" width="220" height="88" class="note-box" />
+      <text x="1090" y="318" class="note-text">阶段 A（hosted）：OVDS 预处理 →</text>
+      <text x="1090" y="332" class="note-text">VADS append → verify →</text>
+      <text x="1090" y="346" class="note-text">ovds_verify_ref → DataBindingRecord</text>
+      <text x="1090" y="362" class="note-text">client_local：数据留本地，仅摘要上链</text>
+      <text x="1090" y="378" class="note-text">全程 HTTPS TLS 1.2+</text>
+
+      <rect x="1080" y="540" width="220" height="100" class="note-box" />
+      <text x="1090" y="558" class="note-text">阶段 B：P0–P5 跨平面会话</text>
+      <text x="1090" y="572" class="note-text">控制面 HTTPS；数据面 WSS</text>
+      <text x="1090" y="586" class="note-text">P3 多轮双端协作（inference_peer）</text>
+      <text x="1090" y="600" class="note-text">CNN：CP-SNARK 证明；LLM·HE：抽样</text>
+      <text x="1090" y="614" class="note-text">LLM·MPC（待扩展）：mpc_trace</text>
+      <text x="1090" y="628" class="note-text">无头服务不可自证</text>
+
+      <rect x="1080" y="900" width="220" height="88" class="note-box" />
+      <text x="1090" y="918" class="note-text">阶段 C：先模型推理验证器</text>
+      <text x="1090" y="932" class="note-text">（CP-SNARK Ver / 抽样 / MPC 审计）</text>
+      <text x="1090" y="946" class="note-text">后密态流程验证器（OVDS + 日志）</text>
+      <text x="1090" y="960" class="note-text">融合 inference_verdict</text>
+      <text x="1090" y="976" class="note-text">客户端必收报告 + 工件副本</text>
+    </svg>
+  </div>
+
+  <footer>
+    <strong>泳道与参考图对照</strong>
+    <ul>
+      <li>数据拥有者 → <strong>客户端</strong>（预处理、承诺、配置）</li>
+      <li>数据服务器 → <strong>信任数据托管服务器</strong>（OVDS 存储）</li>
+      <li>隐私控制器 → <strong>密态方案治理</strong>（选型、隐私模式、门禁）</li>
+      <li>区块链 → <strong>VADS/OVDS 可验证绑定</strong>（分片验签链，非公链）</li>
+      <li>隐私控制平面 → <strong>推理交互方 + 隐私五保证</strong>（明文域非线性）</li>
+      <li>访问控制器 → <strong>无头密态推理服务</strong>（P0–P6 编排、密文专属面）</li>
+      <li>消费者 → <strong>验证对象 + 客户端复核</strong>（VerificationReport）</li>
+    </ul>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vPIN 平台软件结构图</title>
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --card: #fff;
+      --border: #b0bcc9;
+      --text: #1a2332;
+      --muted: #5c6b7f;
+      --layer-app: #dbeafe;
+      --layer-if: #d1fae5;
+      --layer-logic: #fef3c7;
+      --layer-net: #ede9fe;
+      --layer-store: #fee2e2;
+      --accent: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.45;
+    }
+    header { max-width: 1200px; margin: 0 auto 20px; }
+    h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+    .meta { font-size: 0.85rem; color: var(--muted); }
+    .meta a { color: var(--accent); }
+    .canvas-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      overflow-x: auto;
+      padding: 12px;
+    }
+    svg { display: block; min-width: 1160px; }
+    footer {
+      max-width: 1200px;
+      margin: 16px auto 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.82rem;
+    }
+    footer th, footer td {
+      border: 1px solid #dde3ea;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    footer th { background: #f1f5f9; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>图 2　vPIN 平台软件架构</h1>
+    <p class="meta">
+      依据
+      <a href="./vpin-平台顶层抽象架构.md">顶层抽象架构</a>（六平面 · 三角色）　·　分层对照参考：系统软件五层架构
+    </p>
+  </header>
+
+  <div class="canvas-wrap">
+    <svg viewBox="0 0 1160 920" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#475569" />
+        </marker>
+        <marker id="arr-up" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto">
+          <polygon points="0 8, 3 0, 6 8" fill="#475569" />
+        </marker>
+        <marker id="arr-down" markerWidth="8" markerHeight="8" refX="3" refY="1" orient="auto">
+          <polygon points="0 0, 3 8, 6 0" fill="#475569" />
+        </marker>
+      </defs>
+
+      <!-- ========== 应用层 ========== -->
+      <rect x="20" y="20" width="1120" height="130" fill="var(--layer-app)" stroke="#93c5fd" stroke-width="1.5" rx="4" />
+      <text x="40" y="48" font-size="15" font-weight="700" fill="#1e40af">应用层 Application Layer</text>
+
+      <!-- 用户 -->
+      <rect x="50" y="65" width="140" height="70" fill="#fff" stroke="#64748b" rx="6" />
+      <text x="120" y="92" font-size="12" text-anchor="middle" font-weight="600">用户</text>
+      <text x="120" y="108" font-size="10" text-anchor="middle" fill="#64748b">数据拥有者</text>
+      <text x="120" y="122" font-size="10" text-anchor="middle" fill="#64748b">推理请求方</text>
+
+      <!-- 客户端 UI -->
+      <rect x="220" y="65" width="160" height="70" fill="#fff" stroke="#64748b" rx="6" />
+      <text x="300" y="92" font-size="12" text-anchor="middle" font-weight="600">客户端应用</text>
+      <text x="300" y="108" font-size="10" text-anchor="middle" fill="#64748b">Tauri / 桌面 · 移动</text>
+      <text x="300" y="122" font-size="10" text-anchor="middle" fill="#64748b">安全中心 · 隐私模式配置</text>
+
+      <!-- 推理交互方 -->
+      <rect x="410" y="65" width="150" height="70" fill="#fff" stroke="#64748b" rx="6" />
+      <text x="485" y="92" font-size="12" text-anchor="middle" font-weight="600">推理交互方</text>
+      <text x="485" y="108" font-size="10" text-anchor="middle" fill="#64748b">client_local</text>
+      <text x="485" y="122" font-size="10" text-anchor="middle" fill="#64748b">custody_host</text>
+
+      <!-- 验证对象 -->
+      <rect x="590" y="65" width="150" height="70" fill="#fff" stroke="#64748b" rx="6" />
+      <text x="665" y="92" font-size="12" text-anchor="middle" font-weight="600">验证对象</text>
+      <text x="665" y="108" font-size="10" text-anchor="middle" fill="#64748b">双验证器执行</text>
+      <text x="665" y="122" font-size="10" text-anchor="middle" fill="#64748b">VerificationReport</text>
+
+      <!-- 运维 -->
+      <rect x="770" y="65" width="150" height="70" fill="#fff" stroke="#64748b" rx="6" />
+      <text x="845" y="92" font-size="12" text-anchor="middle" font-weight="600">运维 / 注册</text>
+      <text x="845" y="108" font-size="10" text-anchor="middle" fill="#64748b">模型目录 CLI</text>
+      <text x="845" y="122" font-size="10" text-anchor="middle" fill="#64748b">引擎路由配置</text>
+
+      <path d="M 190 100 L 220 100" stroke="#475569" stroke-width="1.2" marker-end="url(#arr)" fill="none" />
+      <path d="M 380 100 L 410 100" stroke="#475569" stroke-width="1.2" marker-end="url(#arr)" fill="none" />
+      <path d="M 560 100 L 590 100" stroke="#475569" stroke-width="1.2" marker-end="url(#arr)" fill="none" />
+
+      <!-- 应用层 → 接口层 -->
+      <path d="M 580 150 L 580 175" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-down)" fill="none" />
+      <text x="595" y="168" font-size="10" fill="#64748b">调用</text>
+
+      <!-- ========== 接口层 ========== -->
+      <rect x="20" y="180" width="1120" height="110" fill="var(--layer-if)" stroke="#6ee7b7" stroke-width="1.5" rx="4" />
+      <text x="40" y="208" font-size="15" font-weight="700" fill="#047857">接口层 Interface Layer</text>
+
+      <rect x="50" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="127" y="242" font-size="11" text-anchor="middle" font-weight="600">身份认证接口</text>
+      <text x="127" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">JWT/OIDC · P0 SessionAuth</text>
+
+      <rect x="225" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="302" y="242" font-size="11" text-anchor="middle" font-weight="600">数据传输接口</text>
+      <text x="302" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">HTTPS TLS · WSS 密文面</text>
+
+      <rect x="400" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="477" y="242" font-size="11" text-anchor="middle" font-weight="600">推理会话接口</text>
+      <text x="477" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">P0–P6 REST + WebSocket</text>
+
+      <rect x="575" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="652" y="242" font-size="11" text-anchor="middle" font-weight="600">数据托管接口</text>
+      <text x="652" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">OVDS append/query/verify</text>
+
+      <rect x="750" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="827" y="242" font-size="11" text-anchor="middle" font-weight="600">验证报告接口</text>
+      <text x="827" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">VerificationReport · 复核</text>
+
+      <rect x="925" y="220" width="155" height="52" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="1002" y="242" font-size="11" text-anchor="middle" font-weight="600">启动配置接口</text>
+      <text x="1002" y="258" font-size="9.5" text-anchor="middle" fill="#64748b">StartupOptimizerResult</text>
+
+      <path d="M 580 290 L 580 315" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-down)" fill="none" />
+
+      <!-- ========== 逻辑层（六平面） ========== -->
+      <rect x="20" y="320" width="1120" height="200" fill="var(--layer-logic)" stroke="#fcd34d" stroke-width="1.5" rx="4" />
+      <text x="40" y="348" font-size="15" font-weight="700" fill="#b45309">逻辑层 Logic Layer（六平面 + 工程优化器）</text>
+
+      <!-- 平面1 -->
+      <rect x="40" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="122" y="385" font-size="11" text-anchor="middle" font-weight="700">平面一 密态方案治理</text>
+      <text x="122" y="400" font-size="9" text-anchor="middle" fill="#64748b">CiphertextSchemeSelector</text>
+      <text x="122" y="413" font-size="9" text-anchor="middle" fill="#64748b">ModalityFamilyRegistry</text>
+      <text x="122" y="426" font-size="9" text-anchor="middle" fill="#64748b">HDC 可部署编译</text>
+
+      <!-- 平面2 -->
+      <rect x="220" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="302" y="385" font-size="11" text-anchor="middle" font-weight="700">平面二 身份与绑定</text>
+      <text x="302" y="400" font-size="9" text-anchor="middle" fill="#64748b">VADS/OVDS · JWT/ACL</text>
+      <text x="302" y="413" font-size="9" text-anchor="middle" fill="#64748b">DataBindingRecord</text>
+      <text x="302" y="426" font-size="9" text-anchor="middle" fill="#64748b">托管双模式</text>
+
+      <!-- 平面3 -->
+      <rect x="400" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="482" y="385" font-size="11" text-anchor="middle" font-weight="700">平面三 隐私保护</text>
+      <text x="482" y="400" font-size="9" text-anchor="middle" fill="#64748b">PrivacyPolicy</text>
+      <text x="482" y="413" font-size="9" text-anchor="middle" fill="#64748b">五类机制保证</text>
+      <text x="482" y="426" font-size="9" text-anchor="middle" fill="#64748b">密文专属契约</text>
+
+      <!-- 平面4 -->
+      <rect x="580" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="662" y="385" font-size="11" text-anchor="middle" font-weight="700">平面四 完整性</text>
+      <text x="662" y="400" font-size="9" text-anchor="middle" fill="#64748b">CiphertextFlowVerifier</text>
+      <text x="662" y="413" font-size="9" text-anchor="middle" fill="#64748b">ModelInferenceVerifier</text>
+      <text x="662" y="426" font-size="9" text-anchor="middle" fill="#64748b">strict / game / mpc</text>
+
+      <!-- 平面5 -->
+      <rect x="760" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="842" y="385" font-size="11" text-anchor="middle" font-weight="700">平面五 密态推理</text>
+      <text x="842" y="400" font-size="9" text-anchor="middle" fill="#64748b">E2ElGamal / CKKS</text>
+      <text x="842" y="413" font-size="9" text-anchor="middle" fill="#64748b">MpcPuma（待扩展）</text>
+      <text x="842" y="426" font-size="9" text-anchor="middle" fill="#64748b">同态 / 分片执行引擎</text>
+
+      <!-- 平面6 -->
+      <rect x="940" y="365" width="165" height="68" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="1022" y="385" font-size="11" text-anchor="middle" font-weight="700">平面六 推理服务</text>
+      <text x="1022" y="400" font-size="9" text-anchor="middle" fill="#64748b">P0–P6 会话编排</text>
+      <text x="1022" y="413" font-size="9" text-anchor="middle" fill="#64748b">Preflight · 多引擎</text>
+      <text x="1022" y="426" font-size="9" text-anchor="middle" fill="#64748b">安全中心</text>
+
+      <!-- 工程优化器横条 -->
+      <rect x="40" y="450" width="1065" height="52" fill="#fff" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="6 3" rx="5" />
+      <text x="572" y="472" font-size="11" text-anchor="middle" font-weight="600">工程优化器（横切，非第七平面）</text>
+      <text x="200" y="490" font-size="10" text-anchor="middle" fill="#64748b">StartupOptimizer</text>
+      <text x="400" y="490" font-size="10" text-anchor="middle" fill="#64748b">InferenceOptimizer</text>
+      <text x="620" y="490" font-size="10" text-anchor="middle" fill="#64748b">CustodyOptimizer</text>
+      <text x="900" y="490" font-size="10" text-anchor="middle" fill="#64748b">DeviceDetector / FallbackBaseline</text>
+
+      <path d="M 580 520 L 580 545" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-down)" fill="none" />
+
+      <!-- ========== 网络层（三角色） ========== -->
+      <rect x="20" y="550" width="1120" height="200" fill="var(--layer-net)" stroke="#c4b5fd" stroke-width="1.5" rx="4" />
+      <text x="40" y="578" font-size="15" font-weight="700" fill="#6d28d9">网络层 Network Layer（三角色部署拓扑）</text>
+
+      <!-- 客户端节点 -->
+      <rect x="80" y="600" width="200" height="120" fill="#fff" stroke="#64748b" rx="8" />
+      <text x="180" y="628" font-size="13" text-anchor="middle" font-weight="700">客户端节点</text>
+      <text x="180" y="648" font-size="10" text-anchor="middle" fill="#64748b">预处理 · 加密 · 密钥域</text>
+      <text x="180" y="664" font-size="10" text-anchor="middle" fill="#64748b">StartupOptimizer 内置</text>
+      <text x="180" y="680" font-size="10" text-anchor="middle" fill="#64748b">双验证器 / client_reverify</text>
+      <text x="180" y="700" font-size="9" text-anchor="middle" fill="#94a3b8">edge · compute · cloud</text>
+
+      <!-- 托管节点 -->
+      <rect x="380" y="590" width="220" height="140" fill="#fff" stroke="#64748b" rx="8" />
+      <text x="490" y="618" font-size="13" text-anchor="middle" font-weight="700">信任数据托管服务器</text>
+      <text x="490" y="638" font-size="10" text-anchor="middle" fill="#64748b">VDS 协议栈（VADS + OVDS）</text>
+      <text x="490" y="654" font-size="10" text-anchor="middle" fill="#64748b">隐私控制器类比：ACL + AuthContext</text>
+      <text x="490" y="670" font-size="10" text-anchor="middle" fill="#64748b">可代行 inference_peer / verifier</text>
+      <text x="490" y="686" font-size="10" text-anchor="middle" fill="#64748b">upload-coordinator · VerifyOrchestrator</text>
+      <text x="490" y="706" font-size="9" text-anchor="middle" fill="#94a3b8">API Gateway 终结 TLS</text>
+
+      <!-- 推理节点 -->
+      <rect x="700" y="600" width="200" height="120" fill="#fff" stroke="#64748b" rx="8" />
+      <text x="800" y="628" font-size="13" text-anchor="middle" font-weight="700">无头密态推理服务</text>
+      <text x="800" y="648" font-size="10" text-anchor="middle" fill="#64748b">密文专属数据面（Headless）</text>
+      <text x="800" y="664" font-size="10" text-anchor="middle" fill="#64748b">同态前向 · witness · π</text>
+      <text x="800" y="680" font-size="10" text-anchor="middle" fill="#64748b">P0 会话认证（client_local）</text>
+      <text x="800" y="700" font-size="9" text-anchor="middle" fill="#94a3b8">不可自证 · 多引擎路由</text>
+
+      <!-- 网络连接 -->
+      <path d="M 280 660 L 380 660" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)" fill="none" />
+      <text x="330" y="652" font-size="9" fill="#64748b">HTTPS</text>
+
+      <path d="M 280 640 L 700 640" stroke="#475569" stroke-width="1.3" marker-end="url(#arr)" fill="none" />
+      <text x="490" y="632" font-size="9" fill="#64748b">HTTPS + WSS（推理会话）</text>
+
+      <path d="M 600 700 L 700 700" stroke="#475569" stroke-width="1.3" marker-end="url(#arr)" fill="none" />
+      <text x="650" y="692" font-size="9" fill="#64748b">HTTPS/mTLS</text>
+
+      <path d="M 180 600 L 180 580 L 800 580 L 800 600" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)" fill="none" />
+      <text x="490" y="574" font-size="9" fill="#94a3b8" text-anchor="middle">P3 双端协作环（经 WSS，可经托管代行）</text>
+
+      <path d="M 580 750 L 580 775" stroke="#475569" stroke-width="1.5" marker-end="url(#arr-down)" fill="none" />
+      <text x="600" y="768" font-size="10" fill="#64748b">读写</text>
+
+      <!-- ========== 存储层 ========== -->
+      <rect x="20" y="780" width="1120" height="120" fill="var(--layer-store)" stroke="#fca5a5" stroke-width="1.5" rx="4" />
+      <text x="40" y="808" font-size="15" font-weight="700" fill="#b91c1c">存储层 Storage Layer</text>
+
+      <rect x="50" y="825" width="200" height="58" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="150" y="848" font-size="11" text-anchor="middle" font-weight="600">VADS 核心状态</text>
+      <text x="150" y="864" font-size="9.5" text-anchor="middle" fill="#64748b">DB / R / Acc_R / cnt · 分片验签</text>
+      <text x="150" y="877" font-size="9.5" text-anchor="middle" fill="#64748b">（托管服务器持久化）</text>
+
+      <rect x="280" y="825" width="200" height="58" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="380" y="848" font-size="11" text-anchor="middle" font-weight="600">OVDS 工程层</text>
+      <text x="380" y="864" font-size="9.5" text-anchor="middle" fill="#64748b">file_index · manifest</text>
+      <text x="380" y="877" font-size="9.5" text-anchor="middle" fill="#64748b">chunk_map · file_revision</text>
+
+      <rect x="510" y="825" width="200" height="58" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="610" y="848" font-size="11" text-anchor="middle" font-weight="600">推理会话状态</text>
+      <text x="610" y="864" font-size="9.5" text-anchor="middle" fill="#64748b">P0–P6 session · ahe_trace</text>
+      <text x="610" y="877" font-size="9.5" text-anchor="middle" fill="#64748b">mpc_trace（待扩展）</text>
+
+      <rect x="740" y="825" width="200" height="58" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="840" y="848" font-size="11" text-anchor="middle" font-weight="600">模型与部署工件</text>
+      <text x="840" y="864" font-size="9.5" text-anchor="middle" fill="#64748b">homomorphic_deploy_plan</text>
+      <text x="840" y="877" font-size="9.5" text-anchor="middle" fill="#64748b">模型目录 · 公开权重</text>
+
+      <rect x="970" y="825" width="150" height="58" fill="#fff" stroke="#64748b" rx="5" />
+      <text x="1045" y="848" font-size="11" text-anchor="middle" font-weight="600">验证工件</text>
+      <text x="1045" y="864" font-size="9.5" text-anchor="middle" fill="#64748b">π · witness</text>
+      <text x="1045" y="877" font-size="9.5" text-anchor="middle" fill="#64748b">VerificationReport</text>
+
+      <!-- 写入/读出标注 -->
+      <text x="300" y="798" font-size="10" fill="#64748b">写入 ↑</text>
+      <text x="700" y="798" font-size="10" fill="#64748b">读出 ↓</text>
+    </svg>
+  </div>
+
+  <footer>
+    <strong>五层与 vPIN 六平面对照</strong>
+    <table>
+      <tr><th>参考五层</th><th>vPIN 映射</th><th>关键组件</th></tr>
+      <tr><td>应用层</td><td>用户、客户端 UI、推理交互方、验证对象</td><td>安全中心、PrivacyModePreference 配置</td></tr>
+      <tr><td>接口层</td><td>TLS 之上的 API 边界</td><td>HTTPS、WSS、JWT/ACL、P0–P6 协议面</td></tr>
+      <tr><td>逻辑层</td><td>六平面 + 工程优化器</td><td>治理、绑定、隐私、完整性、推理、会话编排</td></tr>
+      <tr><td>网络层</td><td>三角色分布式部署</td><td>客户端、信任托管服务器、无头密态推理服务</td></tr>
+      <tr><td>存储层</td><td>可验证数据与推理工件</td><td>VADS/OVDS、会话日志、deploy plan、证明工件</td></tr>
+    </table>
+    <p style="margin-top:12px">参考图中「区块链」在 vPIN 中对应 <strong>VADS/OVDS 可验证绑定链</strong>（BLS + RSA Accumulator 分片验签，非公链）。「隐私控制器 / 转换器」对应 <strong>密态方案治理 + 托管 ACL + 推理交互方明文域</strong>。</p>
+  </footer>
+</body>
+</html>

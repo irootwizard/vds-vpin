@@ -197,26 +197,31 @@ pub fn cps_comm_aux_witness(opening: &ModelCommitmentOpening) -> Result<CpsCommi
     })
 }
 
-/// B′.3: unified CPS.Ver(π, (cm_W, cm'), t) — Z.6 will wire layer π. For
-/// now, perform a structural cross-check on the commitments themselves so
-/// the call surface exists for Z.6 wiring.
-pub fn cps_ver_unified(
-    _pi_bytes: &[u8],
+/// Verify `cm_W` matches a recomputed Spartan PC over opened weights.
+pub fn cps_ver_w_star(weights: &[u128], cm: &CpsCommitment) -> Result<bool, CpsError> {
+    let recomputed = cps_comm_w_star(weights)?;
+    Ok(recomputed.cm_hex == cm.cm_hex
+        && recomputed.kind == cm.kind
+        && recomputed.num_scalars == cm.num_scalars)
+}
+
+/// B′.3: verify CPS commitments against opened W* (π wiring deferred to layer proofs).
+pub fn cps_ver_opening(
+    weights: &[u128],
     cm_w: &CpsCommitment,
-    cm_aux: &CpsCommitment,
+    cm_aux: Option<&CpsCommitment>,
+    opening: &ModelCommitmentOpening,
 ) -> Result<bool, CpsError> {
-    if cm_w.cm_hex.is_empty() || cm_aux.cm_hex.is_empty() {
+    if !cps_ver_w_star(weights, cm_w)? {
         return Ok(false);
     }
-    if cm_w.num_scalars != cm_aux.num_scalars {
-        return Ok(false);
+    if let Some(aux) = cm_aux {
+        let recomputed = cps_comm_aux_witness(opening)?;
+        if recomputed.cm_hex != aux.cm_hex {
+            return Ok(false);
+        }
     }
-    if cm_w.kind != CPS_KIND_SPARTAN_PC || cm_aux.kind != CPS_KIND_SPARTAN_PC {
-        return Ok(false);
-    }
-    Err(CpsError::NotImplemented(
-        "CPS.Ver unified — Spartan π not wired (Z.6)",
-    ))
+    Ok(true)
 }
 
 /// Diagnostics-only: a fresh Pedersen commit over the same weight vector,
@@ -319,21 +324,22 @@ mod tests {
     }
 
     #[test]
-    fn z5_cps_ver_unified_rejects_pedersen_kind() {
+    fn z5_cps_ver_rejects_wrong_kind() {
         let mut cm_w = cps_comm_w_star(&toy_weights()).expect("cm_w");
-        let cm_aux = cm_w.clone();
+        let opening = {
+            let (_, _, blind) = commit_model(&toy_weights());
+            crate::commit::model_opening_from_commit(&toy_weights(), &blind)
+        };
         cm_w.kind = "pedersen_legacy".to_string();
-        let res = cps_ver_unified(&[], &cm_w, &cm_aux).expect("structural check");
-        assert!(!res, "verifier must refuse non-Spartan kind");
+        let res = cps_ver_opening(&toy_weights(), &cm_w, None, &opening).expect("check");
+        assert!(!res, "verifier must refuse non-Spartan kind mismatch via recompute");
     }
 
     #[test]
-    fn z5_cps_ver_unified_rejects_size_mismatch() {
-        let cm_w = cps_comm_w_star(&toy_weights()).expect("cm_w");
-        let mut cm_aux = cm_w.clone();
-        cm_aux.num_scalars += 1;
-        let res = cps_ver_unified(&[], &cm_w, &cm_aux).expect("structural check");
-        assert!(!res, "size mismatch must be rejected");
+    fn z5_cps_ver_opening_honest() {
+        let w = toy_weights();
+        let cm_w = cps_comm_w_star(&w).expect("cm_w");
+        assert!(cps_ver_w_star(&w, &cm_w).expect("ver"));
     }
 
     #[test]

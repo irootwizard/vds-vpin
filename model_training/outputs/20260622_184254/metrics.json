@@ -3,11 +3,11 @@
   "phases": [
     {
       "name": "float",
-      "best_test_acc": 0.9293
+      "best_test_acc": 0.9291
     },
     {
       "name": "fixed",
-      "best_test_acc": 0.1041
+      "best_test_acc": 0.8946
     }
   ],
   "truncation": {
@@ -57,8 +57,16 @@
     }
   },
   "topology_synced": false,
-  "float_fixed_acc": 0.1041,
+  "float_fixed_acc": 0.8946,
   "target_acc": 0.9,
   "weights_exported": true,
-  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254"
+  "weights_dir": "D:\\WorkStation\\pythoncode\\experiment-reproduction\\vPIN-main\\model_training\\outputs\\20260622_184254",
+  "evaluation": {
+    "evaluated_at": "2026-06-28T14:24:30.467553+00:00",
+    "test_size": 10000,
+    "float_acc": 0.9291,
+    "fixed_acc": 0.8946,
+    "float_fixed_agree": 0.9338,
+    "fixed_pass": false
+  }
 }

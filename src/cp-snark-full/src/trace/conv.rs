@@ -52,11 +52,10 @@ impl ConvTraceBundle {
     }
 }
 
+use crate::trace::paths::trace_file;
+
 pub fn conv_trace_path(network: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("model_exports")
-        .join(network)
-        .join("conv_trace.json")
+    trace_file(network, "conv_trace.json")
 }
 
 pub fn load_conv_trace(network: &str) -> Result<Option<ConvTraceBundle>, String> {

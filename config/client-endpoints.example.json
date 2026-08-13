@@ -1,0 +1,14 @@
+{
+  "backend": {
+    "http_base": "http://127.0.0.1:8000/api/v1"
+  },
+  "ahe": {
+    "host": "127.0.0.1",
+    "port": 8001,
+    "http_base": "http://127.0.0.1:8001/api/v1",
+    "skip_local_server": false
+  },
+  "ovds": {
+    "http_base": "http://127.0.0.1:8003/api/v1"
+  }
+}

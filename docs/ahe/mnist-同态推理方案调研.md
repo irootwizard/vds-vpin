@@ -1,9 +1,9 @@
-# MNIST 同态 / 密态推理方案调研（近年文献与实现）
+# MNIST 同态 / 密态推理方案调研
 
-> **范围**：在 **MNIST** 上完成**单张或批量图像分类**的隐私保护推理方案；以**全同态加密（FHE）**及**加法同态 + 证明（vPIN 类）**为主，**MPC / 混合协议**单独标注。  
+> **范围**：在 **MNIST** 上完成单张或批量图像分类的隐私保护推理方案；以**全同态加密（FHE）**及**加法同态 + 可验证证明（vPIN 类）**为主，**MPC / 混合协议**单独标注。  
 > **时间口径**：表中「单图延迟」优先取论文 **wall-clock latency（总耗时 / 批大小）**；若仅报告 **amortized time**（SIMD 批处理摊销）会单独注明。  
 > **参数量**：多数论文只给网络结构；表中「可训练参数」为按结构推算或论文明示，**固定卷积核不计入**时会注明。  
-> **算力口径**：各方案**硬件不同，秒数不可直接横比**；完整 CPU/GPU/内存见 **§2**（汇总表 **§2.0**），本仓库 AHE 实测见 **§2.13**。
+> **算力口径**：各方案**硬件不同，秒数不可直接横比**；论文原文实验环境见 **§2**（汇总表 **§2.0**）。
 
 ---
 
@@ -27,8 +27,7 @@
 | 2020 | **TenSEAL** | CKKS / BFV | **库**（算子微基准） | 取决于用户模型 | 微基准 ms 级（见 §4） | **库级** | §2.10 | — | [arXiv:2003.06714](https://arxiv.org/abs/2003.06714) | [OpenMined/TenSEAL](https://github.com/OpenMined/TenSEAL) |
 | 2025 | **FHEON** | CKKS（OpenFHE RNS） | **LeNet-5** | **~6.17×10⁴** | 可配置 CNN 栈 | **13 s**；内存 **4.2 GB** | §2.11 | 98.5% | [arXiv:2510.03996](https://arxiv.org/abs/2510.03996) | [stamcenter/fheon](https://github.com/stamcenter/fheon) |
 | 2024+ | **HEIR + OpenFHE** | CKKS | MLP on MNIST（示例） | 视 mlir 模型 | 编译器路线 | **~30 s** / **~6 min** | 社区 issue（单机，RingDim 可变） | — | [google/heir#1232](https://github.com/google/heir/issues/1232) | [google/heir](https://github.com/google/heir) |
-| 2024 | **vPIN 论文** | EC-AHE + CP-SNARK | Network 1–5 / LeNet | LeNet **~61,706** | 7508 pt-mult + 16864 pt-add（LeNet） | **proving 266–1002 s**（CNN 1–5）；LeNet **10699 s** | §2.12 | 与明文接近 | [arXiv:2411.07468](https://arxiv.org/abs/2411.07468) | [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) |
-| 2024 | **vPIN 本仓库 AHE** | EC 加法同态（WS） | **Network A** | **1,210** | ~1.86×10⁴ pt-mult + ~1.83×10⁴ pt-add | **~91 s**（`crypto_infer_ms`） | §2.13（本机实测） | parity ✓ | 同上 | 本仓库 |
+| 2024 | **vPIN** | EC 加法同态 + CP-SNARK | Network 1–5 / LeNet | LeNet **~61,706**；Network A **~1,210** | LeNet：7508 pt-mult + 16864 pt-add | **proving 266–1002 s**（CNN 1–5）；LeNet **10699 s** | §2.12 | 与明文接近 | [arXiv:2411.07468](https://arxiv.org/abs/2411.07468) | [vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN) |
 
 ### 混合 / 非纯 FHE（对照）
 
@@ -40,12 +39,12 @@
 
 ---
 
-## 2. 实验环境与算力规格（论文原文 + 本机确认）
+## 2. 实验环境与算力规格（论文原文）
 
 > 下表字段：**平台类型**、**CPU**、**GPU**、**内存**、**OS/库**、**并行度**、**算力档位（粗估）**。  
-> 「算力档位」仅用于**同密码体制内的粗排序**，跨 FHE/TFHE/EC 不可比。
+> 「算力档位」仅用于**同密码体制内的粗排序**，跨 FHE / TFHE / EC 不可比。
 
-### 2.0 环境汇总一览（便于横向对照平台）
+### 2.0 环境汇总一览
 
 | 方案 | CPU / 算力 | GPU | 内存 | 密码库 | 并行 / batch | MNIST 单图时间 |
 |------|------------|-----|------|--------|--------------|----------------|
@@ -61,8 +60,7 @@
 | SHE | Milan 7313P **16C@3.0GHz** | 无 | — | 定制 FHE | — | **0.14 s** |
 | TenSEAL 微基准 | EC2 c4.2xlarge **8 vCPU@2.9GHz** | 无 | 15 GiB | SEAL CKKS | — | 算子 ms 级 |
 | FHEON LeNet | Ryzen 5900X **12C** | 无 | 64 GB | OpenFHE | 单线程 CPU | **13 s** |
-| vPIN 论文 | 客户端 M1 Pro；服务端 **8360Y 48C@2.4GHz** | 无 | 16 / **256 GB** | libspartan | 多线程证明 | proving **266–1002 s** |
-| **vPIN 本仓库 AHE** | **i5-13500H 12C/16T@2.6GHz** | RTX 5060 Ti（**未用**） | **15.7 GB** | Python EC | 单图 WS | **~91 s** |
+| vPIN | 客户端 M1 Pro；服务端 **8360Y 48C@2.4GHz** | 无 | 16 / **256 GB** | libspartan | 多线程证明 | proving **266–1002 s**（CNN 1–5） |
 
 ### 2.1 CryptoNets（2016，原文）
 
@@ -186,26 +184,11 @@
 | **客户端** | MacBook Pro 2021，Apple **M1 Pro @ 3.2 GHz**，**16 GB** |
 | **服务端（证明）** | Intel **Xeon Platinum 8360Y** @ **2.40 GHz**，**48 核**，**256 GB** |
 | 证明库 | **libspartan**，**多线程** proving/verify |
-| MNIST LeNet | **proving 10699 s**，verify **15.9 s**，proof **2339 KB**；**7508** pt-mult + **16864** pt-add |
+| MNIST LeNet | **proving 10,699 s**，verify **15.9 s**，proof **2,339 KB**；**7,508** pt-mult + **16,864** pt-add |
 | Network 1–5 | proving **266–1002 s**（含 AHE + SNARK，非纯同态） |
 | 算力档位 | 客户端 ARM 笔记本 + 服务器 **Ice Lake 48 核** |
 
-### 2.13 本仓库 vPIN AHE 实测环境（2026-06-23 本机确认）
-
-| 项 | 规格 |
-|----|------|
-| 机型 | 笔记本（Windows **10.0.26200**） |
-| CPU | **13th Gen Intel Core i5-13500H**：**12 物理核 / 16 逻辑线程**，基频 **2.6 GHz**（P+E 混合） |
-| 内存 | **15.7 GB** 可用 |
-| GPU | **NVIDIA GeForce RTX 5060 Ti**（**AHE 热路径未使用 GPU**）；核显 Iris Xe |
-| 软件栈 | Python **3.x**（`.venv`），`vpin-backend` WS + `vpin_client ahe-infer` |
-| 负载 | 单图官方 MNIST，`cnn-mnist-trained`（Network A） |
-| 结果 | `crypto_infer_ms` **≈91 s**（优化后）；`preprocess_ms` **≈2 ms** |
-| 算力档位 | 2023 代移动 **i5 + 独显**，但 AHE 为 **纯 Python EC 单线程/少并行**，未绑 GPU |
-
-**与论文服务器对比（粗估）**：本机 CPU 单核睿频与 Xeon 8360Y 同代，但 **AHE 实现为 Python 参考路径、无 48 核 Spartan 并行**；**91 s 仅同态 WS 会话**，不含论文 **266–1002 s** 证明时间。
-
-### 2.14 算力归一化参考（仅供同体制粗排）
+### 2.13 算力归一化参考（仅供同体制粗排）
 
 | 档位 | 代表硬件 | 典型 MNIST 单图（同体制） |
 |------|----------|---------------------------|
@@ -214,8 +197,7 @@
 | 单卡 Volta V100 | A\*FV | HCNN **5.16 s** |
 | 单卡 RTX 4090 | FHEW/TFHE 自举 | MLP **0.04 s** |
 | 12 核桌面 Zen3 | Ryzen 5900X + OpenFHE | LeNet **13 s**（CKKS） |
-| 48 核 + Spartan | Xeon 8360Y | vPIN **proving** 分钟～小时级 |
-| 笔记本 Python EC | i5-13500H（本机） | vPIN AHE **~91 s** |
+| 48 核 + Spartan | Xeon 8360Y | vPIN **proving 266–1002 s**（Network 1–5） |
 
 ---
 
@@ -235,7 +217,7 @@
 - **变体**：LoLa-Small **0.29 s**（精度 96.92%）；LoLa-Dense **7.2 s**。  
 - **参数量**：与 CryptoNets 相同拓扑，见 §2.1。
 
-### 3.3 HCNN / A\*FV（2021）— 当前 FHE 经典强基线
+### 3.3 HCNN / A\*FV（2021）— FHE 经典强基线
 
 - **MNIST 结构**（训练与测试同构）：
 
@@ -257,14 +239,15 @@
 - **单图**：**13 s**，**4.2 GB** 内存，准确率 **98.5%**（明文 98.8%）。  
 - **仓库**：[stamcenter/fheon](https://github.com/stamcenter/fheon)。
 
-### 3.5 vPIN / 本仓库 Network A — 非 FHE 的加法同态轨
+### 3.5 vPIN（2024）— 可验证密态推理
 
-- **定位**：论文主路径为 **EC 上加法同态线性层 + 客户端验证 SNARK**，**不是** BFV/CKKS 全同态。  
-- **Network A 结构**：固定 Sobel 型 3×3 conv（不训练）→ ReLU（客户端）→ 4×4 sum-pool → shift → FC **64→16** → ReLU+shift → FC **16→10**。  
-- **可训练参数**：64×16+16 + 16×10+10 = **1,210**。  
-- **本仓库实测**（Python `homomorphic_network_a.py`，优化后）：`crypto_infer_ms` **≈91 s**（单张官方 MNIST）；瓶颈为 EC 标量乘循环、BSGS、WS 序列化。  
-- **论文报告**：端到端 **proving 266–1002 s**（Network A–E，含 CP-SNARK），**未单独给出纯 AHE 秒级**。  
-- **相关文档**：[ahe-e2e-实现说明.md](./ahe-e2e-实现说明.md)、[network-a-official-mnist-ahe-分析.md](./network-a-official-mnist-ahe-分析.md)。
+- **定位**：**EC 上加法同态线性层** + **客户端可验证 CP-SNARK**；**不是** BFV/CKKS 全同态。非线性（ReLU 等）在客户端明文执行。  
+- **网络族**：论文给出 **Network 1–5**（浅层 CNN，参数量 **10³–10⁴** 级）及 **LeNet-5**（**~61,706** 参数）。  
+- **Network A 示例结构**（最浅）：固定 Sobel 型 3×3 conv → ReLU（客户端）→ 4×4 sum-pool → shift → FC **64→16** → ReLU+shift → FC **16→10**；可训练参数 **1,210**。  
+- **运算量**：LeNet 上 **7,508** pt-mult + **16,864** pt-add；浅层 Network 量级更低。  
+- **时间**（48 核 Xeon + libspartan）：Network 1–5 端到端 proving **266–1002 s**；LeNet **10,699 s**（verify 秒级）。论文**未单独披露纯 AHE 分项**。  
+- **与 FHE 方案差异**：目标为**可验证**推理，延迟含 Spartan 证明开销；不宜与纯 CKKS 端到端秒数直接比「谁更快」，应分 **纯同态** 与 **同态+证明** 两类。  
+- **论文**：[arXiv:2411.07468](https://arxiv.org/abs/2411.07468)；**官方代码**：[vt-asaplab/vPIN](https://github.com/vt-asaplab/vPIN)。
 
 ---
 
@@ -283,26 +266,55 @@ TenSEAL 论文给出 **CKKSVector** 在 EC2 c4.2xlarge 上的算子延迟（多�
 
 ---
 
-## 5. 对比阅读注意事项
+## 5. 技术路线演进脉络
+
+```mermaid
+flowchart LR
+  subgraph fhe [FHE 主线]
+    CN[CryptoNets 2016<br/>YASHE′ ~250s]
+    LoLa[LoLa 2019<br/>packing ~2.2s]
+    HCNN[HCNN 2021<br/>GPU BFV ~5s]
+    FHEON[FHEON 2025<br/>CKKS LeNet ~13s]
+    CN --> LoLa --> HCNN --> FHEON
+  end
+  subgraph alt [其它体制]
+  TFHE[TT-TFHE 2023<br/>~4.4s]
+  GPUboot[GPU TFHE 2023<br/>MLP ~0.04s]
+  end
+  subgraph verify [可验证轨]
+  vPIN[vPIN 2024<br/>EC-AHE + SNARK<br/>proving 分钟级]
+  end
+  LoLa -.->|同拓扑| HCNN
+```
+
+**粗粒度趋势**：
+
+1. **2016–2019**：CryptoNets 确立 FHE 推理可行性；LoLa 用 packing 将同拓扑延迟降 **1–2 个数量级**。  
+2. **2021–2023**：GPU 加速 BFV（HCNN）、TFHE 自举（TT-TFHE、GPU FHEW）把浅层网络推至 **亚秒～数秒**。  
+3. **2024–2025**：CKKS 工程框架（FHEON、HEIR）与编译器路线降低 LeNet 级部署门槛；**vPIN** 开辟「同态线性层 + SNARK 验证」路线，牺牲纯延迟换取可验证性。
+
+---
+
+## 6. 对比阅读注意事项
 
 1. **密码体制不可横比**：YASHE′、BFV、CKKS、TFHE、EC 加法同态的「一次乘法」成本差几个数量级。  
 2. **摊销 vs 单图**：CryptoNets / HCNN 利用 **SIMD slot packing**（N=2¹⁴ 等），**amortized time** 可比单图低 **10³–10⁵** 倍。  
 3. **权重是否加密**：PPAI 类工作区分权重明文（**2.5 s**）与密文（**8.8 s**）。  
-4. **网络深度与参数量**：浅层（LoLa-Small、SHE-M LP）可达 **亚秒**；LeNet-5（~62k 参数）在 CKKS 上多为 **10 s 量级**；CryptoNets 级（~10⁵ 参数）未优化常 **>200 s**。  
-5. **本仓库 vPIN**：目标为 **可验证** 密态推理，AHE 仅覆盖线性层；与纯 FHE 方案目标不同，秒数不宜与 CKKS LeNet 直接比「谁更快」，而应分 **纯同态** 与 **同态+证明** 两类。
+4. **网络深度与参数量**：浅层（LoLa-Small、SHE-MLP）可达 **亚秒**；LeNet-5（~62k 参数）在 CKKS 上多为 **10 s 量级**；CryptoNets 级（~10⁵ 参数）未优化常 **>200 s**。  
+5. **可验证 vs 纯密态**：vPIN 类方案 proving 为**分钟级**，高于 FHEON LeNet（**13 s**），因含 Spartan 证明；与纯 FHE 比的是**安全模型**（可验证性），而非单一延迟指标。
 
 ---
 
-## 6. 推荐阅读顺序
+## 7. 推荐阅读顺序
 
 1. 入门：**CryptoNets** → **LoLa**（理解 packing 为何带来 10×～100× 加速）。  
 2. FHE 工程基线：**HCNN**、**Faster CryptoNets**。  
 3. 现代 CKKS 框架：**TenSEAL**、**FHEON**、**OpenFHE** / **HEIR**。  
-4. 可验证推理：**vPIN 论文** + 本仓库 `docs/ahe-e2e-实现说明.md`。
+4. 可验证推理：**vPIN 论文**（[arXiv:2411.07468](https://arxiv.org/abs/2411.07468)）。
 
 ---
 
-## 7. 参考文献（BibTeX 友好链接）
+## 8. 参考文献
 
 | 简称 | 链接 |
 |------|------|
@@ -322,4 +334,4 @@ TenSEAL 论文给出 **CKKSVector** 在 EC2 c4.2xlarge 上的算子延迟（多�
 
 ---
 
-*文档版本：2026-06-23（§2 实验环境与本机算力已核对）；论文数据来自原文 Table/§Evaluation，本仓库 AHE 行来自 `ahe-infer --timing` + `Win32_Processor` 本机查询。*
+*文档版本：2026-06-28；数据均来自各论文原文 Table / §Evaluation 及公开仓库说明；不含本仓库实现与本地压测。*

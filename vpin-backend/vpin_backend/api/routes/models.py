@@ -64,6 +64,9 @@ class ModelSummary(BaseModel):
     accuracy: float
     updated: str | None = None
     commitment_digest: str | None = None
+    network: str | None = None
+    deployable: bool | None = None
+    message: str | None = None
 
 
 class ModelRegisterRequest(BaseModel):
@@ -129,6 +132,9 @@ def list_models(capability: str | None = Query(None)) -> list[ModelSummary] | di
                 accuracy=float(m.get("accuracy", 0)),
                 updated=m.get("updated"),
                 commitment_digest=m.get("commitment_digest"),
+                network=m.get("network"),
+                deployable=m.get("deployable"),
+                message=m.get("message"),
             )
         )
     return out

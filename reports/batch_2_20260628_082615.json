@@ -1,0 +1,23 @@
+{
+  "limit": 2,
+  "correct": 0,
+  "accuracy": 0.0,
+  "elapsed_s": 12.576154299997143,
+  "concurrency": 1,
+  "engine": "python",
+  "results": [],
+  "errors": [
+    {
+      "job_id": "mnist-1000",
+      "slot": 0,
+      "error": "[WinError 1225] \u8fdc\u7a0b\u8ba1\u7b97\u673a\u62d2\u7edd\u7f51\u7edc\u8fde\u63a5\u3002"
+    },
+    {
+      "job_id": "mnist-1001",
+      "slot": 1,
+      "error": "[WinError 1225] \u8fdc\u7a0b\u8ba1\u7b97\u673a\u62d2\u7edd\u7f51\u7edc\u8fde\u63a5\u3002"
+    }
+  ],
+  "img_per_s": 0.15903112766360178,
+  "infer_engine": "python"
+}

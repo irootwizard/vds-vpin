@@ -9,12 +9,11 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "vpin-client"))
 sys.path.insert(0, str(REPO / "vpin-backend"))
 
-from vpin_client.crypto.challenge import challenge_from_hex, sample_challenge
-from vpin_client.protocol.messages import ProofBundle
-from vpin_client.verify.pipeline import ModelOpening, TraceBundle, verify_session
+from vpin_backend.crypto.challenge import challenge_from_hex, sample_challenge
+from vpin_backend.protocol.messages import ProofBundle
+from vpin_backend.proof.verify.pipeline import ModelOpening, TraceBundle, verify_session
 from vpin_backend.crypto.server_crypto.bridge import ServerCryptoBridge
 from vpin_backend.protocol.messages import ClientChallenge as BackendChallenge
 from vpin_backend.protocol.server_inputs import ProveRequest, SetupRequest
@@ -50,6 +49,7 @@ def test_r4_setup_and_prove(bridge: ServerCryptoBridge) -> None:
             network_id=net,
             challenge=_to_backend_challenge(ch),
             setup_artifact=setup.setup_path,
+            run_dir=REPO / "model_training" / "outputs" / "20260622_184254",
         )
     )
     assert prove.ok, prove.stderr
@@ -84,6 +84,7 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
             network_id=net,
             challenge=_to_backend_challenge(ch),
             setup_artifact=setup.setup_path,
+            run_dir=REPO / "model_training" / "outputs" / "20260622_184254",
         )
     )
     assert prove.ok
@@ -100,6 +101,10 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
         if pool_path.is_file()
         else [],
     )
+    fc_path = REPO / "model_training" / "outputs" / "20260622_184254" / "proof_artifacts" / "fc_trace.json"
+    if fc_path.is_file():
+        fc_raw = json.loads(fc_path.read_text(encoding="utf-8"))
+        traces.fc_traces = fc_raw.get("layers", [])
     bundle = ProofBundle(
         proof_coverage=str(artifact.get("proof_coverage", "skeleton_ec_stub")),
         prove_time_ms=int(artifact.get("prove_time_ms", 0)),
@@ -111,10 +116,13 @@ def test_client_m1_scalar_after_prove(bridge: ServerCryptoBridge) -> None:
         opening,
         ch,
         traces,
-        skip_fc=True,
+        skip_fc=not fc_path.is_file(),
         cm_w_point_hex=str(cm.get("point_hex", "")),
         cm_w_digest_hex=str(cm.get("digest_hex", "")),
         num_weights=mc.get("num_weights"),
     )
     assert report.scalar_ok, report.detail
     assert report.opening_ok, "Pedersen opening should verify against protocol artifact"
+    assert "layer_proofs" in str(artifact.get("proof_coverage", "")) or artifact.get(
+        "cps_commitment"
+    ), "expected B′ path artifacts"

@@ -21,6 +21,7 @@ pub use store::{
 mod load;
 
 pub use load::{
-    load_from_export_path, load_from_manifest, load_model_params, load_w_star, FullWeightsJson,
-    ModelLoadError, NETWORK_A_W_STAR_LEN,
+    load_from_export_path, load_from_manifest, load_model_params, load_w_star,
+    load_w_star_from_path, load_w_star_from_run_dir, FullWeightsJson, ModelLoadError,
+    NETWORK_A_W_STAR_LEN,
 };
